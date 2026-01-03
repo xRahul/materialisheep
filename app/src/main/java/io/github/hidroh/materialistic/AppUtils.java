@@ -103,12 +103,13 @@ public class AppUtils {
      * Opens a web URL in an external browser or a custom tab.
      *
      * @param context The context to use for starting the activity.
-     * @param item    The web item associated with the URL, used for custom tab actions.
+     * @param item    The web item associated with the URL, used for custom tab
+     *                actions.
      * @param url     The URL to open.
      * @param session The custom tabs session to use.
      */
     public static void openWebUrlExternal(Context context, @Nullable WebItem item,
-                                          String url, @Nullable CustomTabsSession session) {
+            String url, @Nullable CustomTabsSession session) {
         if (!hasConnection(context)) {
             context.startActivity(new Intent(context, OfflineWebActivity.class)
                     .putExtra(OfflineWebActivity.EXTRA_URL, url));
@@ -153,7 +154,7 @@ public class AppUtils {
     public static void setTextWithLinks(TextView textView, CharSequence html) {
         textView.setText(html);
         // TODO https://code.google.com/p/android/issues/detail?id=191430
-        //noinspection Convert2Lambda
+        // noinspection Convert2Lambda
         textView.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
@@ -207,7 +208,8 @@ public class AppUtils {
     }
 
     /**
-     * Converts an HTML string to a CharSequence, with an option for compact rendering.
+     * Converts an HTML string to a CharSequence, with an option for compact
+     * rendering.
      *
      * @param htmlText The HTML string to convert.
      * @param compact  True for compact rendering, false otherwise.
@@ -219,11 +221,10 @@ public class AppUtils {
         }
         CharSequence spanned;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            //noinspection InlinedApi
-            spanned = Html.fromHtml(htmlText, compact ?
-                    Html.FROM_HTML_MODE_COMPACT : Html.FROM_HTML_MODE_LEGACY);
+            // noinspection InlinedApi
+            spanned = Html.fromHtml(htmlText, compact ? Html.FROM_HTML_MODE_COMPACT : Html.FROM_HTML_MODE_LEGACY);
         } else {
-            //noinspection deprecation
+            // noinspection deprecation
             spanned = Html.fromHtml(htmlText);
         }
         return trim(spanned);
@@ -240,14 +241,19 @@ public class AppUtils {
         // use ACTION_SEND_MULTIPLE instead of ACTION_SEND to filter out
         // share receivers that accept only EXTRA_TEXT but not EXTRA_STREAM
         return Intent.createChooser(new Intent(Intent.ACTION_SEND_MULTIPLE)
-                        .setType("text/plain")
-                        .putParcelableArrayListExtra(Intent.EXTRA_STREAM,
-                                new ArrayList<Uri>(){{add(data);}}),
+                .setType("text/plain")
+                .putParcelableArrayListExtra(Intent.EXTRA_STREAM,
+                        new ArrayList<Uri>() {
+                            {
+                                add(data);
+                            }
+                        }),
                 context.getString(R.string.share_file));
     }
 
     /**
-     * Opens a web item externally, showing a popup menu to choose between the article and comments.
+     * Opens a web item externally, showing a popup menu to choose between the
+     * article and comments.
      *
      * @param context   The context to use.
      * @param popupMenu The popup menu to display.
@@ -256,10 +262,10 @@ public class AppUtils {
      * @param session   The custom tabs session to use.
      */
     public static void openExternal(@NonNull final Context context,
-                             @NonNull PopupMenu popupMenu,
-                             @NonNull View anchor,
-                             @NonNull final WebItem item,
-                             final CustomTabsSession session) {
+            @NonNull PopupMenu popupMenu,
+            @NonNull View anchor,
+            @NonNull final WebItem item,
+            final CustomTabsSession session) {
         if (TextUtils.isEmpty(item.getUrl()) ||
                 item.getUrl().startsWith(HackerNewsClient.BASE_WEB_URL)) {
             openWebUrlExternal(context,
@@ -270,16 +276,16 @@ public class AppUtils {
         popupMenu.create(context, anchor, GravityCompat.END)
                 .inflate(R.menu.menu_share)
                 .setOnMenuItemClickListener(menuItem -> {
-                    openWebUrlExternal(context, item, menuItem.getItemId() == R.id.menu_article ?
-                            item.getUrl() :
-                            String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()), session);
+                    openWebUrlExternal(context, item, menuItem.getItemId() == R.id.menu_article ? item.getUrl()
+                            : String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()), session);
                     return true;
                 })
                 .show();
     }
 
     /**
-     * Shares a web item, showing a popup menu to choose between the article and comments.
+     * Shares a web item, showing a popup menu to choose between the article and
+     * comments.
      *
      * @param context   The context to use.
      * @param popupMenu The popup menu to display.
@@ -287,9 +293,9 @@ public class AppUtils {
      * @param item      The web item to share.
      */
     public static void share(@NonNull final Context context,
-                             @NonNull PopupMenu popupMenu,
-                             @NonNull View anchor,
-                             @NonNull final WebItem item) {
+            @NonNull PopupMenu popupMenu,
+            @NonNull View anchor,
+            @NonNull final WebItem item) {
         if (TextUtils.isEmpty(item.getUrl()) ||
                 item.getUrl().startsWith(HackerNewsClient.BASE_WEB_URL)) {
             share(context, item.getDisplayedTitle(),
@@ -300,9 +306,8 @@ public class AppUtils {
                 .inflate(R.menu.menu_share)
                 .setOnMenuItemClickListener(menuItem -> {
                     share(context, item.getDisplayedTitle(),
-                            menuItem.getItemId() == R.id.menu_article ?
-                                    item.getUrl() :
-                                    String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
+                            menuItem.getItemId() == R.id.menu_article ? item.getUrl()
+                                    : String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
                     return true;
                 })
                 .show();
@@ -316,7 +321,7 @@ public class AppUtils {
      * @return The resource ID.
      */
     public static int getThemedResId(Context context, @AttrRes int attr) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{attr});
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[] { attr });
         final int resId = a.getResourceId(0, 0);
         a.recycle();
         return resId;
@@ -331,7 +336,7 @@ public class AppUtils {
      * @return The dimension value.
      */
     public static float getDimension(Context context, @StyleRes int styleResId, @AttrRes int attr) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(styleResId, new int[]{attr});
+        TypedArray a = context.getTheme().obtainStyledAttributes(styleResId, new int[] { attr });
         float size = a.getDimension(0, 0);
         a.recycle();
         return size;
@@ -357,7 +362,7 @@ public class AppUtils {
      */
     public static int getDimensionInDp(Context context, @DimenRes int dimenResId) {
         return (int) (context.getResources().getDimension(dimenResId) /
-                        context.getResources().getDisplayMetrics().density);
+                context.getResources().getDisplayMetrics().density);
     }
 
     /**
@@ -423,7 +428,8 @@ public class AppUtils {
      * Gets the credentials for the current user.
      *
      * @param context The context to use.
-     * @return A pair containing the username and password, or null if not logged in.
+     * @return A pair containing the username and password, or null if not logged
+     *         in.
      */
     @SuppressLint("MissingPermission")
     public static Pair<String, String> getCredentials(Context context) {
@@ -443,10 +449,13 @@ public class AppUtils {
 
     /**
      * Displays UI to allow user to login
-     * If no accounts exist in user's device, regardless of login status, prompt to login again
-     * If 1 or more accounts in user's device, and already logged in, prompt to update password
+     * If no accounts exist in user's device, regardless of login status, prompt to
+     * login again
+     * If 1 or more accounts in user's device, and already logged in, prompt to
+     * update password
      * If 1 or more accounts in user's device, and logged out, show account chooser
-     * @param context activity context
+     * 
+     * @param context            activity context
      * @param alertDialogBuilder dialog builder
      */
     @SuppressLint("MissingPermission")
@@ -463,18 +472,22 @@ public class AppUtils {
 
     @SuppressLint("MissingPermission")
     public static void registerAccountsUpdatedListener(final Context context) {
-        AccountManager.get(context).addOnAccountsUpdatedListener(accounts -> {
-            String username = Preferences.getUsername(context);
-            if (TextUtils.isEmpty(username)) {
-                return;
-            }
-            for (Account account : accounts) {
-                if (TextUtils.equals(account.name, username)) {
+        try {
+            AccountManager.get(context).addOnAccountsUpdatedListener(accounts -> {
+                String username = Preferences.getUsername(context);
+                if (TextUtils.isEmpty(username)) {
                     return;
                 }
-            }
-            Preferences.setUsername(context, null);
-        }, null, true);
+                for (Account account : accounts) {
+                    if (TextUtils.equals(account.name, username)) {
+                        return;
+                    }
+                }
+                Preferences.setUsername(context, null);
+            }, null, true);
+        } catch (SecurityException e) {
+            // Permission GET_ACCOUNTS not granted, ignore
+        }
     }
 
     /**
@@ -506,7 +519,7 @@ public class AppUtils {
      */
     @SuppressLint("MissingPermission")
     public static void showAccountChooser(final Context context, AlertDialogBuilder alertDialogBuilder,
-                                           Account[] accounts) {
+            Account[] accounts) {
         String username = Preferences.getUsername(context);
         final String[] items = new String[accounts.length];
         int checked = -1;
@@ -545,7 +558,7 @@ public class AppUtils {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
                             AccountManager.get(context).removeAccount(accounts[selection], null, null, null);
                         } else {
-                            //noinspection deprecation
+                            // noinspection deprecation
                             AccountManager.get(context).removeAccount(accounts[selection], null, null);
                         }
                         dialog.dismiss();
@@ -637,9 +650,9 @@ public class AppUtils {
      * @param dim    True to dim the status bar, false to undim it.
      */
     public static void setStatusBarDim(Window window, boolean dim) {
-        setStatusBarColor(window, dim ? Color.TRANSPARENT :
-                ContextCompat.getColor(window.getContext(),
-                        AppUtils.getThemedResId(window.getContext(), R.attr.colorPrimaryDark)));
+        setStatusBarColor(window, dim ? Color.TRANSPARENT
+                : ContextCompat.getColor(window.getContext(),
+                        AppUtils.getThemedResId(window.getContext(), androidx.appcompat.R.attr.colorPrimaryDark)));
     }
 
     /**
@@ -655,9 +668,9 @@ public class AppUtils {
     /**
      * Navigates in a given direction.
      *
-     * @param direction      The direction to navigate in.
-     * @param appBarLayout   The AppBarLayout to use for navigation.
-     * @param navigable      The navigable interface to use for navigation.
+     * @param direction    The direction to navigate in.
+     * @param appBarLayout The AppBarLayout to use for navigation.
+     * @param navigable    The navigable interface to use for navigation.
      */
     public static void navigate(int direction, AppBarLayout appBarLayout, Navigable navigable) {
         switch (direction) {
@@ -711,8 +724,8 @@ public class AppUtils {
         Intent intent = new Intent(Intent.ACTION_SEND)
                 .setType("text/plain")
                 .putExtra(Intent.EXTRA_SUBJECT, subject)
-                .putExtra(Intent.EXTRA_TEXT, !TextUtils.isEmpty(subject) ?
-                        TextUtils.join(" - ", new String[]{subject, text}) : text);
+                .putExtra(Intent.EXTRA_TEXT,
+                        !TextUtils.isEmpty(subject) ? TextUtils.join(" - ", new String[] { subject, text }) : text);
         if (intent.resolveActivity(context.getPackageManager()) != null) {
             context.startActivity(intent);
         }
@@ -749,8 +762,8 @@ public class AppUtils {
     /**
      * Gets the ID from a data URI.
      *
-     * @param intent      The intent to get the URI from.
-     * @param altParamId  The alternate parameter ID to use.
+     * @param intent     The intent to get the URI from.
+     * @param altParamId The alternate parameter ID to use.
      * @return The ID from the URI.
      */
     public static String getDataUriId(@NonNull Intent intent, String altParamId) {
@@ -804,11 +817,11 @@ public class AppUtils {
 
     @NonNull
     private static Intent createViewIntent(Context context, @Nullable WebItem item,
-                                           String url, @Nullable CustomTabsSession session) {
+            String url, @Nullable CustomTabsSession session) {
         if (Preferences.customTabsEnabled(context)) {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(session)
                     .setToolbarColor(ContextCompat.getColor(context,
-                            AppUtils.getThemedResId(context, R.attr.colorPrimary)))
+                            AppUtils.getThemedResId(context, androidx.appcompat.R.attr.colorPrimary)))
                     .setShowTitle(true)
                     .enableUrlBarHiding()
                     .addDefaultShareMenuItem();
@@ -818,9 +831,9 @@ public class AppUtils {
                                 new Intent(context, ItemActivity.class)
                                         .putExtra(ItemActivity.EXTRA_ITEM, item)
                                         .putExtra(ItemActivity.EXTRA_OPEN_COMMENTS, true),
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ?
-                                        PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE :
-                                        PendingIntent.FLAG_ONE_SHOT));
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                                        ? PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
+                                        : PendingIntent.FLAG_ONE_SHOT));
             }
             return builder.build().intent.setData(Uri.parse(url));
         } else {
@@ -829,7 +842,8 @@ public class AppUtils {
     }
 
     /**
-     * Creates an intent that can be used to launch an activity in multi-window mode.
+     * Creates an intent that can be used to launch an activity in multi-window
+     * mode.
      *
      * @param activity The activity that is launching the new activity.
      * @param intent   The intent to launch.
@@ -855,7 +869,7 @@ public class AppUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             textView.setTextAppearance(textAppearance);
         } else {
-            //noinspection deprecation
+            // noinspection deprecation
             textView.setTextAppearance(textView.getContext(), textAppearance);
         }
     }

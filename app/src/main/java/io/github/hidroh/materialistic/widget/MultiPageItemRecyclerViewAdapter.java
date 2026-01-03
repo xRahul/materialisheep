@@ -17,8 +17,12 @@
 package io.github.hidroh.materialistic.widget;
 
 import android.content.Intent;
+import android.content.Context;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import io.github.hidroh.materialistic.MaterialisticApplication;
 
 import java.util.Arrays;
 

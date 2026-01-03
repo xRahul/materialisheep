@@ -51,7 +51,8 @@ import io.github.hidroh.materialistic.preference.ThemePreference;
 public class Preferences {
     private static final String DRAFT_PREFIX = "draft_%1$s";
     private static final String PREFERENCES_DRAFT = "_drafts";
-    @VisibleForTesting static Boolean sReleaseNotesSeen = null;
+    @VisibleForTesting
+    static Boolean sReleaseNotesSeen = null;
 
     public enum SwipeAction {
         None,
@@ -60,13 +61,14 @@ public class Preferences {
         Refresh,
         Share
     }
+
     public enum StoryViewMode {
         Comment,
         Article,
         Readability
     }
 
-    private static final BoolToStringPref[] PREF_MIGRATION = new BoolToStringPref[]{
+    private static final BoolToStringPref[] PREF_MIGRATION = new BoolToStringPref[] {
             new BoolToStringPref(R.string.pref_item_click, false,
                     R.string.pref_story_display, R.string.pref_story_display_value_comments),
             new BoolToStringPref(R.string.pref_item_search_recent, true,
@@ -142,8 +144,8 @@ public class Preferences {
      * @param byRecent True to sort by recent, false otherwise.
      */
     public static void setSortByRecent(Context context, boolean byRecent) {
-        set(context, R.string.pref_search_sort, context.getString(byRecent ?
-                R.string.pref_search_sort_value_recent : R.string.pref_search_sort_value_default));
+        set(context, R.string.pref_search_sort, context.getString(
+                byRecent ? R.string.pref_search_sort_value_recent : R.string.pref_search_sort_value_default));
     }
 
     /**
@@ -154,7 +156,7 @@ public class Preferences {
      */
     public static StoryViewMode getDefaultStoryView(Context context) {
         String pref = get(context, R.string.pref_story_display,
-                        R.string.pref_story_display_value_article);
+                R.string.pref_story_display_value_article);
         if (TextUtils.equals(context.getString(R.string.pref_story_display_value_comments), pref)) {
             return StoryViewMode.Comment;
         }
@@ -296,7 +298,7 @@ public class Preferences {
      */
     public static String getCommentDisplayOption(Context context) {
         return get(context, R.string.pref_comment_display,
-                        R.string.pref_comment_display_value_single);
+                R.string.pref_comment_display_value_single);
     }
 
     /**
@@ -523,7 +525,7 @@ public class Preferences {
     public static SwipeAction[] getListSwipePreferences(Context context) {
         String left = get(context, R.string.pref_list_swipe_left, R.string.swipe_save),
                 right = get(context, R.string.pref_list_swipe_right, R.string.swipe_vote);
-        return new SwipeAction[]{parseSwipeAction(left), parseSwipeAction(right)};
+        return new SwipeAction[] { parseSwipeAction(left), parseSwipeAction(right) };
     }
 
     /**
@@ -608,14 +610,17 @@ public class Preferences {
     }
 
     public static class BoolToStringPref {
-        @Synthetic final int oldKey;
+        @Synthetic
+        final int oldKey;
         private final boolean oldDefault;
-        @Synthetic final int newKey;
-        @Synthetic final int newValue;
+        @Synthetic
+        final int newKey;
+        @Synthetic
+        final int newValue;
 
         @Synthetic
         BoolToStringPref(@StringRes int oldKey, boolean oldDefault,
-                         @StringRes int newKey, @StringRes int newValue) {
+                @StringRes int newKey, @StringRes int newValue) {
             this.oldKey = oldKey;
             this.oldDefault = oldDefault;
             this.newKey = newKey;
@@ -644,7 +649,7 @@ public class Preferences {
                 context.getTheme().applyStyle(themeSpec.themeOverrides, true);
             }
             if (dialogTheme) {
-                context.setTheme(AppUtils.getThemedResId(context, R.attr.alertDialogTheme));
+                context.setTheme(AppUtils.getThemedResId(context, androidx.appcompat.R.attr.alertDialogTheme));
             }
         }
 
@@ -686,8 +691,8 @@ public class Preferences {
 
         public static int getAutoDayNightMode(Context context) {
             return getTheme(context, false) instanceof ThemePreference.DayNightSpec &&
-                    get(context, R.string.pref_daynight_auto, false) ?
-                    AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM : AppCompatDelegate.MODE_NIGHT_NO;
+                    get(context, R.string.pref_daynight_auto, false) ? AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                            : AppCompatDelegate.MODE_NIGHT_NO;
         }
 
         public static void disableAutoDayNight(Context context) {

@@ -34,7 +34,7 @@ public class AsteriskSpan extends ReplacementSpan {
     public AsteriskSpan(Context context) {
         super();
         mBackgroundColor = ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, R.attr.colorAccent));
+                AppUtils.getThemedResId(context, androidx.appcompat.R.attr.colorAccent));
         mTextColor = ContextCompat.getColor(context, android.R.color.transparent);
         mPadding = context.getResources().getDimension(R.dimen.padding_asterisk);
     }
@@ -45,7 +45,8 @@ public class AsteriskSpan extends ReplacementSpan {
     }
 
     @Override
-    public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
+    public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom,
+            @NonNull Paint paint) {
         float radius = mPadding;
         float centerX = x + radius + mPadding;
         float centerY = top + radius + mPadding;

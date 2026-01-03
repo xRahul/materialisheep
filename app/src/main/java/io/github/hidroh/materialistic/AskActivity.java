@@ -16,6 +16,7 @@
 
 package io.github.hidroh.materialistic;
 
+import android.os.Bundle;
 import androidx.annotation.NonNull;
 
 import io.github.hidroh.materialistic.data.ItemManager;
@@ -24,6 +25,12 @@ import io.github.hidroh.materialistic.data.ItemManager;
  * Activity to display ask stories
  */
 public class AskActivity extends BaseStoriesActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
+    }
 
     /**
      * Gets the default title for the activity.

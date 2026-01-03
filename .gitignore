@@ -28,4 +28,7 @@ proguard/
 .idea
 *.iml
 
+# agent-tools are only to be used locally by Gemini, Antigravity and other coding agents
+agent-tools/
+
 .DS_Store

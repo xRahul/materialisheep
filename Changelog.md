@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0] - 2026-06-XX
+### Changed
+- Migrated dependency injection from Dagger 1 to Dagger 2.51.1.
+- Replaced Mercury Web Parser with local Readability.js implementation.
+- Upgraded build system: Gradle 8.9, AGP 8.x, Java 21, Kotlin 2.0.
+- Upgraded `compileSdk` and `targetSdk` to 33.
+- Fixed `R.attr` resource resolution issues by migrating to `androidx.appcompat.R.attr`.
+
 ## [UNRELEASED]
 
 ### Added

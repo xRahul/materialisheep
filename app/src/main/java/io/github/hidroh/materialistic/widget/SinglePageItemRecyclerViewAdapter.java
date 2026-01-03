@@ -44,6 +44,7 @@ import io.github.hidroh.materialistic.ResourcesProvider;
 import io.github.hidroh.materialistic.annotation.Synthetic;
 import io.github.hidroh.materialistic.data.Item;
 import io.github.hidroh.materialistic.data.ItemManager;
+import io.github.hidroh.materialistic.MaterialisticApplication;
 
 public class SinglePageItemRecyclerViewAdapter
         extends ItemRecyclerViewAdapter<ToggleItemViewHolder> {
@@ -57,7 +58,8 @@ public class SinglePageItemRecyclerViewAdapter
             }
         }
     };
-    @Inject ResourcesProvider mResourcesProvider;
+    @Inject
+    ResourcesProvider mResourcesProvider;
     private int mLevelIndicatorWidth = 0;
     private final boolean mAutoExpand;
     private boolean mColorCoded = true;
@@ -68,8 +70,8 @@ public class SinglePageItemRecyclerViewAdapter
     private int mColorOpacity = 100;
 
     public SinglePageItemRecyclerViewAdapter(ItemManager itemManager,
-                                             @NonNull SavedState state,
-                                             boolean autoExpand) {
+            @NonNull SavedState state,
+            boolean autoExpand) {
         super(itemManager);
         this.mState = state;
         mAutoExpand = autoExpand;
@@ -84,7 +86,8 @@ public class SinglePageItemRecyclerViewAdapter
         mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
                 0, ItemTouchHelper.RIGHT) {
             @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+                    RecyclerView.ViewHolder target) {
                 return false;
             }
 
@@ -108,7 +111,8 @@ public class SinglePageItemRecyclerViewAdapter
             }
 
             @Override
-            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX,
+                    float dY, int actionState, boolean isCurrentlyActive) {
                 float swipeWidth = viewHolder.itemView.getWidth() * getSwipeThreshold(viewHolder);
                 dX = Math.max(dX, -swipeWidth);
                 dX = Math.min(dX, swipeWidth);
@@ -137,10 +141,9 @@ public class SinglePageItemRecyclerViewAdapter
         if (viewType == VIEW_TYPE_FOOTER) {
             return new ToggleItemViewHolder(mLayoutInflater.inflate(R.layout.item_footer, parent, false), null);
         }
-        final ToggleItemViewHolder holder =
-                new ToggleItemViewHolder(mLayoutInflater.inflate(R.layout.item_comment, parent, false));
-        final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
-                holder.itemView.getLayoutParams();
+        final ToggleItemViewHolder holder = new ToggleItemViewHolder(
+                mLayoutInflater.inflate(R.layout.item_comment, parent, false));
+        final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
         params.leftMargin = mLevelIndicatorWidth * viewType;
         holder.itemView.setLayoutParams(params);
         return holder;
@@ -250,7 +253,8 @@ public class SinglePageItemRecyclerViewAdapter
 
     @Override
     protected void onItemLoaded(int position, Item item) {
-        // item position may already be shifted due to expansion, need to get new position
+        // item position may already be shifted due to expansion, need to get new
+        // position
         int index = mState.indexOf(item);
         if (index >= 0 && index < getItemCount()) {
             notifyItemChanged(index);
@@ -326,8 +330,8 @@ public class SinglePageItemRecyclerViewAdapter
     private void changeToggleState(ToggleItemViewHolder holder, Item item, boolean expanded) {
         holder.mToggle.setText(mContext.getResources()
                 .getQuantityString(R.plurals.comments_count, item.getKidCount(), item.getKidCount()));
-        holder.mToggle.setCompoundDrawablesWithIntrinsicBounds(0, 0, expanded ?
-                R.drawable.ic_expand_less_white_24dp : R.drawable.ic_expand_more_white_24dp, 0);
+        holder.mToggle.setCompoundDrawablesWithIntrinsicBounds(0, 0,
+                expanded ? R.drawable.ic_expand_less_white_24dp : R.drawable.ic_expand_more_white_24dp, 0);
     }
 
     private void expand(Item item) {
@@ -443,7 +447,7 @@ public class SinglePageItemRecyclerViewAdapter
         int[] collapse(Item item) {
             int index = indexOf(item) + 1;
             int count = recursiveRemove(item);
-            return new int[]{index, count};
+            return new int[] { index, count };
         }
 
         private void addAll(int index, List<Item> items) {
@@ -459,7 +463,8 @@ public class SinglePageItemRecyclerViewAdapter
             if (!isExpanded(item.getId())) {
                 return 0;
             }
-            // if item is already expanded, its kids must be added, so we need to remove them
+            // if item is already expanded, its kids must be added, so we need to remove
+            // them
             int count = item.getKidCount();
             expanded.remove(item.getId());
             for (Item kid : item.getKidItems()) {

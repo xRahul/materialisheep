@@ -17,11 +17,14 @@
 package io.github.hidroh.materialistic.widget;
 
 import android.content.Intent;
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+
+import io.github.hidroh.materialistic.MaterialisticApplication;
 
 import io.github.hidroh.materialistic.ItemActivity;
 import io.github.hidroh.materialistic.R;
@@ -35,6 +38,12 @@ public class SubmissionRecyclerViewAdapter extends ItemRecyclerViewAdapter<Submi
     public SubmissionRecyclerViewAdapter(ItemManager itemManager, @NonNull Item[] items) {
         super(itemManager);
         mItems = items;
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        attach(recyclerView.getContext(), recyclerView);
     }
 
     @Override
@@ -77,10 +86,8 @@ public class SubmissionRecyclerViewAdapter extends ItemRecyclerViewAdapter<Submi
             holder.mTitleTextView.setText(item.getDisplayedTitle());
             holder.mCommentButton.setText(R.string.view_story);
         }
-        holder.mTitleTextView.setVisibility(holder.mTitleTextView.length() > 0 ?
-                View.VISIBLE : View.GONE);
-        holder.mContentTextView.setVisibility(holder.mContentTextView.length() > 0 ?
-                View.VISIBLE : View.GONE);
+        holder.mTitleTextView.setVisibility(holder.mTitleTextView.length() > 0 ? View.VISIBLE : View.GONE);
+        holder.mContentTextView.setVisibility(holder.mContentTextView.length() > 0 ? View.VISIBLE : View.GONE);
         holder.mCommentButton.setVisibility(item.isDeleted() ? View.GONE : View.VISIBLE);
         holder.mCommentButton.setOnClickListener(v -> {
             if (isComment) {

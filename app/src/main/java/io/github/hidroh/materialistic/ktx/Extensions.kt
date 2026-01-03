@@ -24,14 +24,20 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
 import io.github.hidroh.materialistic.AppUtils
-import okhttp3.internal.Util
 import java.io.Closeable
 import java.io.File
 
 /**
  * Closes this [Closeable] quietly.
  */
-inline fun Closeable.closeQuietly() = Util.closeQuietly(this)
+inline fun Closeable?.closeQuietly() {
+    try {
+        this?.close()
+    } catch (ignored: RuntimeException) {
+        throw ignored
+    } catch (ignored: Exception) {
+    }
+}
 
 /**
  * Gets a content URI for this file.

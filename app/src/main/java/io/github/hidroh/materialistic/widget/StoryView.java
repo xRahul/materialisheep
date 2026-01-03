@@ -58,14 +58,16 @@ public class StoryView extends RelativeLayout implements Checkable {
     private final int mHotColorResId;
     private final int mAccentColorResId;
     private final TextView mRankTextView;
-    @Synthetic final TextView mScoreTextView;
+    @Synthetic
+    final TextView mScoreTextView;
     private final View mBookmarked;
     private final TextView mPostedTextView;
     private final TextView mTitleTextView;
     private final TextView mSourceTextView;
     private final TextView mCommentButton;
     private final boolean mIsLocal;
-    @Synthetic final ViewSwitcher mVoteSwitcher;
+    @Synthetic
+    final ViewSwitcher mVoteSwitcher;
     private final View mMoreButton;
     private final Drawable mCommentDrawable;
     private final View mBackground;
@@ -83,7 +85,7 @@ public class StoryView extends RelativeLayout implements Checkable {
         super(context, attrs, defStyle);
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.StoryView);
         mIsLocal = ta.getBoolean(R.styleable.StoryView_local, false);
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[] {
                 android.R.attr.textColorTertiary,
                 android.R.attr.textColorSecondary,
                 R.attr.colorCardBackground,
@@ -96,7 +98,7 @@ public class StoryView extends RelativeLayout implements Checkable {
         mPromotedColorResId = ContextCompat.getColor(context, R.color.greenA700);
         mHotColorResId = ContextCompat.getColor(context, R.color.orange500);
         mAccentColorResId = ContextCompat.getColor(getContext(),
-                AppUtils.getThemedResId(getContext(), R.attr.colorAccent));
+                AppUtils.getThemedResId(getContext(), androidx.appcompat.R.attr.colorAccent));
         mCommentDrawable = DrawableCompat.wrap(ContextCompat.getDrawable(context,
                 R.drawable.ic_comment_white_24dp).mutate());
         DrawableCompat.setTint(mCommentDrawable, mAccentColorResId);
@@ -116,7 +118,7 @@ public class StoryView extends RelativeLayout implements Checkable {
         // replace with bounded ripple as unbounded ripple requires container bg
         // http://b.android.com/155880
         mMoreButton.setBackgroundResource(AppUtils.getThemedResId(context,
-                R.attr.selectableItemBackground));
+                androidx.appcompat.R.attr.selectableItemBackground));
         ta.recycle();
         a.recycle();
     }
@@ -146,8 +148,8 @@ public class StoryView extends RelativeLayout implements Checkable {
             boolean hot = item.getScore() >= hotThreshold * AppUtils.HOT_FACTOR;
             mScoreTextView.setTextColor(hot ? mHotColorResId : mSecondaryTextColorResId);
             mRankTextView.setText(String.valueOf(item.getRank()));
-            mScoreTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, hot ?
-                    R.drawable.ic_whatshot_orange500_18dp : 0);
+            mScoreTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0,
+                    hot ? R.drawable.ic_whatshot_orange500_18dp : 0);
             mScoreTextView.setText(getContext().getResources()
                     .getQuantityString(R.plurals.score, item.getScore(), item.getScore()));
             if (item.getKidCount() > 0) {

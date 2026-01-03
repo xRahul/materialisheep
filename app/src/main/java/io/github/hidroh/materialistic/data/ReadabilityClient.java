@@ -61,7 +61,8 @@ public interface ReadabilityClient {
         /**
          * Called when the readable content is available.
          *
-         * @param content the readable content, or `null` if the content could not be fetched
+         * @param content the readable content, or `null` if the content could not be
+         *                fetched
          */
         void onResponse(String content);
     }
@@ -85,13 +86,18 @@ public interface ReadabilityClient {
     void parse(String itemId, String url);
 
     /**
-     * An implementation of {@link ReadabilityClient} that uses Mozilla's Readability.js.
+     * An implementation of {@link ReadabilityClient} that uses Mozilla's
+     * Readability.js.
      */
     class Impl implements ReadabilityClient {
         private final LocalCache mCache;
         private final Context mContext;
-        @Inject @Named(DataModule.IO_THREAD) Scheduler mIoScheduler;
-        @Inject @Named(DataModule.MAIN_THREAD) Scheduler mMainThreadScheduler;
+        @Inject
+        @Named(DataModule.IO_THREAD)
+        Scheduler mIoScheduler;
+        @Inject
+        @Named(DataModule.MAIN_THREAD)
+        Scheduler mMainThreadScheduler;
         private String mReadabilityJs;
 
         @Inject
@@ -110,8 +116,7 @@ public interface ReadabilityClient {
         public void parse(String itemId, String url, Callback callback) {
             Observable.defer(() -> fromCache(itemId))
                     .subscribeOn(mIoScheduler)
-                    .flatMap(content -> content != null ?
-                            Observable.just(content) : fromNetwork(itemId, url))
+                    .flatMap(content -> content != null ? Observable.just(content) : fromNetwork(itemId, url))
                     .observeOn(mMainThreadScheduler)
                     .subscribe(callback::onResponse, throwable -> callback.onResponse(null));
         }
@@ -128,7 +133,7 @@ public interface ReadabilityClient {
 
         @NonNull
         private Observable<String> fromNetwork(String itemId, String url) {
-            return Observable.create(subscriber -> new Handler(Looper.getMainLooper()).post(() -> {
+            return Observable.<String>create(subscriber -> new Handler(Looper.getMainLooper()).post(() -> {
                 WebView webView = new WebView(mContext);
                 subscriber.add(Subscriptions.create(() -> AndroidSchedulers.mainThread()
                         .createWorker().schedule(webView::destroy)));

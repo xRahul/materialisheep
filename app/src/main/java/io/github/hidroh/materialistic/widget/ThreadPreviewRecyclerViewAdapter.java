@@ -17,11 +17,14 @@
 package io.github.hidroh.materialistic.widget;
 
 import android.content.Intent;
+import android.content.Context;
 import android.os.Handler;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+
+import io.github.hidroh.materialistic.MaterialisticApplication;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +48,12 @@ public class ThreadPreviewRecyclerViewAdapter extends ItemRecyclerViewAdapter<Su
     }
 
     @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        attach(recyclerView.getContext(), recyclerView);
+    }
+
+    @Override
     public void attach(Context context, RecyclerView recyclerView) {
         super.attach(context, recyclerView);
         ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);
@@ -55,8 +64,7 @@ public class ThreadPreviewRecyclerViewAdapter extends ItemRecyclerViewAdapter<Su
     public SubmissionViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         SubmissionViewHolder holder = new SubmissionViewHolder(mLayoutInflater
                 .inflate(R.layout.item_submission, parent, false));
-        final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
-                holder.itemView.getLayoutParams();
+        final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
         params.leftMargin = mLevelIndicatorWidth * viewType;
         holder.itemView.setLayoutParams(params);
         holder.mCommentButton.setVisibility(View.GONE);
@@ -89,10 +97,8 @@ public class ThreadPreviewRecyclerViewAdapter extends ItemRecyclerViewAdapter<Su
             holder.mCommentButton.setVisibility(View.VISIBLE);
             holder.mCommentButton.setOnClickListener(v -> openItem(item));
         }
-        holder.mTitleTextView.setVisibility(holder.mTitleTextView.length() > 0 ?
-                View.VISIBLE : View.GONE);
-        holder.mContentTextView.setVisibility(holder.mContentTextView.length() > 0 ?
-                View.VISIBLE : View.GONE);
+        holder.mTitleTextView.setVisibility(holder.mTitleTextView.length() > 0 ? View.VISIBLE : View.GONE);
+        holder.mContentTextView.setVisibility(holder.mContentTextView.length() > 0 ? View.VISIBLE : View.GONE);
         if (!mExpanded.contains(item.getId()) && item.getParentItem() != null) {
             mExpanded.add(item.getId());
             new Handler().post(() -> {

@@ -10,7 +10,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 79
-        versionName "3.3"
+        versionName "3.3-" + "git rev-parse --short HEAD".execute().text.trim()
+        buildConfigField "String", "GIT_HASH", "\"${"git rev-parse --short HEAD".execute().text.trim()}\""
         buildConfigField "int", "LATEST_RELEASE", "77"
         buildConfigField "String", "GITHUB_TOKEN", "\"\""
         proguardFiles getDefaultProguardFile('proguard-android.txt'),
@@ -44,11 +45,15 @@ android {
         buildConfig true
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
     kotlin {
-        jvmToolchain(21)
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+            vendor.set(JvmVendorSpec.ADOPTIUM)
+        }
     }
     namespace 'io.github.hidroh.materialistic'
 
@@ -81,7 +86,7 @@ dependencies {
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
-    implementation platform("org.jetbrains.kotlin:kotlin-bom:2.2.20")
+    implementation platform("org.jetbrains.kotlin:kotlin-bom:2.0.0")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
     kapt "androidx.lifecycle:lifecycle-compiler:$lifecycleVersion"
@@ -89,4 +94,9 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$daggerVersion"
     kaptTest "androidx.room:room-compiler:$roomVersion"
     kaptTest "com.google.dagger:dagger-compiler:$daggerVersion"
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.robolectric:robolectric:4.12.1'
+    testImplementation 'androidx.test:core:1.5.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }

@@ -17,6 +17,7 @@
 package io.github.hidroh.materialistic;
 
 import android.content.Intent;
+import android.os.Bundle;
 import androidx.annotation.NonNull;
 
 import io.github.hidroh.materialistic.data.ItemManager;
@@ -27,9 +28,16 @@ import io.github.hidroh.materialistic.data.ItemManager;
 public class NewActivity extends BaseStoriesActivity {
     public static final String EXTRA_REFRESH = NewActivity.class.getName() + ".EXTRA_REFRESH";
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
+    }
+
     /**
      * This is called for activities that set launchMode to "singleTop" in
-     * their package, or if a client used the {@link Intent#FLAG_ACTIVITY_SINGLE_TOP}
+     * their package, or if a client used the
+     * {@link Intent#FLAG_ACTIVITY_SINGLE_TOP}
      * flag when calling {@link #startActivity}.
      *
      * @param intent The new intent that was started for the activity.

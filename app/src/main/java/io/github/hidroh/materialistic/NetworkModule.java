@@ -59,7 +59,8 @@ public class NetworkModule {
      * @param callFactory The {@link Call.Factory} instance.
      * @return The singleton instance of {@link RestServiceFactory}.
      */
-    @Provides @Singleton
+    @Provides
+    @Singleton
     public RestServiceFactory provideRestServiceFactory(Call.Factory callFactory) {
         return new RestServiceFactory.Impl(callFactory);
     }
@@ -70,7 +71,8 @@ public class NetworkModule {
      * @param context The application context.
      * @return The singleton instance of {@link Call.Factory}.
      */
-    @Provides @Singleton
+    @Provides
+    @Singleton
     public Call.Factory provideCallFactory(Context context) {
         return new OkHttpClient.Builder()
                 .socketFactory(new SocketFactory() {
@@ -91,7 +93,8 @@ public class NetworkModule {
                     }
 
                     @Override
-                    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+                    public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+                            throws IOException {
                         Socket socket = mDefaultFactory.createSocket(host, port, localHost, localPort);
                         TrafficStats.setThreadStatsTag(1);
                         return socket;
@@ -105,7 +108,8 @@ public class NetworkModule {
                     }
 
                     @Override
-                    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+                    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
+                            throws IOException {
                         Socket socket = mDefaultFactory.createSocket(address, port, localAddress, localPort);
                         TrafficStats.setThreadStatsTag(1);
                         return socket;
@@ -126,7 +130,8 @@ public class NetworkModule {
      * @param callFactory The {@link Call.Factory} instance.
      * @return The singleton instance of {@link FileDownloader}.
      */
-    @Provides @Singleton
+    @Provides
+    @Singleton
     public FileDownloader provideFileDownloader(Context context, Call.Factory callFactory) {
         return new FileDownloader(context, callFactory);
     }
@@ -139,8 +144,6 @@ public class NetworkModule {
                     RestServiceFactory.CACHE_CONTROL_MAX_AGE_30M);
             CACHE_ENABLED_HOSTS.put(AlgoliaClient.HOST,
                     RestServiceFactory.CACHE_CONTROL_MAX_AGE_30M);
-            CACHE_ENABLED_HOSTS.put(ReadabilityClient.HOST,
-                    RestServiceFactory.CACHE_CONTROL_MAX_AGE_24H);
         }
         private final Context mContext;
 
@@ -153,11 +156,9 @@ public class NetworkModule {
             Request request = chain.request();
             boolean forceCache = CACHE_ENABLED_HOSTS.containsKey(request.url().host()) &&
                     !AppUtils.hasConnection(mContext);
-            return chain.proceed(forceCache ?
-                    request.newBuilder()
-                            .cacheControl(CacheControl.FORCE_CACHE)
-                            .build() :
-                    request);
+            return chain.proceed(forceCache ? request.newBuilder()
+                    .cacheControl(CacheControl.FORCE_CACHE)
+                    .build() : request);
         }
     }
 
@@ -183,9 +184,7 @@ public class NetworkModule {
     static class LoggingInterceptor implements Interceptor {
         private final Interceptor debugInterceptor = new HttpLoggingInterceptor(
                 message -> Log.d(TAG_OK_HTTP, message))
-                .setLevel(BuildConfig.DEBUG ?
-                        HttpLoggingInterceptor.Level.BODY :
-                        HttpLoggingInterceptor.Level.NONE);
+                .setLevel(BuildConfig.DEBUG ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
 
         @Override
         public Response intercept(Chain chain) throws IOException {

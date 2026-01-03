@@ -49,8 +49,10 @@ public class AlgoliaClient implements ItemManager {
     private static final String BASE_API_URL = "https://" + HOST + "/api/v1/";
     static final String MIN_CREATED_AT = "created_at_i>";
     RestService mRestService;
-    ItemManager mHackerNewsClient; // No @Inject here
-    @Inject @Named(DataModule.MAIN_THREAD) Scheduler mMainThreadScheduler;
+    private final ItemManager mHackerNewsClient;
+    @Inject
+    @Named(DataModule.MAIN_THREAD)
+    Scheduler mMainThreadScheduler;
 
     @Inject
     public AlgoliaClient(RestServiceFactory factory, @Named(HN) ItemManager hackerNewsClient) {
@@ -60,7 +62,7 @@ public class AlgoliaClient implements ItemManager {
 
     @Override
     public void getStories(String filter, @CacheMode int cacheMode,
-                           final ResponseListener<Item[]> listener) {
+            final ResponseListener<Item[]> listener) {
         if (listener == null) {
             return;
         }
@@ -119,7 +121,7 @@ public class AlgoliaClient implements ItemManager {
         Hit[] hits = algoliaHits.hits;
         Item[] stories = new Item[hits == null ? 0 : hits.length];
         for (int i = 0; i < stories.length; i++) {
-            //noinspection ConstantConditions
+            // noinspection ConstantConditions
             HackerNewsItem item = new HackerNewsItem(
                     Long.parseLong(hits[i].objectID));
             item.rank = i + 1;
@@ -149,12 +151,14 @@ public class AlgoliaClient implements ItemManager {
     }
 
     static class AlgoliaHits {
-        @Keep @Synthetic
+        @Keep
+        @Synthetic
         Hit[] hits;
     }
 
     static class Hit {
-        @Keep @Synthetic
+        @Keep
+        @Synthetic
         String objectID;
     }
 }

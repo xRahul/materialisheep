@@ -26,6 +26,10 @@ import io.github.hidroh.materialistic.data.ItemSyncJobService;
 import io.github.hidroh.materialistic.data.AlgoliaClient;
 import io.github.hidroh.materialistic.data.ItemSyncService;
 import io.github.hidroh.materialistic.widget.StoryRecyclerViewAdapter;
+import io.github.hidroh.materialistic.widget.MultiPageItemRecyclerViewAdapter;
+import io.github.hidroh.materialistic.widget.SinglePageItemRecyclerViewAdapter;
+import io.github.hidroh.materialistic.widget.SubmissionRecyclerViewAdapter;
+import io.github.hidroh.materialistic.widget.ThreadPreviewRecyclerViewAdapter;
 
 @Singleton
 @Component(modules = {ApplicationModule.class, ActivityModule.class, UiModule.class})
