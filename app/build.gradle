@@ -10,8 +10,15 @@ android {
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 79
-        versionName "3.3-" + "git rev-parse --short HEAD".execute().text.trim()
-        buildConfigField "String", "GIT_HASH", "\"${"git rev-parse --short HEAD".execute().text.trim()}\""
+        def gitHash = { ->
+            try {
+                "git rev-parse --short HEAD".execute().text.trim()
+            } catch (Exception e) {
+                "unknown"
+            }
+        }()
+        versionName "3.3-" + gitHash
+        buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         buildConfigField "int", "LATEST_RELEASE", "77"
         buildConfigField "String", "GITHUB_TOKEN", "\"\""
         proguardFiles getDefaultProguardFile('proguard-android.txt'),

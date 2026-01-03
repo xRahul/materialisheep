@@ -27,9 +27,9 @@ The project has been upgraded to a modern Android build environment. Strict adhe
 
 ### 3. Gradle
 
-- **Gradle Version:** 8.6
+- **Gradle Version:** 8.9
 - **Android Gradle Plugin (AGP) Version:** 8.4.0
-- **Kotlin Version:** 2.2.20
+- **Kotlin Version:** 2.0.0
 - The Gradle wrapper (`./gradlew`) is included in the repository and should be used for all build commands. It will automatically download the correct Gradle version.
 
 ## Building the Project
