@@ -14,10 +14,20 @@ public class AppUtilsTest {
     @Test
     public void testHasConnection() {
         Context context = RuntimeEnvironment.getApplication();
-        // Default Robolectric shadow for ConnectivityManager usually reports no network
-        // We verify that it doesn't crash and returns a boolean
-        boolean connection = AppUtils.hasConnection(context);
-        // Asserting explicit true/false depends on Robolectric default shadow state,
-        // which can vary. For now, just ensuring it runs without exception is the goal.
+        android.net.ConnectivityManager connectivityManager = (android.net.ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        org.robolectric.shadows.ShadowConnectivityManager shadowConnectivityManager = org.robolectric.Shadows
+                .shadowOf(connectivityManager);
+
+        // Test with no connection
+        shadowConnectivityManager.setActiveNetworkInfo(null);
+        assertFalse(AppUtils.hasConnection(context));
+
+        // Test with connection
+        shadowConnectivityManager.setActiveNetworkInfo(
+                org.robolectric.shadows.ShadowNetworkInfo.newInstance(
+                        android.net.NetworkInfo.DetailedState.CONNECTED,
+                        android.net.ConnectivityManager.TYPE_WIFI, 0, true, true));
+        assertTrue(AppUtils.hasConnection(context));
     }
 }

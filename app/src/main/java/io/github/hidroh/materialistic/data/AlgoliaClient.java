@@ -50,14 +50,14 @@ public class AlgoliaClient implements ItemManager {
     static final String MIN_CREATED_AT = "created_at_i>";
     RestService mRestService;
     private final ItemManager mHackerNewsClient;
-    @Inject
-    @Named(DataModule.MAIN_THREAD)
-    Scheduler mMainThreadScheduler;
+    private final Scheduler mMainThreadScheduler;
 
     @Inject
-    public AlgoliaClient(RestServiceFactory factory, @Named(HN) ItemManager hackerNewsClient) {
+    public AlgoliaClient(RestServiceFactory factory, @Named(HN) ItemManager hackerNewsClient,
+            @Named(DataModule.MAIN_THREAD) Scheduler mainThreadScheduler) {
         mRestService = factory.rxEnabled(true).create(BASE_API_URL, RestService.class);
         mHackerNewsClient = hackerNewsClient;
+        mMainThreadScheduler = mainThreadScheduler;
     }
 
     @Override

@@ -30,6 +30,7 @@ import io.github.hidroh.materialistic.DataModule;
 import androidx.annotation.StringDef;
 import retrofit2.Call;
 import rx.Observable;
+import rx.Scheduler;
 
 /**
  * An {@link ItemManager} that uses the Algolia REST API to fetch popular
@@ -40,13 +41,15 @@ public class AlgoliaPopularClient extends AlgoliaClient {
     /**
      * Constructs a new {@code AlgoliaPopularClient}.
      *
-     * @param factory          the {@link RestServiceFactory} to use for creating
-     *                         the REST service
-     * @param hackerNewsClient the {@link ItemManager} for HackerNews items
+     * @param factory             the {@link RestServiceFactory} to use for creating
+     *                            the REST service
+     * @param hackerNewsClient    the {@link ItemManager} for HackerNews items
+     * @param mainThreadScheduler the {@link Scheduler} for observing on main thread
      */
     @Inject
-    public AlgoliaPopularClient(RestServiceFactory factory, @Named(DataModule.HN) ItemManager hackerNewsClient) {
-        super(factory, hackerNewsClient);
+    public AlgoliaPopularClient(RestServiceFactory factory, @Named(DataModule.HN) ItemManager hackerNewsClient,
+            @Named(DataModule.MAIN_THREAD) Scheduler mainThreadScheduler) {
+        super(factory, hackerNewsClient, mainThreadScheduler);
     }
 
     @Retention(RetentionPolicy.SOURCE)
