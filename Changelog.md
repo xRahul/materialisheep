@@ -12,11 +12,11 @@
 - Created a new `ApplicationComponent` and `ApplicationModule` for Dagger 2.
 
 ### Changed
-- **Upgraded the entire build environment to support Java 21.**
-  - Upgraded Gradle from 7.5.1 to 8.9.
-  - Upgraded Android Gradle Plugin from 7.4.2 to 8.4.0.
-  - Upgraded Kotlin from 1.8.20 to 2.0.0.
-  - Updated CI/CD workflows to use Java 21.
+- **Upgraded build environment to support Java 21.**
+  - Gradle: 7.5.1 → 8.9.
+  - Android Gradle Plugin: 7.4.2 → 8.4.0.
+  - Kotlin: 1.8.20 → 2.0.0.
+  - CI/CD workflows: Updated to use Java 21.
 - **Migrated the dependency injection framework from Dagger 1 to Dagger 2.51.1.**
   - Replaced all Dagger 1 annotations and modules with their Dagger 2 equivalents.
   - Refactored all activities and fragments to use the new Dagger 2 component for injection.
