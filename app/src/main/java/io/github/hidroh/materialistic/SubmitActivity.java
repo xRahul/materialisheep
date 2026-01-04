@@ -46,15 +46,18 @@ import io.github.hidroh.materialistic.annotation.Synthetic;
 /**
  * An activity that allows users to submit a new story.
  */
-public class SubmitActivity extends InjectableActivity {
+public class SubmitActivity extends ThemedActivity {
     private static final String HN_GUIDELINES_URL = "https://news.ycombinator.com/newsguidelines.html";
     private static final String STATE_SUBJECT = "state:subject";
     private static final String STATE_TEXT = "state:text";
     // matching title url without any trailing text
     private static final String REGEX_FUZZY_URL = "(.*)((http|https)://[^\\s]*)$";
-    @Inject UserServices mUserServices;
-    @Inject AlertDialogBuilder mAlertDialogBuilder;
-    @Synthetic TextView mTitleEditText;
+    @Inject
+    UserServices mUserServices;
+    @Inject
+    AlertDialogBuilder mAlertDialogBuilder;
+    @Synthetic
+    TextView mTitleEditText;
     private TextView mContentEditText;
     private TextInputLayout mTitleLayout;
     private TextInputLayout mContentLayout;
@@ -64,17 +67,20 @@ public class SubmitActivity extends InjectableActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
         AppUtils.setStatusBarColor(getWindow(), ContextCompat.getColor(this, R.color.blackT12));
         setContentView(R.layout.activity_submit);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP);
         mTitleLayout = (TextInputLayout) findViewById(R.id.textinput_title);
@@ -156,8 +162,7 @@ public class SubmitActivity extends InjectableActivity {
             final boolean isUrl = isUrl(mContentEditText.getText().toString());
             mAlertDialogBuilder
                     .init(SubmitActivity.this)
-                    .setMessage(isUrl ? R.string.confirm_submit_url :
-                            R.string.confirm_submit_question)
+                    .setMessage(isUrl ? R.string.confirm_submit_url : R.string.confirm_submit_question)
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> submit(isUrl))
                     .setNegativeButton(android.R.string.cancel, null)
                     .create()
@@ -231,14 +236,14 @@ public class SubmitActivity extends InjectableActivity {
             Toast.makeText(this, R.string.submit_failed, Toast.LENGTH_SHORT).show();
         } else if (successful) {
             Toast.makeText(this, R.string.submit_successful, Toast.LENGTH_SHORT).show();
-            if (!isFinishing()) {
+            if (!isDestroyed()) {
                 Intent intent = new Intent(this, NewActivity.class);
                 intent.putExtra(NewActivity.EXTRA_REFRESH, true);
                 intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent); // TODO should go to profile instead?
                 finish();
             }
-        } else if (!isFinishing()) {
+        } else if (!isDestroyed()) {
             AppUtils.showLogin(this, mAlertDialogBuilder);
         }
     }
@@ -283,7 +288,7 @@ public class SubmitActivity extends InjectableActivity {
     }
 
     private void toggleControls(boolean sending) {
-        if (isFinishing()) {
+        if (isDestroyed()) {
             return;
         }
         mSending = sending;
@@ -302,14 +307,14 @@ public class SubmitActivity extends InjectableActivity {
 
         @Override
         public void onDone(boolean successful) {
-            if (mSubmitActivity.get() != null && !mSubmitActivity.get().isActivityDestroyed()) {
+            if (mSubmitActivity.get() != null && !mSubmitActivity.get().isDestroyed()) {
                 mSubmitActivity.get().onSubmitted(successful);
             }
         }
 
         @Override
         public void onError(Throwable throwable) {
-            if (mSubmitActivity.get() != null && !mSubmitActivity.get().isActivityDestroyed()) {
+            if (mSubmitActivity.get() != null && !mSubmitActivity.get().isDestroyed()) {
                 if (throwable instanceof UserServices.Exception) {
                     UserServices.Exception e = (UserServices.Exception) throwable;
                     mSubmitActivity.get().onError(e.message, e.data);

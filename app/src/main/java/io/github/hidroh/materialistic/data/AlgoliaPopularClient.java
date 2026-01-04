@@ -22,24 +22,33 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import io.github.hidroh.materialistic.DataModule;
 
 import androidx.annotation.StringDef;
 import retrofit2.Call;
 import rx.Observable;
+import rx.Scheduler;
 
 /**
- * An {@link ItemManager} that uses the Algolia REST API to fetch popular stories.
+ * An {@link ItemManager} that uses the Algolia REST API to fetch popular
+ * stories.
  */
 public class AlgoliaPopularClient extends AlgoliaClient {
 
     /**
      * Constructs a new {@code AlgoliaPopularClient}.
      *
-     * @param factory the {@link RestServiceFactory} to use for creating the REST service
+     * @param factory             the {@link RestServiceFactory} to use for creating
+     *                            the REST service
+     * @param hackerNewsClient    the {@link ItemManager} for HackerNews items
+     * @param mainThreadScheduler the {@link Scheduler} for observing on main thread
      */
     @Inject
-    public AlgoliaPopularClient(RestServiceFactory factory) {
-        super(factory);
+    public AlgoliaPopularClient(RestServiceFactory factory, @Named(DataModule.HN) ItemManager hackerNewsClient,
+            @Named(DataModule.MAIN_THREAD) Scheduler mainThreadScheduler) {
+        super(factory, hackerNewsClient, mainThreadScheduler);
     }
 
     @Retention(RetentionPolicy.SOURCE)
@@ -49,7 +58,9 @@ public class AlgoliaPopularClient extends AlgoliaClient {
             PAST_MONTH,
             PAST_YEAR
     })
-    public @interface Range {}
+    public @interface Range {
+    }
+
     public static final String LAST_24H = "last_24h";
     public static final String PAST_WEEK = "past_week";
     public static final String PAST_MONTH = "past_month";

@@ -40,15 +40,17 @@ import io.github.hidroh.materialistic.annotation.Synthetic;
 /**
  * Activity for composing a new comment or reply.
  */
-public class ComposeActivity extends InjectableActivity {
+public class ComposeActivity extends ThemedActivity {
     public static final String EXTRA_PARENT_ID = ComposeActivity.class.getName() + ".EXTRA_PARENT_ID";
     public static final String EXTRA_PARENT_TEXT = ComposeActivity.class.getName() + ".EXTRA_PARENT_TEXT";
     private static final String HN_FORMAT_DOC_URL = "https://news.ycombinator.com/formatdoc";
     private static final String FORMAT_QUOTE = "> %s\n\n";
     private static final String PARAGRAPH_QUOTE = "\n\n> ";
     private static final String PARAGRAPH_BREAK_REGEX = "[\\n]{2,}";
-    @Inject UserServices mUserServices;
-    @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject
+    UserServices mUserServices;
+    @Inject
+    AlertDialogBuilder mAlertDialogBuilder;
     private EditText mEditText;
     private String mParentText;
     private String mQuoteText;
@@ -59,13 +61,16 @@ public class ComposeActivity extends InjectableActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
         mParentId = getIntent().getStringExtra(EXTRA_PARENT_ID);
         if (TextUtils.isEmpty(mParentId)) {
             finish();
@@ -74,7 +79,7 @@ public class ComposeActivity extends InjectableActivity {
         AppUtils.setStatusBarColor(getWindow(), ContextCompat.getColor(this, R.color.blackT12));
         setContentView(R.layout.activity_compose);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP);
         mEditText = (EditText) findViewById(R.id.edittext_body);
@@ -197,11 +202,10 @@ public class ComposeActivity extends InjectableActivity {
         mAlertDialogBuilder
                 .init(this)
                 .setMessage(R.string.confirm_save_draft)
-                .setNegativeButton(android.R.string.no, (dialog, which) ->
-                        ComposeActivity.super.onBackPressed())
+                .setNegativeButton(android.R.string.no, (dialog, which) -> ComposeActivity.super.onBackPressed())
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                        Preferences.saveDraft(this, mParentId, mEditText.getText().toString());
-                        ComposeActivity.super.onBackPressed();
+                    Preferences.saveDraft(this, mParentId, mEditText.getText().toString());
+                    ComposeActivity.super.onBackPressed();
                 })
                 .show();
     }
@@ -267,15 +271,17 @@ public class ComposeActivity extends InjectableActivity {
         @Override
         public void onDone(boolean successful) {
             Preferences.deleteDraft(mAppContext, mParentId);
-            if (mComposeActivity.get() != null && !mComposeActivity.get().isActivityDestroyed()) {
-                mComposeActivity.get().onSent(successful);
+            ComposeActivity activity = mComposeActivity.get();
+            if (activity != null && !activity.isDestroyed()) {
+                activity.onSent(successful);
             }
         }
 
         @Override
         public void onError(Throwable throwable) {
-            if (mComposeActivity.get() != null && !mComposeActivity.get().isActivityDestroyed()) {
-                mComposeActivity.get().onSent(null);
+            ComposeActivity activity = mComposeActivity.get();
+            if (activity != null && !activity.isDestroyed()) {
+                activity.onSent(null);
             }
         }
     }

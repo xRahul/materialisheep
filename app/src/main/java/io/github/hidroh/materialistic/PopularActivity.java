@@ -35,13 +35,16 @@ public class PopularActivity extends BaseListActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
         if (savedInstanceState != null) {
             setRange(savedInstanceState.getString(STATE_RANGE));
         }
@@ -147,7 +150,7 @@ public class PopularActivity extends BaseListActivity {
         final int stringRes;
         switch (range) {
             case AlgoliaPopularClient.LAST_24H:
-                default:
+            default:
                 stringRes = R.string.popular_range_last_24h;
                 break;
             case AlgoliaPopularClient.PAST_WEEK:

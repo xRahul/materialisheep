@@ -41,8 +41,10 @@ public abstract class ThemedActivity extends AppCompatActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -57,14 +59,16 @@ public abstract class ThemedActivity extends AppCompatActivity {
      * Called after {@link #onCreate(Bundle)} has completed.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        mThemeObservable.subscribe(this, (key, contextChanged) ->  onThemeChanged(key),
+        mThemeObservable.subscribe(this, (key, contextChanged) -> onThemeChanged(key),
                 R.string.pref_theme, R.string.pref_daynight_auto);
     }
 
@@ -83,7 +87,8 @@ public abstract class ThemedActivity extends AppCompatActivity {
     }
 
     /**
-     * Called after {@link #onRestoreInstanceState(Bundle)}, {@link #onRestart()}, or
+     * Called after {@link #onRestoreInstanceState(Bundle)}, {@link #onRestart()},
+     * or
      * {@link #onPause()}, for your activity to start interacting with the user.
      */
     @Override
@@ -128,7 +133,8 @@ public abstract class ThemedActivity extends AppCompatActivity {
     /**
      * Checks if the activity should be displayed as a dialog.
      *
-     * @return True if the activity should be displayed as a dialog, false otherwise.
+     * @return True if the activity should be displayed as a dialog, false
+     *         otherwise.
      */
     protected boolean isDialogTheme() {
         return false;
@@ -158,7 +164,8 @@ public abstract class ThemedActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(title)) {
             setTaskDescription(new ActivityManager.TaskDescription(title.toString(),
                     BitmapFactory.decodeResource(getResources(), R.drawable.ic_app),
-                    ContextCompat.getColor(this, AppUtils.getThemedResId(this, R.attr.colorPrimary))));
+                    ContextCompat.getColor(this,
+                            AppUtils.getThemedResId(this, androidx.appcompat.R.attr.colorPrimary))));
         }
     }
 }

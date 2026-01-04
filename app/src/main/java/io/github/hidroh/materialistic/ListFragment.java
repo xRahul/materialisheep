@@ -34,6 +34,9 @@ import android.widget.Toast;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import static io.github.hidroh.materialistic.DataModule.HN;
+import static io.github.hidroh.materialistic.DataModule.ALGOLIA;
+import static io.github.hidroh.materialistic.DataModule.POPULAR;
 import io.github.hidroh.materialistic.annotation.Synthetic;
 import io.github.hidroh.materialistic.data.AlgoliaClient;
 import io.github.hidroh.materialistic.data.AlgoliaPopularClient;
@@ -73,10 +76,18 @@ public class ListFragment extends BaseListFragment {
     };
     private StoryRecyclerViewAdapter mAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    @Inject @Named(ActivityModule.HN) ItemManager mHnItemManager;
-    @Inject @Named(ActivityModule.ALGOLIA) ItemManager mAlgoliaItemManager;
-    @Inject @Named(ActivityModule.POPULAR) ItemManager mPopularItemManager;
-    @Inject @Named(DataModule.IO_THREAD) Scheduler mIoThreadScheduler;
+    @Inject
+    @Named(HN)
+    ItemManager mHnItemManager;
+    @Inject
+    @Named(ALGOLIA)
+    ItemManager mAlgoliaItemManager;
+    @Inject
+    @Named(POPULAR)
+    ItemManager mPopularItemManager;
+    @Inject
+    @Named(DataModule.IO_THREAD)
+    Scheduler mIoThreadScheduler;
     private StoryListViewModel mStoryListViewModel;
     private View mErrorView;
     private View mEmptyView;
@@ -96,6 +107,7 @@ public class ListFragment extends BaseListFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);
         if (context instanceof RefreshCallback) {
             mRefreshCallback = (RefreshCallback) context;
         }
@@ -125,18 +137,22 @@ public class ListFragment extends BaseListFragment {
     /**
      * Called to have the fragment instantiate its user interface view.
      *
-     * @param inflater           The LayoutInflater object that can be used to inflate
+     * @param inflater           The LayoutInflater object that can be used to
+     *                           inflate
      *                           any views in the fragment,
-     * @param container          If non-null, this is the parent view that the fragment's
-     *                           UI should be attached to.  The fragment should not add the view itself,
-     *                           but this can be used to generate the LayoutParams of the view.
+     * @param container          If non-null, this is the parent view that the
+     *                           fragment's
+     *                           UI should be attached to. The fragment should not
+     *                           add the view itself,
+     *                           but this can be used to generate the LayoutParams
+     *                           of the view.
      * @param savedInstanceState If non-null, this fragment is being re-constructed
      *                           from a previous saved state as given here.
      * @return Return the View for the fragment's UI, or null.
      */
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+            @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_list, container, false);
         mErrorView = view.findViewById(R.id.empty);
         mEmptyView = view.findViewById(R.id.empty_search);
@@ -144,7 +160,7 @@ public class ListFragment extends BaseListFragment {
         mSwipeRefreshLayout = view.findViewById(R.id.swipe_layout);
         mSwipeRefreshLayout.setColorSchemeResources(R.color.white);
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeResource(
-                AppUtils.getThemedResId(getActivity(), R.attr.colorAccent));
+                AppUtils.getThemedResId(getActivity(), androidx.appcompat.R.attr.colorAccent));
         if (savedInstanceState == null) {
             mSwipeRefreshLayout.setRefreshing(true);
         }

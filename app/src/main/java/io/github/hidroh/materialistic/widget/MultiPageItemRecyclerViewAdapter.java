@@ -17,8 +17,12 @@
 package io.github.hidroh.materialistic.widget;
 
 import android.content.Intent;
+import android.content.Context;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import io.github.hidroh.materialistic.MaterialisticApplication;
 
 import java.util.Arrays;
 
@@ -36,6 +40,12 @@ public class MultiPageItemRecyclerViewAdapter
         super(itemManager);
         mItems = Arrays.copyOf(items, items.length + 1);
         mItems[items.length] = null; // footer
+    }
+
+    @Override
+    public void attach(Context context, RecyclerView recyclerView) {
+        super.attach(context, recyclerView);
+        ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);
     }
 
     @Override

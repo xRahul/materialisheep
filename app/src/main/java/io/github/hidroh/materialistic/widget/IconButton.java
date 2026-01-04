@@ -29,9 +29,9 @@ import io.github.hidroh.materialistic.AppUtils;
 import io.github.hidroh.materialistic.R;
 
 public class IconButton extends AppCompatImageButton {
-    private static final int[][] STATES = new int[][]{
-            new int[]{android.R.attr.state_enabled},
-            new int[]{-android.R.attr.state_enabled}
+    private static final int[][] STATES = new int[][] {
+            new int[] { android.R.attr.state_enabled },
+            new int[] { -android.R.attr.state_enabled }
     };
     private ColorStateList mColorStateList;
     private final boolean mTinted;
@@ -46,14 +46,15 @@ public class IconButton extends AppCompatImageButton {
 
     public IconButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setBackgroundResource(AppUtils.getThemedResId(context, R.attr.selectableItemBackgroundBorderless));
+        setBackgroundResource(
+                AppUtils.getThemedResId(context, androidx.appcompat.R.attr.selectableItemBackgroundBorderless));
         TypedArray ta = context.getTheme().obtainStyledAttributes(attrs, R.styleable.IconButton, 0, 0);
         int colorDisabled = ContextCompat.getColor(context,
                 AppUtils.getThemedResId(context, android.R.attr.textColorSecondary));
         int colorDefault = ContextCompat.getColor(context,
                 AppUtils.getThemedResId(context, android.R.attr.textColorPrimary));
         int colorEnabled = ta.getColor(R.styleable.IconButton_tint, colorDefault);
-        mColorStateList = new ColorStateList(STATES, new int[]{colorEnabled, colorDisabled});
+        mColorStateList = new ColorStateList(STATES, new int[] { colorEnabled, colorDisabled });
         mTinted = ta.hasValue(R.styleable.IconButton_tint);
         if (getSuggestedMinimumWidth() == 0) {
             setMinimumWidth(context.getResources().getDimensionPixelSize(R.dimen.icon_button_width));
