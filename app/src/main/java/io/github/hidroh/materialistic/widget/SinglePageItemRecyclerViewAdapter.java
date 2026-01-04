@@ -78,6 +78,12 @@ public class SinglePageItemRecyclerViewAdapter
     }
 
     @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        attach(recyclerView.getContext(), recyclerView);
+    }
+
+    @Override
     public void attach(Context context, RecyclerView recyclerView) {
         super.attach(context, recyclerView);
         ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);

@@ -48,7 +48,7 @@ public class AlgoliaClient implements ItemManager {
     public static final String HOST = "hn.algolia.com";
     private static final String BASE_API_URL = "https://" + HOST + "/api/v1/";
     static final String MIN_CREATED_AT = "created_at_i>";
-    RestService mRestService;
+    protected final RestService mRestService;
     private final ItemManager mHackerNewsClient;
     private final Scheduler mMainThreadScheduler;
 
