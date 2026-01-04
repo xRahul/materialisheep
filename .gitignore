@@ -30,5 +30,19 @@ proguard/
 
 # agent-tools are only to be used locally by Gemini, Antigravity and other coding agents
 agent-tools/
+cycle*.json
+feedback*.json
+*_comments.json
+*_summary.json
+reviews.json
+user.json
+tail_feedback.json
+final_check.json
+compile_*.txt
+test_*.txt
+current_*.txt
+git_*.txt
+status_output.txt
+*_err.txt
 
 .DS_Store
