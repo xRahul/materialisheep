@@ -13,7 +13,7 @@ There are two main workflows:
 
 The CI workflow is defined in the file `.github/workflows/ci.yml`. It performs the following steps:
 
-1.  **Sets up the environment:** It sets up an Ubuntu environment with Java 21 and the Android SDK (API level 33).
+1.  **Sets up the environment:** It sets up an Ubuntu environment with Java 21 and the Android SDK (API level 36).
 2.  **Caches dependencies:** It caches the Gradle dependencies to speed up future builds.
 3.  **Runs tests:** It runs the unit tests using the command `./gradlew test`.
 
