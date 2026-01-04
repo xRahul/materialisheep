@@ -51,7 +51,7 @@ public class AdBlocker {
      */
     public static void init(Context context, Scheduler scheduler) {
         Observable.fromCallable(() -> loadFromAssets(context))
-                .onErrorReturn(throwable -> null)
+                .onErrorReturnItem(false)
                 .subscribeOn(scheduler)
                 .subscribe();
     }
@@ -78,7 +78,7 @@ public class AdBlocker {
     }
 
     @WorkerThread
-    private static Void loadFromAssets(Context context) throws IOException {
+    private static Boolean loadFromAssets(Context context) throws IOException {
         InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
         BufferedSource buffer = Okio.buffer(Okio.source(stream));
         String line;
@@ -87,7 +87,7 @@ public class AdBlocker {
         }
         buffer.close();
         stream.close();
-        return null;
+        return true;
     }
 
     /**

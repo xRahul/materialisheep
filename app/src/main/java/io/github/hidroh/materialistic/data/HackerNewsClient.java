@@ -19,6 +19,7 @@ package io.github.hidroh.materialistic.data;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -112,18 +113,19 @@ public class HackerNewsClient implements ItemManager, UserManager {
         Observable.defer(() -> Observable.zip(
                 mSessionManager.isViewed(itemId),
                 mFavoriteManager.check(itemId),
-                itemObservable,
-                (isViewed, favorite, hackerNewsItem) -> {
+                itemObservable.map(Optional::ofNullable).onErrorReturnItem(Optional.empty()),
+                (isViewed, favorite, optionalItem) -> {
+                    HackerNewsItem hackerNewsItem = optionalItem.orElse(null);
                     if (hackerNewsItem != null) {
                         hackerNewsItem.preload();
                         hackerNewsItem.setIsViewed(isViewed);
                         hackerNewsItem.setFavorite(favorite);
                     }
-                    return hackerNewsItem;
+                    return optionalItem;
                 }))
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
-                .subscribe(listener::onResponse,
+                .subscribe(optionalItem -> listener.onResponse(optionalItem.orElse(null)),
                         t -> listener.onError(t != null ? t.getMessage() : ""));
 
     }
@@ -167,11 +169,11 @@ public class HackerNewsClient implements ItemManager, UserManager {
                     if (userItem != null) {
                         userItem.setSubmittedItems(toItems(userItem.getSubmitted()));
                     }
-                    return userItem;
+                    return Optional.ofNullable(userItem);
                 })
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
-                .subscribe(listener::onResponse,
+                .subscribe(optionalUser -> listener.onResponse(optionalUser.orElse(null)),
                         t -> listener.onError(t != null ? t.getMessage() : ""));
     }
 
