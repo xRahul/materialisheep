@@ -23,6 +23,7 @@ import javax.inject.Named;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import static io.github.hidroh.materialistic.DataModule.HN;
 import io.github.hidroh.materialistic.ActivityModule;
 import io.github.hidroh.materialistic.DataModule;
@@ -135,22 +136,22 @@ public class AlgoliaClient implements ItemManager {
     interface RestService {
         @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByDateRx(@Query("query") String query,
-                @Header("If-None-Match") String etag);
+                @Header("If-None-Match") @Nullable String etag);
 
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchRx(@Query("query") String query,
-                @Header("If-None-Match") String etag);
+                @Header("If-None-Match") @Nullable String etag);
 
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByMinTimestampRx(@Query("numericFilters") String timestampSeconds);
 
         @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> searchByDate(@Query("query") String query,
-                @Header("If-None-Match") String etag);
+                @Header("If-None-Match") @Nullable String etag);
 
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> search(@Query("query") String query,
-                @Header("If-None-Match") String etag);
+                @Header("If-None-Match") @Nullable String etag);
 
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> searchByMinTimestamp(@Query("numericFilters") String timestampSeconds);
