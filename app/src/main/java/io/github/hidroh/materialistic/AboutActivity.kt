@@ -17,6 +17,7 @@
 package io.github.hidroh.materialistic
 
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBar
@@ -42,11 +43,17 @@ class AboutActivity : ThemedActivity() {
     supportActionBar!!.displayOptions = ActionBar.DISPLAY_SHOW_HOME or
         ActionBar.DISPLAY_HOME_AS_UP or ActionBar.DISPLAY_SHOW_TITLE
 
-    var versionName = ""
-    var versionCode = 0
+    var versionName: String? = ""
+    var versionCode = 0L
     try {
-      versionName = packageManager.getPackageInfo(packageName, 0).versionName
-      versionCode = packageManager.getPackageInfo(packageName, 0).versionCode
+      val packageInfo = packageManager.getPackageInfo(packageName, 0)
+      versionName = packageInfo.versionName
+      versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode
+      } else {
+        @Suppress("DEPRECATION")
+        packageInfo.versionCode.toLong()
+      }
     } catch (e: PackageManager.NameNotFoundException) {
       // do nothing
     }
