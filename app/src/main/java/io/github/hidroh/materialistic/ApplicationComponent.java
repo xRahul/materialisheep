@@ -108,5 +108,4 @@ public interface ApplicationComponent {
     void inject(ThreadPreviewRecyclerViewAdapter threadPreviewRecyclerViewAdapter);
 
     // Clients
-    void inject(AlgoliaClient algoliaClient);
 }

@@ -25,7 +25,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import io.github.hidroh.materialistic.DataModule;
-// io.github.hidroh.materialistic.data.ItemManager is in same package
 
 import androidx.annotation.StringDef;
 import retrofit2.Call;
