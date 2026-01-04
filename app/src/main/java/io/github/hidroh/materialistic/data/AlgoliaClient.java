@@ -49,7 +49,7 @@ public class AlgoliaClient implements ItemManager {
      */
     public static final String HOST = "hn.algolia.com";
     private static final String BASE_API_URL = "https://" + HOST + "/api/v1/";
-    private static final String HEADER_IF_NONE_MATCH = "If-None-Match";
+
     static final String MIN_CREATED_AT = "created_at_i>";
     protected final RestService mRestService;
     private final ItemManager mHackerNewsClient;
@@ -116,7 +116,6 @@ public class AlgoliaClient implements ItemManager {
      * @return an {@link Observable} that emits the search results
      */
     protected Observable<AlgoliaHits> searchRx(String filter) {
-        // TODO persist and use ETag values
         return sSortByTime ? mRestService.searchByDateRx(filter, null) : mRestService.searchRx(filter, null);
     }
 
@@ -127,7 +126,6 @@ public class AlgoliaClient implements ItemManager {
      * @return a {@link Call} that can be used to execute the search
      */
     protected Call<AlgoliaHits> search(String filter) {
-        // TODO persist and use ETag values
         return sSortByTime ? mRestService.searchByDate(filter, null) : mRestService.search(filter, null);
     }
 
@@ -149,27 +147,70 @@ public class AlgoliaClient implements ItemManager {
     }
 
     interface RestService {
+        String HEADER_IF_NONE_MATCH = "If-None-Match";
 
+        /**
+         * Asynchronously searches for stories by date.
+         *
+         * @param query the search query
+         * @param etag  the ETag for a conditional request, can be null
+         * @return an Observable of search results
+         */
         @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByDateRx(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
+        /**
+         * Asynchronously searches for stories.
+         *
+         * @param query the search query
+         * @param etag  the ETag for a conditional request, can be null
+         * @return an Observable of search results
+         */
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchRx(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
+        /**
+         * Asynchronously searches for stories created after a minimum timestamp.
+         *
+         * @param timestampSeconds the minimum timestamp in seconds
+         * @param etag             the ETag for a conditional request, can be null
+         * @return an Observable of search results
+         */
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByMinTimestampRx(@Query("numericFilters") String timestampSeconds,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
+        /**
+         * Synchronously searches for stories by date.
+         *
+         * @param query the search query
+         * @param etag  the ETag for a conditional request, can be null
+         * @return a {@link Call} of search results
+         */
         @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> searchByDate(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
+        /**
+         * Synchronously searches for stories.
+         *
+         * @param query the search query
+         * @param etag  the ETag for a conditional request, can be null
+         * @return a {@link Call} of search results
+         */
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> search(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
+        /**
+         * Synchronously searches for stories created after a minimum timestamp.
+         *
+         * @param timestampSeconds the minimum timestamp in seconds
+         * @param etag             the ETag for a conditional request, can be null
+         * @return a {@link Call} of search results
+         */
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> searchByMinTimestamp(@Query("numericFilters") String timestampSeconds,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
