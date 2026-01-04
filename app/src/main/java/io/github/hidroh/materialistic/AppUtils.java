@@ -243,11 +243,7 @@ public class AppUtils {
         return Intent.createChooser(new Intent(Intent.ACTION_SEND_MULTIPLE)
                 .setType("text/plain")
                 .putParcelableArrayListExtra(Intent.EXTRA_STREAM,
-                        new ArrayList<Uri>() {
-                            {
-                                add(data);
-                            }
-                        }),
+                        new ArrayList<>(java.util.List.of(data))),
                 context.getString(R.string.share_file));
     }
 
