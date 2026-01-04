@@ -74,7 +74,7 @@ public class AlgoliaPopularClient extends AlgoliaClient {
      */
     @Override
     protected Observable<AlgoliaHits> searchRx(@Range String filter) {
-        return mRestService.searchByMinTimestampRx(MIN_CREATED_AT + toTimestamp(filter) / 1000, null);
+        return mRestService.searchByMinTimestampRx(getNumericFilter(filter), null);
     }
 
     /**
@@ -85,7 +85,11 @@ public class AlgoliaPopularClient extends AlgoliaClient {
      */
     @Override
     protected Call<AlgoliaHits> search(@Range String filter) {
-        return mRestService.searchByMinTimestamp(MIN_CREATED_AT + toTimestamp(filter) / 1000, null);
+        return mRestService.searchByMinTimestamp(getNumericFilter(filter), null);
+    }
+
+    private String getNumericFilter(@Range String filter) {
+        return MIN_CREATED_AT + toTimestamp(filter) / 1000;
     }
 
     private long toTimestamp(@Range String filter) {
