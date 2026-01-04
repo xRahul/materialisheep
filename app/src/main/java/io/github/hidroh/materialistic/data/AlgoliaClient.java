@@ -49,6 +49,7 @@ public class AlgoliaClient implements ItemManager {
      */
     public static final String HOST = "hn.algolia.com";
     private static final String BASE_API_URL = "https://" + HOST + "/api/v1/";
+    private static final String HEADER_IF_NONE_MATCH = "If-None-Match";
     static final String MIN_CREATED_AT = "created_at_i>";
     protected final RestService mRestService;
     private final ItemManager mHackerNewsClient;
@@ -62,6 +63,13 @@ public class AlgoliaClient implements ItemManager {
         mMainThreadScheduler = mainThreadScheduler;
     }
 
+    /**
+     * Fetches stories from the Algolia API.
+     *
+     * @param filter    the filter to apply (e.g., query string or range)
+     * @param cacheMode the {@link CacheMode} to use
+     * @param listener  the {@link ResponseListener} to notify of the results
+     */
     @Override
     public void getStories(String filter, @CacheMode int cacheMode,
             final ResponseListener<Item[]> listener) {
@@ -80,6 +88,13 @@ public class AlgoliaClient implements ItemManager {
         mHackerNewsClient.getItem(itemId, cacheMode, listener);
     }
 
+    /**
+     * Fetches stories from the Algolia API synchronously.
+     *
+     * @param filter    the filter to apply
+     * @param cacheMode the {@link CacheMode} to use
+     * @return an array of {@link Item}s
+     */
     @Override
     public Item[] getStories(String filter, @CacheMode int cacheMode) {
         try {
@@ -134,7 +149,6 @@ public class AlgoliaClient implements ItemManager {
     }
 
     interface RestService {
-        String HEADER_IF_NONE_MATCH = "If-None-Match";
 
         @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByDateRx(@Query("query") String query,
