@@ -16,6 +16,7 @@
 
 package io.github.hidroh.materialistic.data
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -257,6 +258,7 @@ class FavoriteManager @Inject constructor(
     return file.getUri(context, FILE_AUTHORITY)
   }
 
+  @SuppressLint("MissingPermission")
   private fun notifyExportStart(context: Context) {
     NotificationManagerCompat.from(context)
       .notify(
@@ -278,6 +280,7 @@ class FavoriteManager @Inject constructor(
       )
   }
 
+  @SuppressLint("MissingPermission")
   private fun notifyExportDone(context: Context, uri: Uri?) {
     val manager = NotificationManagerCompat.from(context)
     with(manager) {
