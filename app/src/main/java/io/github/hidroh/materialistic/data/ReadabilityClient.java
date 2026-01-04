@@ -118,7 +118,10 @@ public interface ReadabilityClient {
                     .subscribeOn(mIoScheduler)
                     .flatMap(content -> content != null ? Observable.just(content) : fromNetwork(itemId, url))
                     .observeOn(mMainThreadScheduler)
-                    .subscribe(callback::onResponse, throwable -> callback.onResponse(null));
+                    .subscribe(callback::onResponse, throwable -> {
+                        android.util.Log.e("ReadabilityClient", "Failed to parse " + url, throwable);
+                        callback.onResponse(null);
+                    });
         }
 
         @WorkerThread
