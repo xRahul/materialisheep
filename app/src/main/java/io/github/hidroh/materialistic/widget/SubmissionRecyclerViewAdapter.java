@@ -47,6 +47,12 @@ public class SubmissionRecyclerViewAdapter extends ItemRecyclerViewAdapter<Submi
     }
 
     @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        detach(recyclerView.getContext(), recyclerView);
+    }
+
+    @Override
     public void attach(Context context, RecyclerView recyclerView) {
         super.attach(context, recyclerView);
         ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);
