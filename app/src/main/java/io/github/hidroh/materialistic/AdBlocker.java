@@ -79,14 +79,13 @@ public class AdBlocker {
 
     @WorkerThread
     private static Boolean loadFromAssets(Context context) throws IOException {
-        InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
-        BufferedSource buffer = Okio.buffer(Okio.source(stream));
-        String line;
-        while ((line = buffer.readUtf8Line()) != null) {
-            AD_HOSTS.add(line);
+        try (InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
+                BufferedSource buffer = Okio.buffer(Okio.source(stream))) {
+            String line;
+            while ((line = buffer.readUtf8Line()) != null) {
+                AD_HOSTS.add(line);
+            }
         }
-        buffer.close();
-        stream.close();
         return true;
     }
 
