@@ -41,7 +41,7 @@ import io.reactivex.rxjava3.core.Scheduler;
  */
 public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
-    private static final Set<String> AD_HOSTS = new HashSet<>();
+    private static final Set<String> AD_HOSTS = java.util.Collections.synchronizedSet(new HashSet<>());
 
     /**
      * Initializes the ad blocker by loading the ad hosts from the assets file.
@@ -51,9 +51,10 @@ public class AdBlocker {
      */
     public static void init(Context context, Scheduler scheduler) {
         Observable.fromCallable(() -> loadFromAssets(context))
-                .onErrorReturnItem(false)
                 .subscribeOn(scheduler)
-                .subscribe();
+                .subscribe(result -> {
+                },
+                        t -> android.util.Log.e(AdBlocker.class.getSimpleName(), "Error loading ad hosts", t));
     }
 
     /**
