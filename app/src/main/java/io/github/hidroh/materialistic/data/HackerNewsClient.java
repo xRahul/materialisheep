@@ -113,14 +113,13 @@ public class HackerNewsClient implements ItemManager, UserManager {
         Observable.defer(() -> Observable.zip(
                 mSessionManager.isViewed(itemId),
                 mFavoriteManager.check(itemId),
-                itemObservable.map(Optional::ofNullable).onErrorReturnItem(Optional.empty()),
+                itemObservable.map(Optional::ofNullable),
                 (isViewed, favorite, optionalItem) -> {
-                    HackerNewsItem hackerNewsItem = optionalItem.orElse(null);
-                    if (hackerNewsItem != null) {
+                    optionalItem.ifPresent(hackerNewsItem -> {
                         hackerNewsItem.preload();
                         hackerNewsItem.setIsViewed(isViewed);
                         hackerNewsItem.setFavorite(favorite);
-                    }
+                    });
                     return optionalItem;
                 }))
                 .subscribeOn(mIoScheduler)
