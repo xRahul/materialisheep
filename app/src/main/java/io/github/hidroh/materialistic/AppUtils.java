@@ -219,7 +219,6 @@ public class AppUtils {
         if (TextUtils.isEmpty(htmlText)) {
             return null;
         }
-        CharSequence spanned;
         // noinspection InlinedApi
         CharSequence spanned = Html.fromHtml(htmlText,
                 compact ? Html.FROM_HTML_MODE_COMPACT : Html.FROM_HTML_MODE_LEGACY);

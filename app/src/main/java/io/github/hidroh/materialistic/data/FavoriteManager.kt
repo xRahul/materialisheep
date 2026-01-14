@@ -139,7 +139,7 @@ class FavoriteManager @Inject constructor(
     notifyExportStart(appContext)
     Observable.defer { Observable.just(query ?: "") }
         .map { query(it) }
-        .filter { it != null && it.moveToFirst() }
+        .filter { it.moveToFirst() }
         .map {
           try {
             toFile(appContext, Cursor(it))?.let { uri -> listOf(uri) } ?: emptyList()
@@ -362,7 +362,7 @@ class FavoriteManager @Inject constructor(
           .subscribeOn(ioScheduler)
           .observeOn(AndroidSchedulers.mainThread())
           .subscribe {
-            cursor = if (it == null) null else Cursor(it)
+            cursor = Cursor(it)
             observer.onChanged()
           }
     }
