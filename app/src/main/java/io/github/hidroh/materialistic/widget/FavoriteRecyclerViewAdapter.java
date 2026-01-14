@@ -188,9 +188,10 @@ public class FavoriteRecyclerViewAdapter
     protected void bindItem(final ItemViewHolder holder, int position) {
         final Favorite favorite = getItem(position);
         holder.setOnLongClickListener(v -> {
-            int position = holder.getBindingAdapterPosition();
-            if (position != RecyclerView.NO_POSITION && mActionModeDelegate.startActionMode(mActionModeCallback)) {
-                toggle(favorite.getId(), position);
+            int adapterPosition = holder.getBindingAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION
+                    && mActionModeDelegate.startActionMode(mActionModeCallback)) {
+                toggle(favorite.getId(), adapterPosition);
                 return true;
             }
             return false;
