@@ -316,27 +316,27 @@ class FavoriteManager @Inject constructor(
 
   @WorkerThread
   private fun query(filter: String?): android.database.Cursor = if (filter.isNullOrEmpty()) {
-    dao.selectAllToCursor()
+    savedStoriesDao.selectAllToCursor()
   } else {
-    dao.searchToCursor(filter)
+    savedStoriesDao.searchToCursor(filter)
   }
 
   @WorkerThread
   private fun insert(story: WebItem) {
-    dao.insert(MaterialisticDatabase.SavedStory.from(story))
+    savedStoriesDao.insert(MaterialisticDatabase.SavedStory.from(story))
     loader?.load()
   }
 
   @WorkerThread
   private fun delete(itemId: String?) {
     if (itemId == null) return
-    dao.deleteByItemId(itemId)
+    savedStoriesDao.deleteByItemId(itemId)
     loader?.load()
   }
 
   @WorkerThread
   private fun deleteMultiple(query: String?): Int {
-    val deleted = if (query.isNullOrEmpty()) dao.deleteAll() else dao.deleteByTitle(query)
+    val deleted = if (query.isNullOrEmpty()) savedStoriesDao.deleteAll() else savedStoriesDao.deleteByTitle(query)
     loader?.load()
     return deleted
   }

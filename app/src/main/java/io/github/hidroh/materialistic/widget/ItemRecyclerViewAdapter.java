@@ -105,7 +105,10 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         }
         clear(holder);
         if (item.getLocalRevision() < 0) {
-            load(holder.getBindingAdapterPosition(), item);
+            int adapterPosition = holder.getBindingAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                load(adapterPosition, item);
+            }
         } else if (item.getLocalRevision() > 0) {
             bind(holder, item);
         }

@@ -74,9 +74,10 @@ public class StoryRecyclerViewAdapter extends
     private final RecyclerView.OnScrollListener mAutoViewScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            if (dy > 0) { // scrolling down
-                markAsViewed(((LinearLayoutManager) recyclerView.getLayoutManager())
-                        .findFirstVisibleItemPosition() - 1);
+            if (dy > 0) { // scrolling
+                          // down
+                markAsViewed(
+                        ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition() - 1);
             }
         }
     };
@@ -162,7 +163,11 @@ public class StoryRecyclerViewAdapter extends
                 Preferences.getListSwipePreferences(context)) {
             @Override
             public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-                Item item = getItem(viewHolder.getBindingAdapterPosition());
+                int position = viewHolder.getBindingAdapterPosition();
+                if (position == NO_POSITION) {
+                    return 0;
+                }
+                Item item = getItem(position);
                 if (item == null) {
                     return 0;
                 }
@@ -175,7 +180,11 @@ public class StoryRecyclerViewAdapter extends
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 Preferences.SwipeAction action = direction == ItemTouchHelper.LEFT ? getLeftSwipeAction()
                         : getRightSwipeAction();
-                Item item = getItem(viewHolder.getBindingAdapterPosition());
+                int position = viewHolder.getBindingAdapterPosition();
+                if (position == NO_POSITION) {
+                    return;
+                }
+                Item item = getItem(position);
                 if (item == null) {
                     return;
                 }
@@ -187,7 +196,11 @@ public class StoryRecyclerViewAdapter extends
                         refresh(item, viewHolder);
                         break;
                     case Vote:
-                        notifyItemChanged(viewHolder.getBindingAdapterPosition());
+                        int votePosition = viewHolder.getBindingAdapterPosition();
+                        if (votePosition == NO_POSITION) {
+                            return;
+                        }
+                        notifyItemChanged(votePosition);
                         vote(item, viewHolder);
                         break;
                     case Share:
@@ -212,6 +225,7 @@ public class StoryRecyclerViewAdapter extends
                 }
                 return swipeDirs;
             }
+
         };
         mItemTouchHelper = new ItemTouchHelper(mCallback);
     }
@@ -507,8 +521,12 @@ public class StoryRecyclerViewAdapter extends
 
     @Synthetic
     void refresh(Item story, RecyclerView.ViewHolder holder) {
+        int position = holder.getBindingAdapterPosition();
+        if (position == NO_POSITION) {
+            return;
+        }
         story.setLocalRevision(-1);
-        notifyItemChanged(holder.getBindingAdapterPosition());
+        notifyItemChanged(position);
     }
 
     @Synthetic

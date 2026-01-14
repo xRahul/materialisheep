@@ -108,7 +108,10 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
         final T item = getItem(position);
         clearViewHolder(holder);
         if (!isItemAvailable(item)) {
-            loadItem(holder.getBindingAdapterPosition());
+            int adapterPosition = holder.getBindingAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                loadItem(adapterPosition);
+            }
             return;
         }
         // TODO naive launch priority for now
@@ -210,11 +213,15 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     protected void handleItemClick(T item, VH holder) {
         mMultiPaneListener.onItemSelected(item);
         if (isSelected(item.getId())) {
-            notifyItemChanged(holder.getBindingAdapterPosition());
+            int position = holder.getBindingAdapterPosition();
+            if (position == RecyclerView.NO_POSITION) {
+                return;
+            }
+            notifyItemChanged(position);
             if (mLastSelectedPosition >= 0) {
                 notifyItemChanged(mLastSelectedPosition);
             }
-            mLastSelectedPosition = holder.getBindingAdapterPosition();
+            mLastSelectedPosition = position;
         }
     }
 

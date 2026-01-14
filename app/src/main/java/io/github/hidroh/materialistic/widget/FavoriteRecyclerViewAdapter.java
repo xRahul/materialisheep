@@ -145,14 +145,18 @@ public class FavoriteRecyclerViewAdapter
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getBindingAdapterPosition();
+                if (position == RecyclerView.NO_POSITION) {
+                    return;
+                }
                 if (direction == ItemTouchHelper.LEFT) {
-                    dismiss(viewHolder.itemView, viewHolder.getBindingAdapterPosition());
+                    dismiss(viewHolder.itemView, position);
                 } else {
-                    Favorite item = getItem(viewHolder.getBindingAdapterPosition());
+                    Favorite item = getItem(position);
                     if (item != null) {
                         mSyncScheduler.scheduleSync(mContext, item.getId());
                     }
-                    notifyItemChanged(viewHolder.getBindingAdapterPosition());
+                    notifyItemChanged(position);
                 }
             }
         });
@@ -184,11 +188,11 @@ public class FavoriteRecyclerViewAdapter
     protected void bindItem(final ItemViewHolder holder, int position) {
         final Favorite favorite = getItem(position);
         holder.setOnLongClickListener(v -> {
-            if (mActionModeDelegate.startActionMode(mActionModeCallback)) {
-                toggle(favorite.getId(), holder.getBindingAdapterPosition());
+            int position = holder.getBindingAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && mActionModeDelegate.startActionMode(mActionModeCallback)) {
+                toggle(favorite.getId(), position);
                 return true;
             }
-
             return false;
         });
         holder.bindMoreOptions(v -> showMoreOptions(v, favorite), false);
@@ -204,7 +208,10 @@ public class FavoriteRecyclerViewAdapter
         if (!mActionModeDelegate.isInActionMode()) {
             super.handleItemClick(item, holder);
         } else {
-            toggle(item.getId(), holder.getBindingAdapterPosition());
+            int position = holder.getBindingAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                toggle(item.getId(), position);
+            }
         }
     }
 
