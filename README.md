@@ -50,9 +50,7 @@ The codebase is organized into the following packages:
     ```
     git clone https://github.com/hidroh/materialistic.git
     ```
-2.  Create a `keystore.properties` file in the root of the project and add the following properties:
-    ```
-
+2.  Build the project:
 3.  Build the project:
     ```
     ./gradlew assembleDebug
