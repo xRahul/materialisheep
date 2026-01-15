@@ -17,6 +17,7 @@
 package io.github.hidroh.materialistic;
 
 import android.app.Activity;
+import android.util.Log;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -48,7 +49,7 @@ public class CustomTabsDelegate {
     private CustomTabsSession mCustomTabsSession;
     private CustomTabsClient mClient;
     private CustomTabsServiceConnection mConnection;
-    private boolean mBound;
+    private boolean mIsBound;
 
     /**
      * Binds the Activity to the Custom Tabs Service.
@@ -56,14 +57,14 @@ public class CustomTabsDelegate {
      * @param activity the activity to be bound to the service.
      */
     void bindCustomTabsService(Activity activity) {
-        if (mClient != null || mBound) {
+        if (mClient != null || mIsBound) {
             return;
         }
         if (TextUtils.isEmpty(getPackageNameToUse(activity))) {
             return;
         }
         mConnection = new ServiceConnection(this);
-        mBound = CustomTabsClient.bindCustomTabsService(activity.getApplicationContext(),
+        mIsBound = CustomTabsClient.bindCustomTabsService(activity.getApplicationContext(),
                 getPackageNameToUse(activity), mConnection);
     }
 
@@ -73,18 +74,18 @@ public class CustomTabsDelegate {
      * @param activity the activity that is connected to the service.
      */
     void unbindCustomTabsService(Activity activity) {
-        if (mConnection == null || !mBound) {
+        if (mConnection == null || !mIsBound) {
             return;
         }
         try {
             activity.getApplicationContext().unbindService(mConnection);
         } catch (IllegalArgumentException e) {
-            // ignore
+            android.util.Log.e("CustomTabsDelegate", "Error unbinding service", e);
         }
         mClient = null;
         mCustomTabsSession = null;
         mConnection = null;
-        mBound = false;
+        mIsBound = false;
     }
 
     /**
