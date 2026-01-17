@@ -115,29 +115,39 @@ public class ComposeActivity extends ThemedActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (mEditText.length() == 0 || mSending ||
-                        TextUtils.equals(Preferences.getDraft(ComposeActivity.this, mParentId),
-                                mEditText.getText().toString())) {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
+                try {
+                    if (mEditText.length() == 0 || mSending ||
+                            TextUtils.equals(Preferences.getDraft(ComposeActivity.this, mParentId),
+                                    mEditText.getText().toString())) {
+                        setEnabled(false);
+                        getOnBackPressedDispatcher().onBackPressed();
+                        return;
+                    }
+                    mAlertDialogBuilder
+                            .init(ComposeActivity.this)
+                            .setMessage(R.string.confirm_save_draft)
+                            .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                                try {
+                                    setEnabled(false);
+                                    getOnBackPressedDispatcher().onBackPressed();
+                                } finally {
+                                    setEnabled(true);
+                                }
+                            })
+                            .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                                try {
+                                    Preferences.saveDraft(ComposeActivity.this, mParentId,
+                                            mEditText.getText().toString());
+                                    setEnabled(false);
+                                    getOnBackPressedDispatcher().onBackPressed();
+                                } finally {
+                                    setEnabled(true);
+                                }
+                            })
+                            .show();
+                } finally {
                     setEnabled(true);
-                    return;
                 }
-                mAlertDialogBuilder
-                        .init(ComposeActivity.this)
-                        .setMessage(R.string.confirm_save_draft)
-                        .setNegativeButton(android.R.string.no, (dialog, which) -> {
-                            setEnabled(false);
-                            getOnBackPressedDispatcher().onBackPressed();
-                            setEnabled(true);
-                        })
-                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                            Preferences.saveDraft(ComposeActivity.this, mParentId, mEditText.getText().toString());
-                            setEnabled(false);
-                            getOnBackPressedDispatcher().onBackPressed();
-                            setEnabled(true);
-                        })
-                        .show();
             }
         });
     }
