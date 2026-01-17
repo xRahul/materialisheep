@@ -125,7 +125,7 @@ public class SubmitActivity extends ThemedActivity {
                         .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                             setEnabled(false);
                             getOnBackPressedDispatcher().onBackPressed();
-                            setEnabled(true);
+
                         })
                         .show();
             }

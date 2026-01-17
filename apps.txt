@@ -1,0 +1,68 @@
+Name: Google
+packageName: com.google.android.googlequicksearchbox
+categories:
+	android.intent.category.INFO
+Name: Files
+packageName: com.android.documentsui
+categories:
+	android.intent.category.LAUNCHER
+Name: Messages
+packageName: com.google.android.apps.messaging
+categories:
+	android.intent.category.LAUNCHER
+Name: Personal Safety
+packageName: com.google.android.apps.safetyhub
+categories:
+	android.intent.category.INFO
+Name: Google Play Store
+packageName: com.android.vending
+categories:
+	android.intent.category.LAUNCHER
+Name: Recorder
+packageName: org.lineageos.recorder
+categories:
+	android.intent.category.LAUNCHER
+Name: Materialistic
+packageName: io.github.hidroh.materialistic
+categories:
+	android.intent.category.LAUNCHER
+Name: Contacts
+packageName: com.google.android.contacts
+categories:
+	android.intent.category.LAUNCHER
+Name: Gallery
+packageName: com.android.gallery3d
+categories:
+	android.intent.category.LAUNCHER
+Name: Browser
+packageName: org.lineageos.jelly
+categories:
+	android.intent.category.LAUNCHER
+Name: Music
+packageName: org.lineageos.eleven
+categories:
+	android.intent.category.LAUNCHER
+Name: Calendar
+packageName: org.lineageos.etar
+categories:
+	android.intent.category.LAUNCHER
+Name: Camera
+packageName: org.lineageos.aperture
+categories:
+	android.intent.category.LAUNCHER
+Name: Settings
+packageName: com.android.settings
+categories:
+	android.intent.category.LAUNCHER
+Name: Calculator
+packageName: com.android.calculator2
+categories:
+	android.intent.category.LAUNCHER
+Name: Clock
+packageName: com.android.deskclock
+categories:
+	android.intent.category.LAUNCHER
+Name: Android Switch
+packageName: com.google.android.apps.restore
+categories:
+	android.intent.category.INFO

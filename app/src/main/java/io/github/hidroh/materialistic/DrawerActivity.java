@@ -117,7 +117,7 @@ public abstract class DrawerActivity extends ThemedActivity {
                 } else {
                     setEnabled(false);
                     getOnBackPressedDispatcher().onBackPressed();
-                    setEnabled(true);
+
                 }
             }
         });

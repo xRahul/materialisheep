@@ -1,0 +1,629 @@
+--------- beginning of crash
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: FATAL EXCEPTION: main
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: Process: com.fadcam, PID: 15853
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: android.app.RemoteServiceException$ForegroundServiceDidNotStartInTimeException: Context.startForegroundService() did not then call Service.startForeground(): ServiceRecord{f4b3fca u0 com.fadcam/.services.RecordingService c:com.fadcam}
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread.generateForegroundServiceDidNotStartInTimeException(ActivityThread.java:2549)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread.throwRemoteServiceException(ActivityThread.java:2517)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mthrowRemoteServiceException(Unknown Source:0)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2901)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: Caused by: android.app.StackTrace: Last startServiceCommon() call for this service was made here
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ContextImpl.startServiceCommon(ContextImpl.java:2117)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ContextImpl.startForegroundService(ContextImpl.java:2071)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.content.ContextWrapper.startForegroundService(ContextWrapper.java:875)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at com.fadcam.RecordingStartActivity.onCreate(r8-map-id-4b658f494cd0f91b2d48895d6e5387fb6396f49fbf8198b240f91be81e63a348:44)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:9289)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:9267)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1543)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4502)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4717)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:224)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-04 23:46:23.677 15853 15853 E AndroidRuntime: 	... 8 more
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: FATAL EXCEPTION: main
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: Process: com.android.virtualization.terminal, PID: 1927
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:576)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	... 1 more
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: Caused by: java.lang.Exception: ttyd timeout
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at com.android.virtualization.terminal.TerminalTabFragment$ttydTimeoutRunnable$1.run(TerminalTabFragment.kt:59)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:1095)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:135)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-12 12:54:14.340  1927  1927 E AndroidRuntime: 	... 3 more
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: FATAL EXCEPTION: main
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: Process: com.android.virtualization.terminal, PID: 2459
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:576)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	... 1 more
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: Caused by: java.lang.Exception: ttyd timeout
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at com.android.virtualization.terminal.TerminalTabFragment$ttydTimeoutRunnable$1.run(TerminalTabFragment.kt:59)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:1095)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:135)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-12 12:55:24.681  2459  2459 E AndroidRuntime: 	... 3 more
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 6347
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@2c58e59
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:14:11.909  6347  6347 E AndroidRuntime: 	... 16 more
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 7549
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ListActivity}
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.servertransaction.StopActivityItem.execute(StopActivityItem.java:43)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.servertransaction.ActivityTransactionItem.execute(ActivityTransactionItem.java:63)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:169)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@7bdd42c
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at io.github.hidroh.materialistic.BaseListActivity.onStop(BaseListActivity.java:290)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:22:57.797  7549  7549 E AndroidRuntime: 	... 16 more
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 9389
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@a3011ec
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:23:59.979  9389  9389 E AndroidRuntime: 	... 16 more
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 11485
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@39b36e6
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:36:58.586 11485 11485 E AndroidRuntime: 	... 16 more
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 11729
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@8c2cc56
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:37:09.273 11729 11729 E AndroidRuntime: 	... 16 more
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 12395
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@178b340
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:48:49.854 12395 12395 E AndroidRuntime: 	... 16 more
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 12809
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@7e84c95
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:49:00.757 12809 12809 E AndroidRuntime: 	... 16 more
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 13103
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@768a967
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:49:12.437 13103 13103 E AndroidRuntime: 	... 16 more
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 13658
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@deb35b5
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:50:28.469 13658 13658 E AndroidRuntime: 	... 16 more
+--------- beginning of system
+01-15 00:53:19.966 20340  6024 E ActivityThread: Failed to find provider info for gmail-ofls
+01-15 00:53:21.107 20340  7453 E ActivityThread: Failed to find provider info for gmail-ofls
+01-15 00:53:48.753 15927 15927 E TransactionExecutor: Failed to execute the transaction: tId:-2083642609 ClientTransaction{
+01-15 00:53:48.753 15927 15927 E TransactionExecutor: tId:-2083642609   transactionItems=[
+01-15 00:53:48.753 15927 15927 E TransactionExecutor: tId:-2083642609     DestroyActivityItem{mActivityToken=android.os.BinderProxy@7e8d943,finished=true}
+01-15 00:53:48.753 15927 15927 E TransactionExecutor: tId:-2083642609     Target activity: io.github.hidroh.materialistic.ItemActivity
+01-15 00:53:48.753 15927 15927 E TransactionExecutor: tId:-2083642609   ]
+01-15 00:53:48.753 15927 15927 E TransactionExecutor: tId:-2083642609 }
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 15927
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@1172a45
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 00:53:48.754 15927 15927 E AndroidRuntime: 	... 16 more
+01-15 00:53:51.800  1860  4998 E TransitionChain: Can't collect into a chain with no transition
+01-15 00:53:51.800  1860  4998 E TransitionChain: Can't collect into a chain with no transition
+01-15 00:53:51.802  1860  4998 E TransitionChain: Can't collect into a chain with no transition
+01-15 00:53:51.802  1860  4998 E TransitionChain: Can't collect into a chain with no transition
+01-15 00:54:11.663  1860  1942 E BatteryHistoryStepDetails: updateStateResidency: buffer not enough
+01-15 00:54:33.669  1289  1782 E Lyric   : backend_pipeline_telemetry_key.h:201:  received unknown Backend Pipeline Telemetry Key Invalid IPBeYuvRealtime
+01-15 00:54:33.679  1289  1778 E GAF     : af_tuning_manager.cc:103: 6 calls in 123 sec(s): Tof tuning key not found:  Usecase: 0 Sensor mode: -1 Viridian value: -1 Camera position: 2 Camera lens_type: 5 Camera spectrum: -1 Partial Usecases: {}
+01-15 00:54:33.684  1289  9317 E GAF     : elp_util.cc:504: 3 calls in 123 sec(s): FrontVirtualELP couldn't be calculated from the ELP table history. Using final_Fallback_position 22
+01-15 00:54:33.686  1289  1778 E Lyric   : backend_pipeline_telemetry_key.h:201:  received unknown Backend Pipeline Telemetry Key Invalid IPBeYuvRealtime
+01-15 00:54:33.712  1289  2702 E Lyric   : software_fence.cc:40: Resetting unsignaled fence unnamed
+01-15 00:54:33.737  1289  2696 E Lyric   : acat_controller_utils.cc:1793: 1 calls in 123 sec(s): Invalid defocus data:ABORTED: null ptr
+01-15 00:54:34.019  1289  2697 E Lyric   : acat_controller_utils.cc:1793: 6 calls in 1 sec(s): Invalid defocus data:ABORTED: null ptr
+01-15 00:54:44.484  1860  1942 E BatteryHistoryStepDetails: updateStateResidency: buffer not enough
+01-15 00:54:51.477  1860  1942 E BatteryHistoryStepDetails: updateStateResidency: buffer not enough
+01-15 00:54:52.450  1860  4997 E AppOps  : attributionTag  not declared in manifest of com.android.systemui
+01-15 00:54:52.452  1860  2788 E AppOps  : attributionTag  not declared in manifest of com.android.systemui
+01-15 00:54:54.244  1860  4997 E AppOps  : attributionTag  not declared in manifest of com.android.systemui
+01-15 00:54:54.245  1860  4702 E AppOps  : attributionTag  not declared in manifest of com.android.systemui
+01-15 00:55:13.410  1289  1782 E Lyric   : backend_pipeline_telemetry_key.h:201:  received unknown Backend Pipeline Telemetry Key Invalid IPBeYuvRealtime
+01-15 00:55:13.419  1289  1779 E GAF     : af_tuning_manager.cc:103: 6 calls in 40 sec(s): Tof tuning key not found:  Usecase: 0 Sensor mode: -1 Viridian value: -1 Camera position: 2 Camera lens_type: 5 Camera spectrum: -1 Partial Usecases: {}
+01-15 00:55:13.427  1289  1779 E Lyric   : backend_pipeline_telemetry_key.h:201:  received unknown Backend Pipeline Telemetry Key Invalid IPBeYuvRealtime
+01-15 00:55:13.446  1289  2698 E GAF     : elp_util.cc:504: 3 calls in 40 sec(s): FrontVirtualELP couldn't be calculated from the ELP table history. Using final_Fallback_position 24
+01-15 00:55:13.456  1289  2704 E Lyric   : software_fence.cc:40: Resetting unsignaled fence unnamed
+01-15 00:55:13.480  1289  2700 E Lyric   : acat_controller_utils.cc:1793: 6 calls in 39 sec(s): Invalid defocus data:ABORTED: null ptr
+01-15 01:00:26.954  1860  1942 E BatteryHistoryStepDetails: updateStateResidency: buffer not enough
+01-15 01:02:27.361  1860  1976 E PackageManager: Error occurred while checking alignment of package : io.github.hidroh.materialistic
+01-15 01:02:28.128  1860  2939 E AppOps  : attributionTag VCN not declared in manifest of android
+01-15 01:02:28.130  1860  2939 E AppOps  : attributionTag VCN not declared in manifest of android
+--------- beginning of main
+01-15 01:02:28.130  3437  3437 E SmsApplication: com.google.android.apps.messaging lost android:read_cell_broadcasts:  (fixing)
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f080129.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f1101f9.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f1101f9.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f080128.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f1101fb.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f1101fb.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f080127.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f1101f6.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f1101f6.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f080126.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f110200.
+01-15 01:02:28.179  1860  2983 E system_server: No package ID 7f found for resource ID 0x7f110200.
+01-15 01:02:28.187  3437  3437 E SmsApplication: com.google.android.apps.messaging lost android:read_cell_broadcasts:  (fixing)
+01-15 01:02:28.202  3437  3437 E SmsApplication: com.google.android.apps.messaging lost android:read_cell_broadcasts:  (fixing)
+01-15 01:02:28.249  1860  3204 E RoleControllerServiceImpl: Default/fallback role holder package doesn't qualify for the role, package: com.google.android.retaildemo, role: android.app.role.RETAIL_DEMO, user: 0
+01-15 01:02:28.249  1860  3204 E RoleControllerServiceImpl: Default/fallback role holder package doesn't qualify for the role, package: com.google.android.gms.supervision, role: android.app.role.SYSTEM_SUPERVISION, user: 0
+01-15 01:02:28.287  1860  3204 E RoleControllerServiceImpl: Default/fallback role holder package doesn't qualify for the role, package: com.google.android.gms, role: android.app.role.SYSTEM_DEPENDENCY_INSTALLER, user: 0
+01-15 01:02:28.312  1860  3204 E ApduServiceInfo: Not adding <aid-group> with empty or invalid AIDs
+01-15 01:02:28.313  1860  3204 E ApduServiceInfo: Not adding <aid-group> with empty or invalid AIDs
+01-15 01:02:28.313  1860  3204 E ApduServiceInfo: Not adding <aid-group> with empty or invalid AIDs
+01-15 01:02:28.326  1860  3204 E RoleControllerServiceImpl: Default/fallback role holder package doesn't qualify for the role, package: com.google.android.devicelockcontroller, role: android.app.role.SYSTEM_FINANCED_DEVICE_CONTROLLER, user: 0
+01-15 01:02:28.345 26210 26249 E Finsky  : [904] [Counters] attempted to use a non-positive increment for: 4752
+01-15 01:02:28.387  1860  4868 E AppSearchAppIndxrImpl: Certificate not found for package: org.chromium.webapk.ad20b6c1f038a667f_v2
+01-15 01:02:28.387  1860  4868 E AppSearchAppIndxrImpl: Certificate not found for package: org.chromium.webapk.a53651bec06c16ac8_v2
+01-15 01:02:28.426 26210 26249 E Finsky  : [904] [Counters] attempted to use a non-positive increment for: 4753
+01-15 01:02:28.524  1860  4868 E AppSearchAppIndxrImpl: Certificate not found for package: org.chromium.webapk.ad20b6c1f038a667f_v2
+01-15 01:02:28.525  1860  4868 E AppSearchAppIndxrImpl: Certificate not found for package: org.chromium.webapk.a53651bec06c16ac8_v2
+01-15 01:02:28.542 26210 26242 E Finsky  : [899] [Counters] attempted to use a non-positive increment for: 4752
+01-15 01:02:28.573  1860  1931 E libbinder.IPCThreadState: Binder transaction failure. id: 238796560, cmd: BR_DEAD_REPLY (29189), error: -3 (No such process)
+01-15 01:02:28.667  1860  4998 E AppOps  : Bad call made by uid 1000. Package "com.google.android.apps.photos" does not belong to uid 1000.
+01-15 01:02:28.682 26210 26249 E Finsky  : [904] [Counters] attempted to use a non-positive increment for: 4753
+01-15 01:02:28.682 26210 26249 E Finsky  : [904] [Counters] attempted to use a non-positive increment for: 4752
+01-15 01:02:28.682 26210 26249 E Finsky  : [904] [Counters] attempted to use a non-positive increment for: 4753
+01-15 01:02:29.131  1860  4996 E AppOps  : attributionTag VCN not declared in manifest of android
+01-15 01:02:36.477  1290  1342 E CHRE    : @ 1666563.591: [AV] Client 3 is not found.
+01-15 01:02:36.713  1363  1457 E WifiHAL : Setting APF program, halHandle = 0xb400007a3fda9510
+01-15 01:02:36.714  1363  1457 E WifiHAL : Set apf filter for iface = wlan0
+01-15 01:02:46.104  1363  1457 E WifiHAL : wifi_select_tx_power_scenario
+01-15 01:02:46.816  3039  3039 E NotifRow: Magnetic state changed from IDLE to IDLE on a null swiped listener, or the logging key of the listener is null
+01-15 01:02:46.915  1860  3184 E AppOps  : attributionTag IWLAN not declared in manifest of com.google.android.iwlan
+01-15 01:02:46.915  1860  5013 E AppOps  : attributionTag IWLAN not declared in manifest of com.google.android.iwlan
+01-15 01:02:47.049  3437  3437 E TelephonyConfigUpdateInstallReceiver: Failed to read current content : /data/misc/telephonyconfig/valid_telephony_config.pb
+01-15 01:02:47.050  3437  3437 E TelephonyConfigUpdateInstallReceiver: Failed to read current content : /data/misc/telephonyconfig/valid_telephony_config.pb
+01-15 01:02:47.054  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:47.057  3437  3437 E TelephonyConfigUpdateInstallReceiver: Failed to read current content : /data/misc/telephonyconfig/valid_telephony_config.pb
+01-15 01:02:47.057  3437  3437 E TelephonyConfigUpdateInstallReceiver: Failed to read current content : /data/misc/telephonyconfig/valid_telephony_config.pb
+01-15 01:02:47.063  1363  1363 E libbinder.IPCThreadState: binder thread pool (1 threads) starved for 124 ms
+01-15 01:02:47.067  1365  1485 E APM::AudioInputDescriptor: setDevice failed to set preferred config for device AUDIO_DEVICE_IN_BUILTIN_MIC, @:bottom
+01-15 01:02:47.075  3229  3242 E ScanController: Unexpectedly cannot find batch scan client for scannerId=1
+01-15 01:02:47.109  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:47.155  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:47.190  3827  4259 E IwlanNetworkStatusTracker: Could not get Wifi SSID
+01-15 01:02:47.199  1363  1363 E WifiHAL : Setting APF program, halHandle = 0xb400007a3fda9510
+01-15 01:02:47.199  1363  1363 E WifiHAL : Set apf filter for iface = wlan0
+01-15 01:02:47.230  1363  1363 E WifiHAL : Setting APF program, halHandle = 0xb400007a3fda9510
+01-15 01:02:47.230  1363  1363 E WifiHAL : Set apf filter for iface = wlan0
+01-15 01:02:47.324  2980  2998 E QFP     : updateFromVfsInternal: Error data magic code start/end 0/0 received, expect 424c4143 
+01-15 01:02:47.838  1363  1457 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:47.918  1860  3184 E AppOps  : attributionTag IWLAN not declared in manifest of com.google.android.iwlan
+01-15 01:02:48.238 13980 13980 E CannedAnimCoordinator: Trying to play two animations together, m6.t@e048d90 and null
+01-15 01:02:48.244  1860  5001 E BiometricScheduler: Current operation is null,no need to start watchdog
+01-15 01:02:48.252  1860  2975 E FingerprintProvider/default: onPointerUp received during client: null
+01-15 01:02:48.315 15396 15438 E YouTube : Failed to fetch settings
+01-15 01:02:48.315 15396 15438 E YouTube : java.util.concurrent.ExecutionException: abip
+01-15 01:02:48.315 15396 15438 E YouTube : 	at askb.g(PG:21)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at askb.get(PG:389)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at htz.a(PG:121)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at ahzy.Y(PG:35)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at zdf.call(PG:452)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at askz.call(PG:17)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at asnq.a(PG:3)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at asmu.run(PG:19)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at asnr.run(PG:5)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at asfv.run(PG:44)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at sga.run(PG:706)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at ewr.run(PG:1033)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at java.lang.Thread.run(Thread.java:1563)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at sfb.run(PG:61)
+01-15 01:02:48.315 15396 15438 E YouTube : Caused by: abip
+01-15 01:02:48.315 15396 15438 E YouTube : 	at ewr.run(PG:702)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at arby.run(PG:21)
+01-15 01:02:48.315 15396 15438 E YouTube : 	at sef.run(PG:7)
+01-15 01:02:48.315 15396 15438 E YouTube : 	... 5 more
+01-15 01:02:48.315 15396 15438 E YouTube : Caused by: bnjx: Exception in CronetUrlRequest: net::ERR_TIMED_OUT, ErrorCode=4, InternalErrorCode=-7, Retryable=true
+01-15 01:02:48.315 15396 15438 E YouTube : 	at org.chromium.net.impl.CronetUrlRequest.onError(PG:66)
+01-15 01:02:48.324  3039  3039 E NotifRow: Magnetic state changed from IDLE to IDLE on a null swiped listener, or the logging key of the listener is null
+01-15 01:02:48.327  1860  5083 E BiometricScheduler: Current operation is null,no need to start watchdog
+01-15 01:02:48.691 14724 17620 E WorkSourceUtil: Could not find package: com.google.android.gms.westworld
+01-15 01:02:48.721  2980  3000 E QFP     : updateFromVfsInternal: Error data magic code start/end 0/0 received, expect 424c4143 
+01-15 01:02:49.430   591   639 E keystore2: system/security/keystore2/src/error.rs:185 - system/security/keystore2/src/security_level.rs:334
+01-15 01:02:49.430   591   639 E keystore2: 
+01-15 01:02:49.430   591   639 E keystore2: Caused by:
+01-15 01:02:49.430   591   639 E keystore2:     0: system/security/keystore2/src/enforcements.rs:596: matching auth token (challenge=0, userId=-185332758933460789, authId=0, authType=0x1, timestamp=1565512228ms) rcved=BootTime(1565509767) for sids [SecureUserId(-185332758933460789)] type Some(r#PASSWORD) is expired (101063s old > timeout=5s)
+01-15 01:02:49.430   591   639 E keystore2:     1: Error::Km(r#KEY_USER_NOT_AUTHENTICATED)
+01-15 01:02:49.814  1860  1860 E PowerManagerService: Event cannot be newer than the current time (now=490281882, eventTime=490281883, displayId=0, event=other, flags=0)
+01-15 01:02:50.229  1363  1457 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:50.906 26609 26778 E chromium: [ERROR:components/sync/engine/get_updates_processor.cc:270] PostClientToServerMessage() failed during GetUpdates with error Network error (ERR_NAME_NOT_RESOLVED)
+01-15 01:02:50.955  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f170029.
+01-15 01:02:50.962  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f180018.
+01-15 01:02:50.964  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f170042.
+01-15 01:02:50.966  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f18002b.
+01-15 01:02:50.973  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f180030.
+01-15 01:02:50.975  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f17002f.
+01-15 01:02:50.977  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f17002f.
+01-15 01:02:50.977  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f180018.
+01-15 01:02:50.978  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f170042.
+01-15 01:02:50.979  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f170016.
+01-15 01:02:50.981  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f170009.
+01-15 01:02:50.983  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f160004.
+01-15 01:02:50.985  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f150005.
+01-15 01:02:50.990  1860  5083 E system_server: No package ID 7f found for resource ID 0x7f190102.
+01-15 01:02:50.994 26609 26768 E chromium: [ERROR:components/sync/engine/get_updates_processor.cc:270] PostClientToServerMessage() failed during GetUpdates with error Network error (ERR_NAME_NOT_RESOLVED)
+01-15 01:02:53.326  1363  1457 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:53.326 15396 15520 E chromium: [0115/010253.326725:ERROR:net/socket/ssl_client_socket_impl.cc:916] handshake failed; returned -1, SSL error code 1, net_error -103
+01-15 01:02:53.598 17976 17992 E ashmem  : readlink(/proc/self/fd/121) failed: Operation not permitted
+01-15 01:02:53.598 17976 17992 E ashmem  : readlink(/proc/self/fd/121) failed: Operation not permitted
+01-15 01:02:53.603 17976 17992 E ashmem  : readlink(/proc/self/fd/121) failed: Operation not permitted
+01-15 01:02:53.604 17976 17992 E ashmem  : readlink(/proc/self/fd/122) failed: Operation not permitted
+01-15 01:02:53.604 17976 17992 E ashmem  : readlink(/proc/self/fd/124) failed: Operation not permitted
+01-15 01:02:53.605 17976 18046 E ashmem  : readlink(/proc/self/fd/123) failed: Operation not permitted
+01-15 01:02:53.606 17976 18046 E ashmem  : readlink(/proc/self/fd/100) failed: Operation not permitted
+01-15 01:02:53.606 17976 18046 E ashmem  : readlink(/proc/self/fd/112) failed: Operation not permitted
+01-15 01:02:53.664 17976 17992 E ashmem  : readlink(/proc/self/fd/128) failed: Operation not permitted
+01-15 01:02:53.665 17976 17992 E ashmem  : readlink(/proc/self/fd/128) failed: Operation not permitted
+01-15 01:02:53.698 17976 18031 E ashmem  : readlink(/proc/self/fd/128) failed: Operation not permitted
+01-15 01:02:53.699 17976 18031 E ashmem  : readlink(/proc/self/fd/129) failed: Operation not permitted
+01-15 01:02:56.419  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:02:56.996 17877 17877 E TransactionExecutor: Failed to execute the transaction: tId:-488791794 ClientTransaction{
+01-15 01:02:56.996 17877 17877 E TransactionExecutor: tId:-488791794   transactionItems=[
+01-15 01:02:56.996 17877 17877 E TransactionExecutor: tId:-488791794     DestroyActivityItem{mActivityToken=android.os.BinderProxy@bd1a844,finished=true}
+01-15 01:02:56.996 17877 17877 E TransactionExecutor: tId:-488791794     Target activity: io.github.hidroh.materialistic.ItemActivity
+01-15 01:02:56.996 17877 17877 E TransactionExecutor: tId:-488791794   ]
+01-15 01:02:56.996 17877 17877 E TransactionExecutor: tId:-488791794 }
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: FATAL EXCEPTION: main
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: Process: io.github.hidroh.materialistic, PID: 17877
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: java.lang.RuntimeException: Unable to stop activity {io.github.hidroh.materialistic/io.github.hidroh.materialistic.ItemActivity}
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6310)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ActivityThread.performStopActivityInner(ActivityThread.java:6283)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ActivityThread.handleStopActivity(ActivityThread.java:6346)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:229)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:194)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeLifecycleItem(TransactionExecutor.java:166)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:101)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2983)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:269)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:367)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9309)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: Service not registered: io.github.hidroh.materialistic.CustomTabsDelegate$ServiceConnection@ad4e8b8
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.LoadedApk.forgetServiceDispatcher(LoadedApk.java:2173)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ContextImpl.unbindService(ContextImpl.java:2365)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.content.ContextWrapper.unbindService(ContextWrapper.java:973)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at io.github.hidroh.materialistic.CustomTabsDelegate.unbindCustomTabsService(CustomTabsDelegate.java:77)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at io.github.hidroh.materialistic.ItemActivity.onStop(ItemActivity.java:290)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnStop(Instrumentation.java:1759)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.Activity.performStop(Activity.java:9573)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	at android.app.ActivityThread.callActivityOnStop(ActivityThread.java:6303)
+01-15 01:02:56.998 17877 17877 E AndroidRuntime: 	... 16 more
+01-15 01:02:58.844  1860  3348 E TransitionChain: Can't collect into a chain with no transition
+01-15 01:02:58.844  1860  3348 E TransitionChain: Can't collect into a chain with no transition
+01-15 01:02:58.847  1860  3348 E TransitionChain: Can't collect into a chain with no transition
+01-15 01:02:58.847  1860  3348 E TransitionChain: Can't collect into a chain with no transition
+01-15 01:02:59.051   609   609 E BpTransactionCompletedListener: Failed to transact (-32)
+01-15 01:02:59.558  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:00.318  5095  5649 E AppsModel: Failed to retrieve application info
+01-15 01:03:00.318  5095  5649 E AppsModel: android.content.pm.PackageManager$NameNotFoundException: Package com.android.systemui not found for user -1
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at android.content.pm.LauncherApps.getApplicationInfo(LauncherApps.java:1405)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at aae$$ExternalSyntheticApiModelOutline0.m(D8$$SyntheticClass:9)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at aeke.k(PG:30)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at und.z(PG:190)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at vpn.b(PG:257)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at vpn.e(PG:2)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at smo.run(PG:428)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+01-15 01:03:00.318  5095  5649 E AppsModel: 	at java.lang.Thread.run(Thread.java:1563)
+01-15 01:03:02.774  1363  1363 E libbinder.IPCThreadState: binder thread pool (1 threads) starved for 132 ms
+01-15 01:03:02.776  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:05.950  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:06.476  1290  1342 E CHRE    : @ 1666593.590: [AV] Client 3 is not found.
+01-15 01:03:09.190  1363  1363 E libbinder.IPCThreadState: binder thread pool (1 threads) starved for 148 ms
+01-15 01:03:09.193  1363  1457 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:12.428  1363  1457 E libbinder.IPCThreadState: binder thread pool (1 threads) starved for 134 ms
+01-15 01:03:12.430  1363  1457 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:15.646  1363  1457 E libbinder.IPCThreadState: binder thread pool (1 threads) starved for 140 ms
+01-15 01:03:15.646  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:18.816  1363  1363 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:20.921  1365  1486 E DeviceHalAidl: Function: parseAndSetVendorParameters Line: 411 Failed 
+01-15 01:03:20.921  1365  1486 E DeviceHalAidl: Function: parseAndSetVendorParameters Line: 411 Failed 
+01-15 01:03:20.948  1289  1779 E Lyric   : backend_pipeline_telemetry_key.h:201:  received unknown Backend Pipeline Telemetry Key Invalid IPBeYuvRealtime
+01-15 01:03:20.959  1289  1781 E GAF     : af_tuning_manager.cc:103: 6 calls in 487 sec(s): Tof tuning key not found:  Usecase: 0 Sensor mode: -1 Viridian value: -1 Camera position: 2 Camera lens_type: 5 Camera spectrum: -1 Partial Usecases: {}
+01-15 01:03:20.966  1289  2703 E GAF     : FrontVirtual: gaf_mod_hw_controller_impl.cc:423] GetHwPdStatsConfig: Bounding box output isn't valid.
+01-15 01:03:20.966  1289  1778 E Lyric   : backend_pipeline_telemetry_key.h:201:  received unknown Backend Pipeline Telemetry Key Invalid IPBeYuvRealtime
+01-15 01:03:20.966  1289  2703 E GAF     : elp_util.cc:504: 3 calls in 487 sec(s): FrontVirtualELP couldn't be calculated from the ELP table history. Using final_Fallback_position 25
+01-15 01:03:20.966  1289  2703 E GAF     : GAfStatsCdaf: gaf_stats_cdaf.cc:177] PreProcessHwCdaf: Invalid raw hw cdaf stats.
+01-15 01:03:20.966  1289  2703 E GAF     : FrontVirtual: gaf_metric_algos_3a.cc:65] ProcessStatsAe: invalid aec stats: skip aec stats processing
+01-15 01:03:20.969  1289  2703 E GAF     : GAfStatsCdaf: gaf_stats_cdaf.cc:177] PreProcessHwCdaf: Invalid raw hw cdaf stats.
+01-15 01:03:20.984  1289  2703 E GAF     : GAfStatsCdaf: gaf_stats_cdaf.cc:177] PreProcessHwCdaf: Invalid raw hw cdaf stats.
+01-15 01:03:20.993  1289  2703 E Lyric   : software_fence.cc:40: Resetting unsignaled fence unnamed
+01-15 01:03:21.017  1289  2702 E Lyric   : acat_controller_utils.cc:1793: 11 calls in 488 sec(s): Invalid defocus data:ABORTED: null ptr
+01-15 01:03:21.058  1289  2705 E native  : E0000 00:00:1768435401.058788    2705 frame_series.h:63] No valid frame assigned. Do nothing.
+01-15 01:03:21.058  1289  2705 E native  : E0000 00:00:1768435401.058901    2705 frame_series.h:63] No valid frame assigned. Do nothing.
+01-15 01:03:21.584  1289  2155 E USF     : USF_SpAPI: SampleEventCallback: Can't find session w/ cookie:10002e7b5
+01-15 01:03:21.977  1363  1457 E WifiHAL : Creating message to get cached scan results
+01-15 01:03:22.180  1289  2155 E USF     : USF_SpAPI: [0]Can't find session for cookie:10002e7b9 to handle flicker data msg!
+01-15 01:03:25.171  1363  1457 E WifiHAL : Creating message to get cached scan results
