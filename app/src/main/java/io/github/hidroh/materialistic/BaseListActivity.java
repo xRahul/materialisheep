@@ -30,6 +30,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.activity.OnBackPressedCallback;
+
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -56,7 +58,8 @@ import io.github.hidroh.materialistic.widget.PopupMenu;
 import io.github.hidroh.materialistic.widget.ViewPager;
 
 /**
- * An abstract base activity for displaying a list of items. This activity handles different layouts
+ * An abstract base activity for displaying a list of items. This activity
+ * handles different layouts
  * for portrait and landscape orientations and manages multi-pane functionality.
  */
 public abstract class BaseListActivity extends DrawerActivity implements MultiPaneListener {
@@ -70,17 +73,23 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     private Preferences.StoryViewMode mStoryViewMode;
     private boolean mExternalBrowser;
     private ViewPager mViewPager;
-    @Inject ActionViewResolver mActionViewResolver;
-    @Inject PopupMenu mPopupMenu;
-    @Inject SessionManager mSessionManager;
-    @Inject CustomTabsDelegate mCustomTabsDelegate;
-    @Inject KeyDelegate mKeyDelegate;
+    @Inject
+    ActionViewResolver mActionViewResolver;
+    @Inject
+    PopupMenu mPopupMenu;
+    @Inject
+    SessionManager mSessionManager;
+    @Inject
+    CustomTabsDelegate mCustomTabsDelegate;
+    @Inject
+    KeyDelegate mKeyDelegate;
     private AppBarLayout mAppBar;
     private TabLayout mTabLayout;
     private FloatingActionButton mReplyButton;
     private NavFloatingActionButton mNavButton;
     private View mListView;
-    @Synthetic boolean mFullscreen;
+    @Synthetic
+    boolean mFullscreen;
     private boolean mMultiWindowEnabled;
     private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -90,14 +99,23 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
             setFullscreen();
         }
     };
+    private final OnBackPressedCallback mBackPressedCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            LocalBroadcastManager.getInstance(BaseListActivity.this).sendBroadcast(new Intent(
+                    WebFragment.ACTION_FULLSCREEN).putExtra(WebFragment.EXTRA_FULLSCREEN, false));
+        }
+    };
     private ItemPagerAdapter mAdapter;
 
     /**
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @SuppressWarnings("ConstantConditions")
@@ -128,9 +146,9 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
             mReplyButton = (FloatingActionButton) findViewById(R.id.reply_button);
             mNavButton = (NavFloatingActionButton) findViewById(R.id.navigation_button);
             mNavButton.setNavigable(direction ->
-                    // if callback is fired navigable should not be null
-                    ((Navigable) ((ItemPagerAdapter) mViewPager.getAdapter()).getItem(0))
-                            .onNavigate(direction));
+            // if callback is fired navigable should not be null
+            ((Navigable) ((ItemPagerAdapter) mViewPager.getAdapter()).getItem(0))
+                    .onNavigate(direction));
             AppUtils.toggleFab(mNavButton, false);
             AppUtils.toggleFab(mReplyButton, false);
         }
@@ -158,14 +176,17 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
                 R.string.pref_external,
                 R.string.pref_story_display,
                 R.string.pref_multi_window);
+        getOnBackPressedDispatcher().addCallback(this, mBackPressedCallback);
     }
 
     /**
      * Called after {@link #onCreate(Bundle)} has completed.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -253,14 +274,12 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_share) {
             View anchor = findViewById(R.id.menu_share);
-            AppUtils.share(this, mPopupMenu, anchor == null ?
-                    findViewById(R.id.toolbar) : anchor, mSelectedItem);
+            AppUtils.share(this, mPopupMenu, anchor == null ? findViewById(R.id.toolbar) : anchor, mSelectedItem);
             return true;
         }
         if (item.getItemId() == R.id.menu_external) {
             View anchor = findViewById(R.id.menu_external);
-            AppUtils.openExternal(this, mPopupMenu, anchor == null ?
-                    findViewById(R.id.toolbar) : anchor,
+            AppUtils.openExternal(this, mPopupMenu, anchor == null ? findViewById(R.id.toolbar) : anchor,
                     mSelectedItem, mCustomTabsDelegate.getSession());
             return true;
         }
@@ -300,20 +319,6 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         mPreferenceObservable.unsubscribe(this);
         if (mIsMultiPane) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
-        }
-    }
-
-    /**
-     * Called when the activity has detected the user's press of the back
-     * key.
-     */
-    @Override
-    public void onBackPressed() {
-        if (!mIsMultiPane || !mFullscreen) {
-            super.onBackPressed();
-        } else {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(
-                    WebFragment.ACTION_FULLSCREEN).putExtra(WebFragment.EXTRA_FULLSCREEN, false));
         }
     }
 
@@ -372,7 +377,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     @NonNull
     @Override
     public ActionBar getSupportActionBar() {
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         return super.getSupportActionBar();
     }
 
@@ -461,6 +466,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         mKeyDelegate.setAppBarEnabled(!mFullscreen);
         mViewPager.setSwipeEnabled(!mFullscreen);
         AppUtils.toggleFab(mReplyButton, !mFullscreen);
+        mBackPressedCallback.setEnabled(mIsMultiPane && mFullscreen);
     }
 
     private Scrollable getScrollableList() {
@@ -534,7 +540,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         // even when view pager no longer exists (e.g. after rotation),
         // so we have to explicitly remove those with view pager ID
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        //noinspection Convert2streamapi
+        // noinspection Convert2streamapi
         for (Fragment fragment : getSupportFragmentManager().getFragments()) {
             if (fragment != null && fragment.getId() == R.id.content) {
                 transaction.remove(fragment);

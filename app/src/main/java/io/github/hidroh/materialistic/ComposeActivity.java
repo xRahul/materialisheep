@@ -18,6 +18,8 @@ package io.github.hidroh.materialistic;
 
 import android.content.Context;
 import android.os.Bundle;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
@@ -164,7 +166,7 @@ public class ComposeActivity extends ThemedActivity {
             mEditText.getEditableText().insert(0, createQuote());
         }
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
+            getOnBackPressedDispatcher().onBackPressed();
             return true;
         }
         if (item.getItemId() == R.id.menu_save_draft) {
@@ -186,28 +188,6 @@ public class ComposeActivity extends ThemedActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * Called when the activity has detected the user's press of the back
-     * key.
-     */
-    @Override
-    public void onBackPressed() {
-        if (mEditText.length() == 0 || mSending ||
-                TextUtils.equals(Preferences.getDraft(this, mParentId), mEditText.getText().toString())) {
-            super.onBackPressed();
-            return;
-        }
-        mAlertDialogBuilder
-                .init(this)
-                .setMessage(R.string.confirm_save_draft)
-                .setNegativeButton(android.R.string.no, (dialog, which) -> ComposeActivity.super.onBackPressed())
-                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                    Preferences.saveDraft(this, mParentId, mEditText.getText().toString());
-                    ComposeActivity.super.onBackPressed();
-                })
-                .show();
     }
 
     private void send() {

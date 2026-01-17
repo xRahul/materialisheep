@@ -19,6 +19,8 @@ package io.github.hidroh.materialistic;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import com.google.android.material.textfield.TextInputLayout;
 import androidx.core.content.ContextCompat;
@@ -113,6 +115,21 @@ public class SubmitActivity extends ThemedActivity {
                 extractUrl(text);
             }
         }
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                mAlertDialogBuilder
+                        .init(SubmitActivity.this)
+                        .setMessage(mSending ? R.string.confirm_no_waiting : R.string.confirm_no_submit)
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                            setEnabled(false);
+                            getOnBackPressedDispatcher().onBackPressed();
+                            setEnabled(true);
+                        })
+                        .show();
+            }
+        });
     }
 
     /**
@@ -152,7 +169,7 @@ public class SubmitActivity extends ThemedActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
+            getOnBackPressedDispatcher().onBackPressed();
             return true;
         }
         if (item.getItemId() == R.id.menu_send) {
@@ -194,20 +211,6 @@ public class SubmitActivity extends ThemedActivity {
         super.onSaveInstanceState(outState);
         outState.putString(STATE_SUBJECT, mTitleEditText.getText().toString());
         outState.putString(STATE_TEXT, mContentEditText.getText().toString());
-    }
-
-    /**
-     * Called when the activity has detected the user's press of the back
-     * key.
-     */
-    @Override
-    public void onBackPressed() {
-        mAlertDialogBuilder
-                .init(this)
-                .setMessage(mSending ? R.string.confirm_no_waiting : R.string.confirm_no_submit)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> SubmitActivity.super.onBackPressed())
-                .show();
     }
 
     private boolean validate() {
