@@ -112,6 +112,34 @@ public class ComposeActivity extends ThemedActivity {
                 }
             });
         }
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (mEditText.length() == 0 || mSending ||
+                        TextUtils.equals(Preferences.getDraft(ComposeActivity.this, mParentId),
+                                mEditText.getText().toString())) {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                    setEnabled(true);
+                    return;
+                }
+                mAlertDialogBuilder
+                        .init(ComposeActivity.this)
+                        .setMessage(R.string.confirm_save_draft)
+                        .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                            setEnabled(false);
+                            getOnBackPressedDispatcher().onBackPressed();
+                            setEnabled(true);
+                        })
+                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                            Preferences.saveDraft(ComposeActivity.this, mParentId, mEditText.getText().toString());
+                            setEnabled(false);
+                            getOnBackPressedDispatcher().onBackPressed();
+                            setEnabled(true);
+                        })
+                        .show();
+            }
+        });
     }
 
     /**

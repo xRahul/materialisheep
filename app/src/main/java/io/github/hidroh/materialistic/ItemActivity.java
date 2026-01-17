@@ -405,8 +405,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         mAppBar.setExpanded(!mFullscreen, true);
         mKeyDelegate.setAppBarEnabled(!mFullscreen);
         mViewPager.setSwipeEnabled(!mFullscreen);
-        mKeyDelegate.setAppBarEnabled(!mFullscreen);
-        mViewPager.setSwipeEnabled(!mFullscreen);
+
         AppUtils.toggleFab(mReplyButton, !mFullscreen);
         mBackPressedCallback.setEnabled(mFullscreen);
     }
