@@ -64,6 +64,23 @@ public class SubmitActivity extends ThemedActivity {
     private TextInputLayout mTitleLayout;
     private TextInputLayout mContentLayout;
     private boolean mSending;
+    private final OnBackPressedCallback mOnBackPressedCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            setEnabled(false);
+            mAlertDialogBuilder
+                    .init(SubmitActivity.this)
+                    .setMessage(mSending ? R.string.confirm_no_waiting : R.string.confirm_no_submit)
+                    .setNegativeButton(android.R.string.cancel, (dialog, which) -> setEnabled(true))
+                    .setPositiveButton(android.R.string.ok,
+                            (dialog, which) -> {
+                                setEnabled(false);
+                                getOnBackPressedDispatcher().onBackPressed();
+                            })
+                    .setOnCancelListener(dialog -> setEnabled(true))
+                    .show();
+        }
+    };
 
     /**
      * Called when the activity is first created.
@@ -115,20 +132,7 @@ public class SubmitActivity extends ThemedActivity {
                 extractUrl(text);
             }
         }
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                setEnabled(false);
-                mAlertDialogBuilder
-                        .init(SubmitActivity.this)
-                        .setMessage(mSending ? R.string.confirm_no_waiting : R.string.confirm_no_submit)
-                        .setNegativeButton(android.R.string.cancel, (dialog, which) -> setEnabled(true))
-                        .setPositiveButton(android.R.string.ok,
-                                (dialog, which) -> getOnBackPressedDispatcher().onBackPressed())
-                        .setOnCancelListener(dialog -> setEnabled(true))
-                        .show();
-            }
-        });
+        getOnBackPressedDispatcher().addCallback(this, mOnBackPressedCallback);
     }
 
     /**
