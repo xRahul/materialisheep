@@ -54,3 +54,8 @@ gha-creds-*.json
 tests/artifacts/
 
 build_log*.txt
+waydroid_status.txt
+apk_list.txt
+crash_dump.txt
+pr_comments*.txt
+

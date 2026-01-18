@@ -26,15 +26,21 @@ import android.widget.ListView;
 
 /**
  * Injectable alert dialog builder, allowing swapping between
- * {@link androidx.appcompat.app.AlertDialog.Builder} and {@link android.app.AlertDialog.Builder}.
- * This interface provides a consistent way to create alert dialogs, regardless of the underlying
- * implementation, which is particularly useful for testing and maintaining a consistent UI.
+ * {@link androidx.appcompat.app.AlertDialog.Builder} and
+ * {@link android.app.AlertDialog.Builder}.
+ * This interface provides a consistent way to create alert dialogs, regardless
+ * of the underlying
+ * implementation, which is particularly useful for testing and maintaining a
+ * consistent UI.
  *
- * @param <T> The type of created alert dialog, which must extend from {@link Dialog}.
+ * @param <T> The type of created alert dialog, which must extend from
+ *            {@link Dialog}.
  */
 public interface AlertDialogBuilder<T extends Dialog> {
     /**
-     * Construct the wrapped dialog builder object. This must be called before any other methods.
+     * Construct the wrapped dialog builder object. This must be called before any
+     * other methods.
+     * 
      * @param context activity context
      * @return This Builder object to allow for chaining of calls to set methods
      */
@@ -71,27 +77,35 @@ public interface AlertDialogBuilder<T extends Dialog> {
     AlertDialogBuilder setView(View view);
 
     /**
-     * Set a list of items to be displayed in the dialog as the content, you will be notified
+     * Set a list of items to be displayed in the dialog as the content, you will be
+     * notified
      * of
-     * the selected item via the supplied listener. The list will have a check mark displayed
+     * the selected item via the supplied listener. The list will have a check mark
+     * displayed
      * to
-     * the right of the text for the checked item. Clicking on an item in the list will not
+     * the right of the text for the checked item. Clicking on an item in the list
+     * will not
      * dismiss the dialog. Clicking on a button will dismiss the dialog.
      *
      * @param items       the items to be displayed.
-     * @param checkedItem specifies which item is checked. If -1 no items are checked.
-     * @param listener    notified when an item on the list is clicked. The dialog will not be
-     *                    dismissed when an item is clicked. It will only be dismissed if
+     * @param checkedItem specifies which item is checked. If -1 no items are
+     *                    checked.
+     * @param listener    notified when an item on the list is clicked. The dialog
+     *                    will not be
+     *                    dismissed when an item is clicked. It will only be
+     *                    dismissed if
      *                    clicked on a
-     *                    button, if no buttons are supplied it's up to the user to dismiss the
+     *                    button, if no buttons are supplied it's up to the user to
+     *                    dismiss the
      *                    dialog.
      * @return This Builder object to allow for chaining of calls to set methods
      */
     AlertDialogBuilder setSingleChoiceItems(CharSequence[] items, int checkedItem,
-                                            final DialogInterface.OnClickListener listener);
+            final DialogInterface.OnClickListener listener);
 
     /**
-     * Set a listener to be invoked when the negative button of the dialog is pressed.
+     * Set a listener to be invoked when the negative button of the dialog is
+     * pressed.
      *
      * @param textId   The resource id of the text to display in the negative button
      * @param listener The {@link DialogInterface.OnClickListener} to use.
@@ -100,7 +114,8 @@ public interface AlertDialogBuilder<T extends Dialog> {
     AlertDialogBuilder setNegativeButton(@StringRes int textId, DialogInterface.OnClickListener listener);
 
     /**
-     * Set a listener to be invoked when the positive button of the dialog is pressed.
+     * Set a listener to be invoked when the positive button of the dialog is
+     * pressed.
      *
      * @param textId   The resource id of the text to display in the positive button
      * @param listener The {@link DialogInterface.OnClickListener} to use.
@@ -109,7 +124,8 @@ public interface AlertDialogBuilder<T extends Dialog> {
     AlertDialogBuilder setPositiveButton(@StringRes int textId, DialogInterface.OnClickListener listener);
 
     /**
-     * Set a listener to be invoked when the neutral button of the dialog is pressed.
+     * Set a listener to be invoked when the neutral button of the dialog is
+     * pressed.
      *
      * @param textId   The resource id of the text to display in the neutral button
      * @param listener The {@link DialogInterface.OnClickListener} to use.
@@ -118,9 +134,20 @@ public interface AlertDialogBuilder<T extends Dialog> {
     AlertDialogBuilder setNeutralButton(@StringRes int textId, DialogInterface.OnClickListener listener);
 
     /**
-     * Creates a {@link Dialog} with the arguments supplied to this builder. It does not
-     * {@link Dialog#show()} the dialog. This allows the user to do any extra processing
-     * before displaying the dialog. Use {@link #show()} if you don't have any other processing
+     * Set a listener to be invoked when the dialog is canceled.
+     *
+     * @param listener The {@link DialogInterface.OnCancelListener} to use.
+     * @return This Builder object to allow for chaining of calls to set methods
+     */
+    AlertDialogBuilder setOnCancelListener(DialogInterface.OnCancelListener listener);
+
+    /**
+     * Creates a {@link Dialog} with the arguments supplied to this builder. It does
+     * not
+     * {@link Dialog#show()} the dialog. This allows the user to do any extra
+     * processing
+     * before displaying the dialog. Use {@link #show()} if you don't have any other
+     * processing
      * to do and want this to be created and displayed.
      */
     T create();
@@ -165,21 +192,22 @@ public interface AlertDialogBuilder<T extends Dialog> {
         }
 
         @Override
-        public AlertDialogBuilder setSingleChoiceItems(CharSequence[] items, int checkedItem, DialogInterface.OnClickListener listener) {
+        public AlertDialogBuilder setSingleChoiceItems(CharSequence[] items, int checkedItem,
+                DialogInterface.OnClickListener listener) {
             mBuilder.setSingleChoiceItems(items, checkedItem, listener);
             return this;
         }
 
         @Override
         public AlertDialogBuilder setNegativeButton(@StringRes int textId,
-                                                    DialogInterface.OnClickListener listener) {
+                DialogInterface.OnClickListener listener) {
             mBuilder.setNegativeButton(textId, listener);
             return this;
         }
 
         @Override
         public AlertDialogBuilder setPositiveButton(@StringRes int textId,
-                                                    DialogInterface.OnClickListener listener) {
+                DialogInterface.OnClickListener listener) {
             mBuilder.setPositiveButton(textId, listener);
             return this;
         }
@@ -187,6 +215,12 @@ public interface AlertDialogBuilder<T extends Dialog> {
         @Override
         public AlertDialogBuilder setNeutralButton(@StringRes int textId, DialogInterface.OnClickListener listener) {
             mBuilder.setNeutralButton(textId, listener);
+            return this;
+        }
+
+        @Override
+        public AlertDialogBuilder setOnCancelListener(DialogInterface.OnCancelListener listener) {
+            mBuilder.setOnCancelListener(listener);
             return this;
         }
 

@@ -17,6 +17,7 @@
 package io.github.hidroh.materialistic;
 
 import androidx.lifecycle.Observer;
+import androidx.activity.OnBackPressedCallback;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -80,28 +81,43 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     private static final String STATE_ITEM = "state:item";
     private static final String STATE_ITEM_ID = "state:itemId";
     private static final String STATE_FULLSCREEN = "state:fullscreen";
-    @Synthetic WebItem mItem;
-    @Synthetic String mItemId = null;
-    @Synthetic ImageView mBookmark;
+    @Synthetic
+    WebItem mItem;
+    @Synthetic
+    String mItemId = null;
+    @Synthetic
+    ImageView mBookmark;
     private boolean mExternalBrowser;
     private Preferences.StoryViewMode mStoryViewMode;
-    @Inject @Named(HN) ItemManager mItemManager;
-    @Inject FavoriteManager mFavoriteManager;
-    @Inject AlertDialogBuilder mAlertDialogBuilder;
-    @Inject PopupMenu mPopupMenu;
-    @Inject UserServices mUserServices;
-    @Inject SessionManager mSessionManager;
-    @Inject CustomTabsDelegate mCustomTabsDelegate;
-    @Inject KeyDelegate mKeyDelegate;
+    @Inject
+    @Named(HN)
+    ItemManager mItemManager;
+    @Inject
+    FavoriteManager mFavoriteManager;
+    @Inject
+    AlertDialogBuilder mAlertDialogBuilder;
+    @Inject
+    PopupMenu mPopupMenu;
+    @Inject
+    UserServices mUserServices;
+    @Inject
+    SessionManager mSessionManager;
+    @Inject
+    CustomTabsDelegate mCustomTabsDelegate;
+    @Inject
+    KeyDelegate mKeyDelegate;
     private TabLayout mTabLayout;
-    @Synthetic AppBarLayout mAppBar;
-    @Synthetic CoordinatorLayout mCoordinatorLayout;
+    @Synthetic
+    AppBarLayout mAppBar;
+    @Synthetic
+    CoordinatorLayout mCoordinatorLayout;
     private ImageButton mVoteButton;
     private FloatingActionButton mReplyButton;
     private NavFloatingActionButton mNavButton;
     private ItemPagerAdapter mAdapter;
     private ViewPager mViewPager;
-    @Synthetic boolean mFullscreen;
+    @Synthetic
+    boolean mFullscreen;
     private final Observer<Uri> mObserver = uri -> {
         if (mItem == null) {
             return;
@@ -129,6 +145,13 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
             setFullscreen();
         }
     };
+    private final OnBackPressedCallback mBackPressedCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            LocalBroadcastManager.getInstance(ItemActivity.this).sendBroadcast(
+                    new Intent(WebFragment.ACTION_FULLSCREEN).putExtra(WebFragment.EXTRA_FULLSCREEN, false));
+        }
+    };
     private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
     private AppUtils.SystemUiHelper mSystemUiHelper;
 
@@ -136,8 +159,10 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -152,15 +177,15 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         }
         setContentView(R.layout.activity_item);
         setSupportActionBar(findViewById(R.id.toolbar));
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP);
         mSystemUiHelper = new AppUtils.SystemUiHelper(getWindow());
         mReplyButton = findViewById(R.id.reply_button);
         mNavButton = findViewById(R.id.navigation_button);
         mNavButton.setNavigable(direction ->
-                // if callback is fired navigable should not be null
-                AppUtils.navigate(direction, mAppBar, (Navigable) mAdapter.getItem(0)));
+        // if callback is fired navigable should not be null
+        AppUtils.navigate(direction, mAppBar, (Navigable) mAdapter.getItem(0)));
         mVoteButton = findViewById(R.id.vote_button);
         mBookmark = findViewById(R.id.bookmarked);
         mCoordinatorLayout = findViewById(R.id.content_frame);
@@ -175,6 +200,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                 new IntentFilter(WebFragment.ACTION_FULLSCREEN));
         mPreferenceObservable.subscribe(this, this::onPreferenceChanged,
                 R.string.pref_navigation);
+        getOnBackPressedDispatcher().addCallback(this, mBackPressedCallback);
         if (savedInstanceState != null) {
             mItem = savedInstanceState.getParcelable(STATE_ITEM);
             mItemId = savedInstanceState.getString(STATE_ITEM_ID);
@@ -252,15 +278,13 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         }
         if (item.getItemId() == R.id.menu_external) {
             View anchor = findViewById(R.id.menu_external);
-            AppUtils.openExternal(this, mPopupMenu, anchor == null ?
-                    findViewById(R.id.toolbar) : anchor, mItem,
+            AppUtils.openExternal(this, mPopupMenu, anchor == null ? findViewById(R.id.toolbar) : anchor, mItem,
                     mCustomTabsDelegate.getSession());
             return true;
         }
         if (item.getItemId() == R.id.menu_share) {
             View anchor = findViewById(R.id.menu_share);
-            AppUtils.share(this, mPopupMenu, anchor == null ?
-                    findViewById(R.id.toolbar) : anchor, mItem);
+            AppUtils.share(this, mPopupMenu, anchor == null ? findViewById(R.id.toolbar) : anchor, mItem);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -299,20 +323,6 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         mPreferenceObservable.unsubscribe(this);
-    }
-
-    /**
-     * Called when the activity has detected the user's press of the back
-     * key.
-     */
-    @Override
-    public void onBackPressed() {
-        if (!mFullscreen) {
-            super.onBackPressed();
-        } else {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(
-                    WebFragment.ACTION_FULLSCREEN).putExtra(WebFragment.EXTRA_FULLSCREEN, false));
-        }
     }
 
     /**
@@ -383,7 +393,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     public void onItemChanged(@NonNull Item item) {
         mItem = item;
         if (mTabLayout.getTabCount() > 0) {
-            //noinspection ConstantConditions
+            // noinspection ConstantConditions
             mTabLayout.getTabAt(0).setText(getResources()
                     .getQuantityString(R.plurals.comments_count, item.getKidCount(), item.getKidCount()));
         }
@@ -395,7 +405,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         mAppBar.setExpanded(!mFullscreen, true);
         mKeyDelegate.setAppBarEnabled(!mFullscreen);
         mViewPager.setSwipeEnabled(!mFullscreen);
+
         AppUtils.toggleFab(mReplyButton, !mFullscreen);
+        mBackPressedCallback.setEnabled(mFullscreen);
     }
 
     @Synthetic
@@ -501,9 +513,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         if (story.isStoryType() && mExternalBrowser && !hasText) {
             TextView buttonArticle = (TextView) findViewById(R.id.button_article);
             buttonArticle.setVisibility(View.VISIBLE);
-            buttonArticle.setOnClickListener(v ->
-                    AppUtils.openWebUrlExternal(ItemActivity.this,
-                            story, story.getUrl(), mCustomTabsDelegate.getSession()));
+            buttonArticle.setOnClickListener(v -> AppUtils.openWebUrlExternal(ItemActivity.this,
+                    story, story.getUrl(), mCustomTabsDelegate.getSession()));
         }
         if (mFullscreen) {
             setFullscreen();
@@ -511,8 +522,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     }
 
     private void decorateFavorite(boolean isFavorite) {
-        mBookmark.setImageResource(isFavorite ?
-                R.drawable.ic_bookmark_white_24dp : R.drawable.ic_bookmark_border_white_24dp);
+        mBookmark.setImageResource(
+                isFavorite ? R.drawable.ic_bookmark_white_24dp : R.drawable.ic_bookmark_border_white_24dp);
     }
 
     private <T> T getCurrent(Class<T> clazz) {
@@ -521,7 +532,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         }
         Fragment currentItem = mAdapter.getItem(mViewPager.getCurrentItem());
         if (clazz.isInstance(currentItem)) {
-            //noinspection unchecked
+            // noinspection unchecked
             return (T) currentItem;
         } else {
             return null;

@@ -24,6 +24,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -44,17 +46,20 @@ import io.github.hidroh.materialistic.annotation.Synthetic;
  */
 public abstract class DrawerActivity extends ThemedActivity {
 
-    @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject
+    AlertDialogBuilder mAlertDialogBuilder;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-    @Synthetic View mDrawer;
-    @Synthetic Class<? extends Activity> mPendingNavigation;
-    @Synthetic Bundle mPendingNavigationExtras;
+    @Synthetic
+    View mDrawer;
+    @Synthetic
+    Class<? extends Activity> mPendingNavigation;
+    @Synthetic
+    Bundle mPendingNavigationExtras;
     private TextView mDrawerAccount;
     private View mDrawerLogout;
     private View mDrawerUser;
-    private final SharedPreferences.OnSharedPreferenceChangeListener mLoginListener
-            = (sharedPreferences, key) -> {
+    private final SharedPreferences.OnSharedPreferenceChangeListener mLoginListener = (sharedPreferences, key) -> {
         if (TextUtils.equals(key, getString(R.string.pref_username))) {
             setUsername();
         }
@@ -64,8 +69,10 @@ public abstract class DrawerActivity extends ThemedActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -100,14 +107,30 @@ public abstract class DrawerActivity extends ThemedActivity {
                 .registerOnSharedPreferenceChangeListener(mLoginListener);
         setUpDrawer();
         setUsername();
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (mDrawerLayout.isDrawerOpen(mDrawer)) {
+                    closeDrawers();
+                } else if (isTaskRoot() && Preferences.isLaunchScreenLast(DrawerActivity.this)) {
+                    moveTaskToBack(true);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+
+                }
+            }
+        });
     }
 
     /**
      * Called after {@link #onCreate(Bundle)} has completed.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -137,22 +160,7 @@ public abstract class DrawerActivity extends ThemedActivity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return mDrawerToggle.onOptionsItemSelected(item)|| super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * Called when the activity has detected the user's press of the back
-     * key.
-     */
-    @Override
-    public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(mDrawer)) {
-            closeDrawers();
-        } else if (isTaskRoot() && Preferences.isLaunchScreenLast(this)) {
-            moveTaskToBack(true);
-        } else {
-            super.onBackPressed();
-        }
+        return mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     /**
@@ -175,7 +183,7 @@ public abstract class DrawerActivity extends ThemedActivity {
     public void setContentView(int layoutResID) {
         ViewGroup drawerLayout = (ViewGroup) findViewById(R.id.drawer_layout);
         View view = getLayoutInflater().inflate(layoutResID, drawerLayout, false);
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         drawerLayout.addView(view, 0);
     }
 
@@ -238,8 +246,7 @@ public abstract class DrawerActivity extends ThemedActivity {
         mAlertDialogBuilder.init(this)
                 .setMessage(R.string.logout_confirm)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (dialog, which) ->
-                        Preferences.setUsername(this, null))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> Preferences.setUsername(this, null))
                 .show();
     }
 
