@@ -19,6 +19,7 @@ package io.github.sheepdestroyer.materialisheep;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.os.Bundle;
+import androidx.core.content.IntentCompat;
 
 /**
  * Base class for activities that are used to help implement an
@@ -41,7 +42,6 @@ import android.os.Bundle;
  * {@link AccountManager#ERROR_CODE_CANCELED}
  * will be called on the response.
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated Parcelable API
 public abstract class AccountAuthenticatorActivity extends ThemedActivity {
     private AccountAuthenticatorResponse mAccountAuthenticatorResponse = null;
     private Bundle mResultBundle = null;
@@ -49,8 +49,8 @@ public abstract class AccountAuthenticatorActivity extends ThemedActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAccountAuthenticatorResponse = getIntent()
-                .getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
+        mAccountAuthenticatorResponse = IntentCompat.getParcelableExtra(getIntent(),
+                AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, AccountAuthenticatorResponse.class);
         if (mAccountAuthenticatorResponse != null) {
             mAccountAuthenticatorResponse.onRequestContinued();
         }
