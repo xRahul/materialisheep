@@ -119,9 +119,8 @@ public interface ReadabilityClient {
         }
 
         @Override
-        @android.annotation.SuppressLint("CheckResult")
         public void parse(String itemId, String url, Callback callback) {
-            Observable.defer(() -> fromCache(itemId))
+            mDisposables.add(Observable.defer(() -> fromCache(itemId))
                     .subscribeOn(mIoScheduler)
                     .switchIfEmpty(fromNetwork(itemId, url))
                     .observeOn(mMainThreadScheduler)
@@ -129,21 +128,20 @@ public interface ReadabilityClient {
                     .subscribe(callback::onResponse, throwable -> {
                         android.util.Log.e(TAG, "Failed to parse " + url, throwable);
                         callback.onResponse(null);
-                    }, () -> callback.onResponse(null));
+                    }, () -> callback.onResponse(null)));
         }
 
         @WorkerThread
         @Override
-        @android.annotation.SuppressLint("CheckResult")
         public void parse(String itemId, String url) {
-            Observable.defer(() -> fromCache(itemId))
+            mDisposables.add(Observable.defer(() -> fromCache(itemId))
                     .subscribeOn(Schedulers.trampoline())
                     .switchIfEmpty(fromNetwork(itemId, url))
                     .observeOn(Schedulers.trampoline())
                     .ignoreElements()
                     .subscribe(() -> {
                     }, throwable -> Log.w(TAG, "Failed to pre-parse " + url,
-                            throwable));
+                            throwable)));
         }
 
         @NonNull
