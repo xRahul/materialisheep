@@ -1,2 +1,0 @@
-Warning: 14 uncommitted changes
-https://github.com/sheepdestroyer/materialistic/pull/23
