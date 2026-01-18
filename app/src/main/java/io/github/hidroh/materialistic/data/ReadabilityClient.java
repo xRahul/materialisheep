@@ -45,6 +45,7 @@ import okio.Okio;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -97,6 +98,7 @@ public interface ReadabilityClient {
         @Named(DataModule.MAIN_THREAD)
         Scheduler mMainThreadScheduler;
         private String mReadabilityJs;
+        private final CompositeDisposable mDisposables = new CompositeDisposable();
 
         @Inject
         public Impl(Context context, LocalCache cache) {
@@ -165,11 +167,13 @@ public interface ReadabilityClient {
                                         JSONObject json = new JSONObject(value);
                                         content = json.getString("content");
                                         final String savedContent = content;
-                                        Completable.fromAction(() -> mCache.putReadability(itemId, savedContent))
+                                        final String savedContent = content;
+                                        mDisposables.add(Completable
+                                                .fromAction(() -> mCache.putReadability(itemId, savedContent))
                                                 .subscribeOn(mIoScheduler)
                                                 .subscribe(() -> {
                                                 }, error -> Log.e("ReadabilityClient", "Failed to cache content",
-                                                        error));
+                                                        error)));
                                     } catch (JSONException e) {
                                         Log.w("ReadabilityClient", "Failed to parse Readability output", e);
                                         // content will be null
@@ -209,6 +213,10 @@ public interface ReadabilityClient {
                 settings.setGeolocationEnabled(false);
                 webView.loadUrl(url);
             })).timeout(30, TimeUnit.SECONDS);
+        }
+
+        public void close() {
+            mDisposables.clear();
         }
 
         private Observable<String> fromCache(String itemId) {
