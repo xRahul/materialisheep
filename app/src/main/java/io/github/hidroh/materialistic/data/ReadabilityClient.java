@@ -97,19 +97,19 @@ public interface ReadabilityClient {
         private static final String TAG = "ReadabilityClient";
         private final LocalCache mCache;
         private final Context mContext;
-        @Inject
-        @Named(DataModule.IO_THREAD)
-        Scheduler mIoScheduler;
-        @Inject
-        @Named(DataModule.MAIN_THREAD)
-        Scheduler mMainThreadScheduler;
+        private final Scheduler mIoScheduler;
+        private final Scheduler mMainThreadScheduler;
         private String mReadabilityJs;
         private final CompositeDisposable mDisposables = new CompositeDisposable();
 
         @Inject
-        public Impl(Context context, LocalCache cache) {
+        public Impl(Context context, LocalCache cache,
+                @Named(DataModule.IO_THREAD) Scheduler ioScheduler,
+                @Named(DataModule.MAIN_THREAD) Scheduler mainThreadScheduler) {
             mContext = context;
             mCache = cache;
+            mIoScheduler = ioScheduler;
+            mMainThreadScheduler = mainThreadScheduler;
             try (InputStream inputStream = mContext.getAssets().open("Readability.js")) {
                 mReadabilityJs = Okio.buffer(Okio.source(inputStream)).readUtf8();
             } catch (IOException e) {
