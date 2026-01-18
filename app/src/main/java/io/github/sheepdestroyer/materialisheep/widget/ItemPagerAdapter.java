@@ -38,6 +38,8 @@ import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
 
+@SuppressWarnings("deprecation") // TODO: Uses deprecated FragmentStatePagerAdapter; migrate to
+                                 // ViewPager2/FragmentStateAdapter
 public class ItemPagerAdapter extends FragmentStatePagerAdapter {
     private final Fragment[] mFragments = new Fragment[3];
     private final Context mContext;
@@ -55,7 +57,7 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
         mShowArticle = builder.showArticle;
         mCacheMode = builder.cacheMode;
         mRetainInstance = builder.retainInstance;
-        mDefaultItem = Math.min(getCount()-1,
+        mDefaultItem = Math.min(getCount() - 1,
                 builder.defaultViewMode == Preferences.StoryViewMode.Comment ? 0 : 1);
     }
 
@@ -64,20 +66,22 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
         if (mFragments[position] != null) {
             return mFragments[position];
         }
-        String fragmentName;
         Bundle args = new Bundle();
         args.putBoolean(LazyLoadFragment.EXTRA_EAGER_LOAD, mDefaultItem == position);
         if (position == 0) {
             args.putParcelable(ItemFragment.EXTRA_ITEM, mItem);
             args.putInt(ItemFragment.EXTRA_CACHE_MODE, mCacheMode);
             args.putBoolean(ItemFragment.EXTRA_RETAIN_INSTANCE, mRetainInstance);
-            fragmentName = ItemFragment.class.getName();
+            Fragment fragment = new ItemFragment();
+            fragment.setArguments(args);
+            return fragment;
         } else {
             args.putParcelable(WebFragment.EXTRA_ITEM, mItem);
             args.putBoolean(WebFragment.EXTRA_RETAIN_INSTANCE, mRetainInstance);
-            fragmentName = WebFragment.class.getName();
+            Fragment fragment = new WebFragment();
+            fragment.setArguments(args);
+            return fragment;
         }
-        return Fragment.instantiate(mContext, fragmentName, args);
     }
 
     @Override
@@ -105,7 +109,7 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     public void bind(ViewPager viewPager, TabLayout tabLayout,
-                     FloatingActionButton navigationFab, FloatingActionButton genericFab) {
+            FloatingActionButton navigationFab, FloatingActionButton genericFab) {
         viewPager.setPageMargin(viewPager.getResources().getDimensionPixelOffset(R.dimen.divider));
         viewPager.setPageMarginDrawable(R.color.blackT12);
         viewPager.setOffscreenPageLimit(2);
@@ -138,8 +142,8 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
 
     @Synthetic
     void toggleFabs(boolean isComments,
-                    FloatingActionButton navigationFab,
-                    FloatingActionButton genericFab) {
+            FloatingActionButton navigationFab,
+            FloatingActionButton genericFab) {
         AppUtils.toggleFab(navigationFab, isComments &&
                 Preferences.navigationEnabled(navigationFab.getContext()));
         AppUtils.toggleFab(genericFab, true);

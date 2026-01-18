@@ -122,7 +122,9 @@ public class PopularActivity extends BaseListActivity {
         setRange(Preferences.getPopularRange(this));
         args.putString(ListFragment.EXTRA_FILTER, mRange);
         args.putString(ListFragment.EXTRA_ITEM_MANAGER, AlgoliaPopularClient.class.getName());
-        return Fragment.instantiate(this, ListFragment.class.getName(), args);
+        ListFragment fragment = new ListFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     /**

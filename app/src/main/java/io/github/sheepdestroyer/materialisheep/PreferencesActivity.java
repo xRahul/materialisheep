@@ -26,6 +26,7 @@ import android.view.MenuItem;
 /**
  * An activity that displays a preference screen.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Fragment.instantiate API
 public class PreferencesActivity extends ThemedActivity {
     public static final String EXTRA_TITLE = PreferencesActivity.class.getName() + ".EXTRA_TITLE";
     public static final String EXTRA_PREFERENCES = PreferencesActivity.class.getName() + ".EXTRA_PREFERENCES";
@@ -34,8 +35,10 @@ public class PreferencesActivity extends ThemedActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -44,7 +47,7 @@ public class PreferencesActivity extends ThemedActivity {
         setContentView(R.layout.activity_preferences);
         setTitle(getIntent().getIntExtra(EXTRA_TITLE, 0));
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
         if (savedInstanceState == null) {

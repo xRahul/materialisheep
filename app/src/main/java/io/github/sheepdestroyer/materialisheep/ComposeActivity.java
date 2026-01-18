@@ -42,6 +42,7 @@ import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 /**
  * Activity for composing a new comment or reply.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated android.R.string.yes/no
 public class ComposeActivity extends ThemedActivity {
     public static final String EXTRA_PARENT_ID = ComposeActivity.class.getName() + ".EXTRA_PARENT_ID";
     public static final String EXTRA_PARENT_TEXT = ComposeActivity.class.getName() + ".EXTRA_PARENT_TEXT";

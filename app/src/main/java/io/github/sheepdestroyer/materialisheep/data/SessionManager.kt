@@ -30,7 +30,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SessionManager @Inject constructor(
-    @Named(DataModule.IO_THREAD)
+    @param:Named(DataModule.IO_THREAD)
     private val ioScheduler: Scheduler,
     private val cache: LocalCache) {
 

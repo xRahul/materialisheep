@@ -37,18 +37,24 @@ import io.github.sheepdestroyer.materialisheep.widget.ThreadPreviewRecyclerViewA
 /**
  * An activity that displays a preview of a comment thread.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Parcelable API
 public class ThreadPreviewActivity extends ThemedActivity {
     public static final String EXTRA_ITEM = ThreadPreviewActivity.class.getName() + ".EXTRA_ITEM";
 
-    @Inject @Named(HN) ItemManager mItemManager;
-    @Inject KeyDelegate mKeyDelegate;
+    @Inject
+    @Named(HN)
+    ItemManager mItemManager;
+    @Inject
+    KeyDelegate mKeyDelegate;
 
     /**
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -63,7 +69,7 @@ public class ThreadPreviewActivity extends ThemedActivity {
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_thread_preview);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP);
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -72,7 +78,8 @@ public class ThreadPreviewActivity extends ThemedActivity {
         recyclerView.setAdapter(new ThreadPreviewRecyclerViewAdapter(mItemManager, item));
         mKeyDelegate.setScrollable(
                 new KeyDelegate.RecyclerViewHelper(recyclerView,
-                        KeyDelegate.RecyclerViewHelper.SCROLL_ITEM), null);
+                        KeyDelegate.RecyclerViewHelper.SCROLL_ITEM),
+                null);
     }
 
     /**
@@ -157,7 +164,8 @@ public class ThreadPreviewActivity extends ThemedActivity {
     /**
      * Checks if the activity should be displayed as a dialog.
      *
-     * @return True if the activity should be displayed as a dialog, false otherwise.
+     * @return True if the activity should be displayed as a dialog, false
+     *         otherwise.
      */
     @Override
     protected boolean isDialogTheme() {

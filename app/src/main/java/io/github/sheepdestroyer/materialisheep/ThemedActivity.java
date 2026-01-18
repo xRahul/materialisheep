@@ -31,6 +31,7 @@ import android.view.Menu;
 /**
  * An abstract base activity that supports different themes.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated TaskDescription API
 public abstract class ThemedActivity extends AppCompatActivity {
     private final MenuTintDelegate mMenuTintDelegate = new MenuTintDelegate();
     private final Preferences.Observable mThemeObservable = new Preferences.Observable();

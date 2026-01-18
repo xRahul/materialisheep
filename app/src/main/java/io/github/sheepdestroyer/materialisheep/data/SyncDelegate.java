@@ -66,6 +66,7 @@ import retrofit2.Callback;
 /**
  * A delegate for syncing data.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated NotificationCompat.Builder
 public class SyncDelegate {
     static final String SYNC_PREFERENCES_FILE = "_syncpreferences";
     private static final String NOTIFICATION_GROUP_KEY = "group";

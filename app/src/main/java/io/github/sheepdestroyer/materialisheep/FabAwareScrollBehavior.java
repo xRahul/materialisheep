@@ -27,9 +27,11 @@ import android.view.View;
 import java.util.List;
 
 /**
- * A {@link CoordinatorLayout.Behavior} that hides a {@link FloatingActionButton} when the user
+ * A {@link CoordinatorLayout.Behavior} that hides a
+ * {@link FloatingActionButton} when the user
  * scrolls down and shows it when the user scrolls up.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated onNestedScroll API
 public class FabAwareScrollBehavior extends AppBarLayout.ScrollingViewBehavior {
     static final Object HIDDEN = new Object();
 
@@ -63,7 +65,8 @@ public class FabAwareScrollBehavior extends AppBarLayout.ScrollingViewBehavior {
      * @return True if the behavior accepts the nested scroll, false otherwise.
      */
     @Override
-    public boolean onStartNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View directTargetChild, @NonNull View target, int axes, int type) {
+    public boolean onStartNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child,
+            @NonNull View directTargetChild, @NonNull View target, int axes, int type) {
         // Ensure we react to vertical scrolling
         return axes == ViewCompat.SCROLL_AXIS_VERTICAL
                 || super.onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, axes, type);
@@ -82,8 +85,10 @@ public class FabAwareScrollBehavior extends AppBarLayout.ScrollingViewBehavior {
      * @param type              The type of the scroll.
      */
     @Override
-    public void onNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
-        super.onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type);
+    public void onNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target,
+            int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+        super.onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
+                type);
         if (dyConsumed > 0) {
             // User scrolled down -> hide the FAB
             List<View> dependencies = coordinatorLayout.getDependencies(child);

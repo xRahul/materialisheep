@@ -40,8 +40,10 @@ public class SearchActivity extends BaseListActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -134,7 +136,9 @@ public class SearchActivity extends BaseListActivity {
         } else {
             args.putString(ListFragment.EXTRA_ITEM_MANAGER, AlgoliaClient.class.getName());
         }
-        return Fragment.instantiate(this, ListFragment.class.getName(), args);
+        ListFragment fragment = new ListFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     private void sort(boolean byTime) {

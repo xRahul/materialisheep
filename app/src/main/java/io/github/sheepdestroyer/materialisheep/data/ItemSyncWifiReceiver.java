@@ -26,8 +26,10 @@ import android.text.TextUtils;
 import io.github.sheepdestroyer.materialisheep.AppUtils;
 
 /**
- * A {@link BroadcastReceiver} that triggers a sync when the device connects to a Wi-Fi network.
+ * A {@link BroadcastReceiver} that triggers a sync when the device connects to
+ * a Wi-Fi network.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated ConnectivityManager/NetworkInfo APIs
 public class ItemSyncWifiReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {

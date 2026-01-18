@@ -21,7 +21,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import io.github.sheepdestroyer.materialisheep.ThemedActivity;
-import androidx.fragment.app.Fragment;
 import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
 import androidx.preference.PreferenceFragmentCompat;
 import android.text.TextUtils;
@@ -51,14 +50,16 @@ public class WidgetConfigActivity extends ThemedActivity {
         if (savedInstanceState == null) {
             Bundle args = new Bundle();
             args.putInt(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+            WidgetConfigurationFragment fragment = new WidgetConfigurationFragment();
+            fragment.setArguments(args);
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.widget_preferences,
-                            Fragment.instantiate(this, WidgetConfigurationFragment.class.getName(), args),
+                            fragment,
                             WidgetConfigurationFragment.class.getName())
                     .commit();
         }
-        //noinspection ConstantConditions
+        // noinspection ConstantConditions
         findViewById(R.id.button_ok).setOnClickListener(v -> configure());
     }
 
@@ -81,12 +82,11 @@ public class WidgetConfigActivity extends ThemedActivity {
      */
     public static class WidgetConfigurationFragment extends PreferenceFragmentCompat {
 
-        private SharedPreferences.OnSharedPreferenceChangeListener mListener =
-                (sharedPreferences, key) -> {
-                    if (TextUtils.equals(key, getString(R.string.pref_widget_query))) {
-                        setFilterQuery();
-                    }
-                };
+        private SharedPreferences.OnSharedPreferenceChangeListener mListener = (sharedPreferences, key) -> {
+            if (TextUtils.equals(key, getString(R.string.pref_widget_query))) {
+                setFilterQuery();
+            }
+        };
 
         @Override
         public void onCreate(Bundle savedInstanceState) {

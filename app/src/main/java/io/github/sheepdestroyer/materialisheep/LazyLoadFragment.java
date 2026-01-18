@@ -20,7 +20,8 @@ import android.content.Context;
 import android.os.Bundle;
 
 /**
- * A base fragment that delays loading data until it is visible to the user or if WIFI is enabled.
+ * A base fragment that delays loading data until it is visible to the user or
+ * if WIFI is enabled.
  */
 public abstract class LazyLoadFragment extends BaseFragment {
     public static final String EXTRA_EAGER_LOAD = LazyLoadFragment.class.getName() + ".EXTRA_EAGER_LOAD";
@@ -47,6 +48,8 @@ public abstract class LazyLoadFragment extends BaseFragment {
      * @param savedInstanceState If the fragment is being re-created from
      *                           a previous saved state, this is the state.
      */
+    @SuppressWarnings("deprecation") // Using deprecated setRetainInstance; migration to ViewModel requires
+                                     // significant refactoring
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,6 +123,8 @@ public abstract class LazyLoadFragment extends BaseFragment {
      *
      * @return True if the fragment is a new instance, false otherwise.
      */
+    @SuppressWarnings("deprecation") // Using deprecated getRetainInstance; migration to ViewModel requires
+                                     // significant refactoring
     protected boolean isNewInstance() {
         return !getRetainInstance() || mNewInstance;
     }
