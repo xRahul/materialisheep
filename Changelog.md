@@ -2,7 +2,7 @@
 
 ## [UNRELEASED]
 
-## [3.0] - 2026-06-XX
+## [4.0] - 2026-XX-XX
 ### Added
 - Added GitHub Actions workflows for Continuous Integration and Release builds.
 - The `CI.md` file documents the new CI/CD pipeline.
