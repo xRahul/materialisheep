@@ -35,6 +35,7 @@ import io.reactivex.rxjava3.core.Scheduler;
  * An {@link ItemManager} that uses the Algolia REST API to fetch popular
  * stories.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated DateUtils APIs
 public class AlgoliaPopularClient extends AlgoliaClient {
 
     /**

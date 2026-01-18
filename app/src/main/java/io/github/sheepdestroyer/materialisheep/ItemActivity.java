@@ -72,6 +72,7 @@ import io.github.sheepdestroyer.materialisheep.widget.ViewPager;
 /**
  * Activity that displays a single item in a {@link ViewPager}.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated LocalBroadcastManager/Parcelable APIs
 public class ItemActivity extends ThemedActivity implements ItemFragment.ItemChangedListener {
 
     public static final String EXTRA_ITEM = ItemActivity.class.getName() + ".EXTRA_ITEM";

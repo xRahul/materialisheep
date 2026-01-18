@@ -29,6 +29,7 @@ import java.util.Map;
 import androidx.annotation.Nullable;
 import io.github.sheepdestroyer.materialisheep.AdBlocker;
 
+@SuppressWarnings("deprecation") // TODO: Uses deprecated WebResourceRequest API
 public class AdBlockWebViewClient extends WebViewClient {
     private final boolean mAdBlockEnabled;
     private final Map<String, Boolean> mLoadedUrls = new HashMap<>();

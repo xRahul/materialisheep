@@ -62,6 +62,7 @@ import io.github.sheepdestroyer.materialisheep.widget.ViewPager;
  * handles different layouts
  * for portrait and landscape orientations and manages multi-pane functionality.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated LocalBroadcastManager, Parcelable APIs
 public abstract class BaseListActivity extends DrawerActivity implements MultiPaneListener {
 
     protected static final String LIST_FRAGMENT_TAG = BaseListActivity.class.getName() +

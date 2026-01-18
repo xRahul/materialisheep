@@ -37,10 +37,14 @@ import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
  * Entries, entry values and entry layouts should be provided via arrays.
  * Preference value will be persisted as string.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Preference APIs
 public abstract class SpinnerPreference extends Preference {
-    @Synthetic String[] mEntries = new String[0];
-    @Synthetic String[] mEntryValues = new String[0];
-    @Synthetic int mSelection = 0;
+    @Synthetic
+    String[] mEntries = new String[0];
+    @Synthetic
+    String[] mEntryValues = new String[0];
+    @Synthetic
+    int mSelection = 0;
 
     @SuppressWarnings("unused")
     public SpinnerPreference(Context context, AttributeSet attrs) {
@@ -165,16 +169,18 @@ public abstract class SpinnerPreference extends Preference {
 
     /**
      * Create dropdown view for item at given position
-     * @param position    item position
-     * @param parent      parent view
-     * @return  created view
+     * 
+     * @param position item position
+     * @param parent   parent view
+     * @return created view
      */
     protected abstract View createDropDownView(int position, ViewGroup parent);
 
     /**
      * Customize dropdown view for given spinner item
-     * @param position  item position
-     * @param view      item view
+     * 
+     * @param position item position
+     * @param view     item view
      */
     protected abstract void bindDropDownView(int position, View view);
 }

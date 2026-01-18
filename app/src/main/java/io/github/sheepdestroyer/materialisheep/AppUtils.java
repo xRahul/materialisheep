@@ -77,7 +77,8 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({ "WeakerAccess", "deprecation" }) // TODO: Uses deprecated NetworkInfo, Display,
+                                                     // LocalBroadcastManager, SystemUI, Custom Tabs APIs
 @PublicApi
 /**
  * A utility class providing common functions for the application.

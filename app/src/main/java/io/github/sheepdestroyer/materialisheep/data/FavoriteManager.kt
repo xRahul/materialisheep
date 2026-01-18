@@ -53,7 +53,7 @@ import javax.inject.Singleton
 @Singleton
 class FavoriteManager @Inject constructor(
     private val cache: LocalCache,
-    @Named(DataModule.IO_THREAD) private val ioScheduler: Scheduler,
+    @param:Named(DataModule.IO_THREAD) private val ioScheduler: Scheduler,
     private val savedStoriesDao: SavedStoriesDao) : LocalItemManager<Favorite> {
 
   companion object {
@@ -234,7 +234,7 @@ class FavoriteManager @Inject constructor(
     false
   } else {
     cache.isFavorite(itemId)
-  })!!
+  })
 
   @WorkerThread
   private fun toFile(context: Context, cursor: Cursor): Uri? {

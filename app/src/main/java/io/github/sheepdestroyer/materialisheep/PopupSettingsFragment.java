@@ -35,6 +35,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 /**
  * A dialog fragment that displays settings in a popup.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Fragment APIs (instantiate, onActivityCreated)
 public class PopupSettingsFragment extends AppCompatDialogFragment {
     static final String EXTRA_TITLE = PopupSettingsFragment.class.getName() + ".EXTRA_TITLE";
     static final String EXTRA_SUMMARY = PopupSettingsFragment.class.getName() + ".EXTRA_SUMMARY";
@@ -44,18 +45,23 @@ public class PopupSettingsFragment extends AppCompatDialogFragment {
     /**
      * Called to have the fragment instantiate its user interface view.
      *
-     * @param inflater           The LayoutInflater object that can be used to inflate
+     * @param inflater           The LayoutInflater object that can be used to
+     *                           inflate
      *                           any views in the fragment,
-     * @param container          If non-null, this is the parent view that the fragment's
-     *                           UI should be attached to.  The fragment should not add the view itself,
-     *                           but this can be used to generate the LayoutParams of the view.
+     * @param container          If non-null, this is the parent view that the
+     *                           fragment's
+     *                           UI should be attached to. The fragment should not
+     *                           add the view itself,
+     *                           but this can be used to generate the LayoutParams
+     *                           of the view.
      * @param savedInstanceState If non-null, this fragment is being re-constructed
      *                           from a previous saved state as given here.
      * @return Return the View for the fragment's UI, or null.
      */
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_popup_settings, container, false);
     }
 
@@ -123,7 +129,7 @@ public class PopupSettingsFragment extends AppCompatDialogFragment {
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             int width = getContext().getResources().getDimensionPixelSize(R.dimen.bottom_sheet_width);
-            //noinspection ConstantConditions
+            // noinspection ConstantConditions
             getWindow().setLayout(
                     width > 0 ? width : ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT);

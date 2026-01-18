@@ -149,7 +149,9 @@ public abstract class BaseStoriesActivity extends BaseListActivity
         Bundle args = new Bundle();
         args.putString(ListFragment.EXTRA_ITEM_MANAGER, HackerNewsClient.class.getName());
         args.putString(ListFragment.EXTRA_FILTER, getFetchMode());
-        return Fragment.instantiate(this, ListFragment.class.getName(), args);
+        ListFragment fragment = new ListFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
 }

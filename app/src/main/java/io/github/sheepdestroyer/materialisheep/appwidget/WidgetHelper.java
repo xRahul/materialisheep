@@ -51,6 +51,7 @@ import static android.content.Context.MODE_PRIVATE;
 /**
  * A helper class for managing widgets.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated AppWidgetManager/RemoteViews APIs
 class WidgetHelper {
     private static final String SP_NAME = "WidgetConfiguration_%1$d";
     private static final int DEFAULT_FREQUENCY_HOUR = 6;

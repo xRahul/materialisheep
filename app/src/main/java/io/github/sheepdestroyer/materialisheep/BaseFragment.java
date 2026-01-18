@@ -50,6 +50,8 @@ public abstract class BaseFragment extends Fragment {
      * @param savedInstanceState If the fragment is being re-created from
      *                           a previous saved state, this is the state.
      */
+    @SuppressWarnings("deprecation") // Using deprecated onActivityCreated; migration to onViewCreated requires
+                                     // refactoring
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -63,6 +65,8 @@ public abstract class BaseFragment extends Fragment {
      * @param inflater You can use this to inflate your menu XML files into the
      *                 menu.
      */
+    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
+                                     // Activity cooperation
     @Override
     public final void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         if (isAttached()) { // TODO http://b.android.com/80783
@@ -77,6 +81,8 @@ public abstract class BaseFragment extends Fragment {
      * @param menu The options menu as last shown or first initialized by
      *             onCreateOptionsMenu().
      */
+    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
+                                     // Activity cooperation
     @Override
     public final void onPrepareOptionsMenu(Menu menu) {
         if (isAttached()) { // TODO http://b.android.com/80783

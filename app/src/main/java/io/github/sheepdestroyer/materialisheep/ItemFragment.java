@@ -107,6 +107,8 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
      * @param savedInstanceState If the fragment is being re-created from
      *                           a previous saved state, this is the state.
      */
+    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
+                                     // Activity cooperation
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -194,6 +196,8 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
      * @return boolean Return false to allow normal menu processing to
      *         proceed, true to consume it here.
      */
+    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
+                                     // Activity cooperation
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_comments) {
@@ -365,9 +369,9 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
         args.putIntArray(PopupSettingsFragment.EXTRA_XML_PREFERENCES, new int[] {
                 R.xml.preferences_font,
                 R.xml.preferences_comments });
-        ((DialogFragment) Fragment.instantiate(getActivity(),
-                PopupSettingsFragment.class.getName(), args))
-                .show(getFragmentManager(), PopupSettingsFragment.class.getName());
+        PopupSettingsFragment fragment = new PopupSettingsFragment();
+        fragment.setArguments(args);
+        fragment.show(getParentFragmentManager(), PopupSettingsFragment.class.getName());
     }
 
     private void notifyItemLoaded(@NonNull Item item) {

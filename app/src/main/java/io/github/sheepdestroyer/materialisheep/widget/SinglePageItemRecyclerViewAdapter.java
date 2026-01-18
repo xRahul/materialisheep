@@ -46,6 +46,7 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
 
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Parcel API
 public class SinglePageItemRecyclerViewAdapter
         extends ItemRecyclerViewAdapter<ToggleItemViewHolder> {
     private static final int VIEW_TYPE_FOOTER = -1;

@@ -56,8 +56,10 @@ public class FavoriteActivity extends BaseListActivity {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @Override
@@ -72,7 +74,8 @@ public class FavoriteActivity extends BaseListActivity {
 
     /**
      * This is called for activities that set launchMode to "singleTop" in
-     * their package, or if a client used the {@link Intent#FLAG_ACTIVITY_SINGLE_TOP}
+     * their package, or if a client used the
+     * {@link Intent#FLAG_ACTIVITY_SINGLE_TOP}
      * flag when calling {@link #startActivity}.
      *
      * @param intent The new intent that was started for the activity.
@@ -128,7 +131,9 @@ public class FavoriteActivity extends BaseListActivity {
     protected Fragment instantiateListFragment() {
         Bundle args = new Bundle();
         args.putString(FavoriteFragment.EXTRA_FILTER, mFilter);
-        return Fragment.instantiate(this, FavoriteFragment.class.getName(), args);
+        FavoriteFragment fragment = new FavoriteFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     /**

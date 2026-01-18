@@ -38,6 +38,8 @@ import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
 
+@SuppressWarnings("deprecation") // TODO: Uses deprecated FragmentStatePagerAdapter; migrate to
+                                 // ViewPager2/FragmentStateAdapter
 public class ItemPagerAdapter extends FragmentStatePagerAdapter {
     private final Fragment[] mFragments = new Fragment[3];
     private final Context mContext;
@@ -55,7 +57,7 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
         mShowArticle = builder.showArticle;
         mCacheMode = builder.cacheMode;
         mRetainInstance = builder.retainInstance;
-        mDefaultItem = Math.min(getCount()-1,
+        mDefaultItem = Math.min(getCount() - 1,
                 builder.defaultViewMode == Preferences.StoryViewMode.Comment ? 0 : 1);
     }
 
@@ -105,7 +107,7 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     public void bind(ViewPager viewPager, TabLayout tabLayout,
-                     FloatingActionButton navigationFab, FloatingActionButton genericFab) {
+            FloatingActionButton navigationFab, FloatingActionButton genericFab) {
         viewPager.setPageMargin(viewPager.getResources().getDimensionPixelOffset(R.dimen.divider));
         viewPager.setPageMarginDrawable(R.color.blackT12);
         viewPager.setOffscreenPageLimit(2);
@@ -138,8 +140,8 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
 
     @Synthetic
     void toggleFabs(boolean isComments,
-                    FloatingActionButton navigationFab,
-                    FloatingActionButton genericFab) {
+            FloatingActionButton navigationFab,
+            FloatingActionButton genericFab) {
         AppUtils.toggleFab(navigationFab, isComments &&
                 Preferences.navigationEnabled(navigationFab.getContext()));
         AppUtils.toggleFab(genericFab, true);

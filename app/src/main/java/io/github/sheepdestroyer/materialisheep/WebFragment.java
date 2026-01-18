@@ -79,6 +79,7 @@ import static android.view.View.VISIBLE;
 /**
  * A fragment that displays a web page.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated LocalBroadcastManager/Parcelable APIs
 public class WebFragment extends LazyLoadFragment
         implements Scrollable, KeyDelegate.BackInterceptor {
     public static final String EXTRA_ITEM = WebFragment.class.getName() + ".EXTRA_ITEM";
@@ -131,6 +132,8 @@ public class WebFragment extends LazyLoadFragment
     private boolean mIsHackerNewsUrl, mEmpty, mReadability;
     private PdfAndroidJavascriptBridge mPdfAndroidJavascriptBridge;
 
+    @SuppressWarnings("deprecation") // Using deprecated LocalBroadcastManager; migration to LiveData/Flow requires
+                                     // architectural changes
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -180,6 +183,8 @@ public class WebFragment extends LazyLoadFragment
         return mFragmentView;
     }
 
+    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
+                                     // Activity cooperation
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -209,6 +214,8 @@ public class WebFragment extends LazyLoadFragment
         menu.findItem(R.id.menu_font_options).setVisible(fontEnabled());
     }
 
+    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
+                                     // Activity cooperation
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_font_options) {
@@ -257,6 +264,8 @@ public class WebFragment extends LazyLoadFragment
         // Subscriptions are fire-and-forget and managed internally.
     }
 
+    @SuppressWarnings("deprecation") // Using deprecated LocalBroadcastManager; migration to LiveData/Flow requires
+                                     // architectural changes
     @Override
     public void onDetach() {
         mPreferenceObservable.unsubscribe(getActivity());
@@ -411,9 +420,12 @@ public class WebFragment extends LazyLoadFragment
             }
         });
         view.findViewById(R.id.button_exit)
-                .setOnClickListener(v -> LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(
-                        new Intent(WebFragment.ACTION_FULLSCREEN)
-                                .putExtra(EXTRA_FULLSCREEN, false)));
+                .setOnClickListener(v -> {
+                    @SuppressWarnings("deprecation") // Using deprecated LocalBroadcastManager
+                    android.content.Intent intent = new Intent(WebFragment.ACTION_FULLSCREEN)
+                            .putExtra(EXTRA_FULLSCREEN, false);
+                    LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
+                });
         mButtonNext.setOnClickListener(v -> mWebView.findNext(true));
         mButtonMore.setOnClickListener(v -> mPopupMenu.create(getActivity(), mButtonMore, Gravity.NO_GRAVITY)
                 .inflate(R.menu.menu_web)
@@ -548,9 +560,9 @@ public class WebFragment extends LazyLoadFragment
         args.putInt(PopupSettingsFragment.EXTRA_TITLE, R.string.font_options);
         args.putIntArray(PopupSettingsFragment.EXTRA_XML_PREFERENCES,
                 new int[] { R.xml.preferences_readability });
-        ((DialogFragment) Fragment.instantiate(getActivity(),
-                PopupSettingsFragment.class.getName(), args))
-                .show(getFragmentManager(), PopupSettingsFragment.class.getName());
+        PopupSettingsFragment fragment = new PopupSettingsFragment();
+        fragment.setArguments(args);
+        fragment.show(getParentFragmentManager(), PopupSettingsFragment.class.getName());
     }
 
     private void onPreferenceChanged(int key, boolean contextChanged) {

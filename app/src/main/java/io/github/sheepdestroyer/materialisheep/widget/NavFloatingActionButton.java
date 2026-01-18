@@ -45,6 +45,7 @@ import io.github.sheepdestroyer.materialisheep.Preferences;
 import io.github.sheepdestroyer.materialisheep.R;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Vibrator, Display, GestureDetectorCompat APIs
 public class NavFloatingActionButton extends FloatingActionButton implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String PREFERENCES_FAB = "_fab";
     private static final String PREFERENCES_FAB_X = "%1$s_%2$d_%3$d_x";

@@ -52,21 +52,27 @@ import io.github.sheepdestroyer.materialisheep.widget.SubmissionRecyclerViewAdap
 /**
  * An activity that displays a user's profile.
  */
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Parcelable, RecyclerView, BottomSheetBehavior APIs
 public class UserActivity extends ThemedActivity implements Scrollable {
     public static final String EXTRA_USERNAME = UserActivity.class.getName() + ".EXTRA_USERNAME";
     private static final String STATE_USER = "state:user";
     private static final String PARAM_ID = "id";
     private static final String KARMA = " (%1$s)";
-    @Inject UserManager mUserManager;
-    @Inject @Named(HN) ItemManager mItemManger;
-    @Inject KeyDelegate mKeyDelegate;
+    @Inject
+    UserManager mUserManager;
+    @Inject
+    @Named(HN)
+    ItemManager mItemManger;
+    @Inject
+    KeyDelegate mKeyDelegate;
     private KeyDelegate.RecyclerViewHelper mScrollableHelper;
     private String mUsername;
     private UserManager.User mUser;
     private TextView mTitle;
     private TextView mInfo;
     private TextView mAbout;
-    @Synthetic RecyclerView mRecyclerView;
+    @Synthetic
+    RecyclerView mRecyclerView;
     private TabLayout mTabLayout;
     private View mEmpty;
     private BottomSheetBehavior<View> mBottomSheetBehavior;
@@ -75,8 +81,10 @@ public class UserActivity extends ThemedActivity implements Scrollable {
      * Called when the activity is first created.
      *
      * @param savedInstanceState If the activity is being re-initialized after
-     *                           previously being shut down then this Bundle contains the data it most
-     *                           recently supplied in {@link #onSaveInstanceState(Bundle)}.
+     *                           previously being shut down then this Bundle
+     *                           contains the data it most
+     *                           recently supplied in
+     *                           {@link #onSaveInstanceState(Bundle)}.
      *                           Otherwise it is null.
      */
     @SuppressWarnings("ConstantConditions")
@@ -317,8 +325,7 @@ public class UserActivity extends ThemedActivity implements Scrollable {
         mTabLayout.addTab(mTabLayout.newTab()
                 .setText(getResources().getQuantityString(R.plurals.submissions_count, count, count)));
         mRecyclerView.setAdapter(new SubmissionRecyclerViewAdapter(mItemManger, mUser.getItems()));
-        mRecyclerView.setLayoutFrozen(mBottomSheetBehavior.getState() !=
-                BottomSheetBehavior.STATE_EXPANDED);
+        mRecyclerView.setLayoutFrozen(mBottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED);
     }
 
     static class UserResponseListener implements ResponseListener<UserManager.User> {
