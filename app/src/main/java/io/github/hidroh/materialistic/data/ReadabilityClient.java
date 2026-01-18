@@ -43,6 +43,7 @@ import javax.inject.Named;
 import io.github.hidroh.materialistic.DataModule;
 import okio.Okio;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -164,12 +165,9 @@ public interface ReadabilityClient {
                                         JSONObject json = new JSONObject(value);
                                         content = json.getString("content");
                                         final String savedContent = content;
-                                        Observable.fromCallable(() -> {
-                                            mCache.putReadability(itemId, savedContent);
-                                            return true;
-                                        })
+                                        Completable.fromAction(() -> mCache.putReadability(itemId, savedContent))
                                                 .subscribeOn(mIoScheduler)
-                                                .subscribe(success -> {
+                                                .subscribe(() -> {
                                                 }, error -> Log.e("ReadabilityClient", "Failed to cache content",
                                                         error));
                                     } catch (JSONException e) {
