@@ -1,6 +1,6 @@
-# Materialistic for Hacker News
+# Materialisheep for Hacker News
 
-Materialistic is a Hacker News client for Android that is built with a clean, modern architecture and a focus on Material Design principles. It uses the official [HackerNews/API] and [Algolia Hacker News Search API] to provide a fast, reliable, and feature-rich experience.
+Materialisheep, forked from hidroh's Materialistic, is a Hacker News client for Android that is built with a clean, modern architecture and a focus on Material Design principles. It uses the official [HackerNews/API] and [Algolia Hacker News Search API] to provide a fast, reliable, and feature-rich experience.
 
 ## Project Overview
 
