@@ -19,7 +19,7 @@ package io.github.sheepdestroyer.materialisheep.widget;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
+
 import androidx.annotation.CallSuper;
 import android.text.TextUtils;
 import android.util.AttributeSet;
