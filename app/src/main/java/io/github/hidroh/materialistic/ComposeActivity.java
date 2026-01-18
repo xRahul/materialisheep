@@ -73,13 +73,11 @@ public class ComposeActivity extends ThemedActivity {
                     .init(ComposeActivity.this)
                     .setMessage(R.string.confirm_save_draft)
                     .setNegativeButton(android.R.string.no, (dialog, which) -> {
-                        setEnabled(false);
                         getOnBackPressedDispatcher().onBackPressed();
                     })
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> {
                         Preferences.saveDraft(ComposeActivity.this, mParentId,
                                 mEditText.getText().toString());
-                        setEnabled(false);
                         getOnBackPressedDispatcher().onBackPressed();
                     })
                     .setOnCancelListener(dialog -> setEnabled(true))
