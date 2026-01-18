@@ -139,7 +139,7 @@ public class CacheableWebView extends WebView {
                     CACHE_PREFIX +
                     hexString.toString() +
                     CACHE_EXTENSION;
-        } catch (Exception e) {
+        } catch (java.security.NoSuchAlgorithmException | java.io.UnsupportedEncodingException e) {
             return getContext().getApplicationContext().getCacheDir().getAbsolutePath() +
                     File.separator +
                     CACHE_PREFIX +
