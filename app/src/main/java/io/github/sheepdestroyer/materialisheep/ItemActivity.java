@@ -523,7 +523,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                         .setItem(story)
                         .setShowArticle(hasText || !mExternalBrowser)
                         .setCacheMode(getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT))
-                        .setShowArticle(true)
+
                         .setDefaultViewMode(mStoryViewMode));
         mViewPager.setAdapter(mAdapter);
         mViewPager.setOffscreenPageLimit(2);
