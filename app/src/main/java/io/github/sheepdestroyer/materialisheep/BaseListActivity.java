@@ -622,12 +622,6 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     }
 
     /**
-     * Retrieves the fragment at the specified position from the ViewPager2 adapter.
-     *
-     * @param position The position of the fragment.
-     * @return The fragment, or null if not found.
-     */
-    /**
      * Retrieves the fragment at the specified position.
      *
      * @param position The position of the fragment.
