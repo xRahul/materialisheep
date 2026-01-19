@@ -63,9 +63,7 @@ public abstract class LazyLoadFragment extends BaseFragment {
     public void onViewCreated(android.view.View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mActivityCreated = true;
-        if (true) {
-            eagerLoad();
-        }
+        eagerLoad();
     }
 
     /**

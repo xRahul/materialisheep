@@ -626,7 +626,11 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     }
 
     private Fragment getFragment(int position) {
-        return getSupportFragmentManager().findFragmentByTag("f" + position);
+        if (mAdapter == null) {
+            return null;
+        }
+        long itemId = mAdapter.getItemId(position);
+        return getSupportFragmentManager().findFragmentByTag("f" + itemId);
     }
 
     private void onPreferenceChanged(int key, boolean contextChanged) {

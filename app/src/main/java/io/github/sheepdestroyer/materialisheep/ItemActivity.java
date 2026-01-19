@@ -185,9 +185,13 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         mSystemUiHelper = new AppUtils.SystemUiHelper(getWindow());
         mReplyButton = findViewById(R.id.reply_button);
         mNavButton = findViewById(R.id.navigation_button);
-        mNavButton.setNavigable(direction ->
-        // if callback is fired navigable should not be null
-        AppUtils.navigate(direction, mAppBar, (Navigable) getFragment(0)));
+        mNavButton.setNavigable(direction -> {
+            // if callback is fired navigable should not be null
+            Fragment fragment = getFragment(0);
+            if (fragment instanceof Navigable) {
+                AppUtils.navigate(direction, mAppBar, (Navigable) fragment);
+            }
+        });
         mVoteButton = findViewById(R.id.vote_button);
         mBookmark = findViewById(R.id.bookmarked);
         mCoordinatorLayout = findViewById(R.id.content_frame);
@@ -575,7 +579,11 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     private Fragment getFragment(int position) {
         // Tag format for FragmentStateAdapter is "f" + itemId (default itemId is
         // position)
-        return getSupportFragmentManager().findFragmentByTag("f" + position);
+        if (mAdapter == null) {
+            return null;
+        }
+        long itemId = mAdapter.getItemId(position);
+        return getSupportFragmentManager().findFragmentByTag("f" + itemId);
     }
 
     @Synthetic
