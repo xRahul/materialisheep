@@ -44,7 +44,6 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
     private final boolean mShowArticle;
     private final int mCacheMode;
     private final int mDefaultItem;
-    private final boolean mRetainInstance;
 
     /**
      * Constructor for ItemPagerAdapter.
@@ -58,7 +57,6 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
         mItem = builder.item;
         mShowArticle = builder.showArticle;
         mCacheMode = builder.cacheMode;
-        mRetainInstance = builder.retainInstance;
         mDefaultItem = Math.min(getItemCount() - 1,
                 builder.defaultViewMode == Preferences.StoryViewMode.Comment ? 0 : 1);
     }
@@ -87,13 +85,11 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
         if (position == 0) {
             args.putParcelable(ItemFragment.EXTRA_ITEM, mItem);
             args.putInt(ItemFragment.EXTRA_CACHE_MODE, mCacheMode);
-            args.putBoolean(ItemFragment.EXTRA_RETAIN_INSTANCE, mRetainInstance);
             Fragment fragment = new ItemFragment();
             fragment.setArguments(args);
             return fragment;
         } else {
             args.putParcelable(WebFragment.EXTRA_ITEM, mItem);
-            args.putBoolean(WebFragment.EXTRA_RETAIN_INSTANCE, mRetainInstance);
             Fragment fragment = new WebFragment();
             fragment.setArguments(args);
             return fragment;
@@ -133,7 +129,6 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
         boolean showArticle;
         int cacheMode;
         Preferences.StoryViewMode defaultViewMode;
-        boolean retainInstance;
 
         public Builder setItem(@NonNull WebItem item) {
             this.item = item;
@@ -154,10 +149,16 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
             this.defaultViewMode = viewMode;
             return this;
         }
+    }
 
-        public Builder setRetainInstance(boolean retainInstance) {
-            this.retainInstance = retainInstance;
-            return this;
-        }
+    /**
+     * Helper to generate the fragment tag used by ViewPager2's
+     * FragmentStateAdapter.
+     * 
+     * @param itemId The item ID (usually position).
+     * @return The tag string.
+     */
+    public static String getFragmentTag(long itemId) {
+        return "f" + itemId;
     }
 }

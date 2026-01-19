@@ -523,10 +523,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                         .setItem(story)
                         .setShowArticle(hasText || !mExternalBrowser)
                         .setCacheMode(getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT))
-                        .setRetainInstance(true)
+                        .setShowArticle(true)
                         .setDefaultViewMode(mStoryViewMode));
-        mViewPager.setAdapter(mAdapter);
-        mViewPager.setOffscreenPageLimit(2);
         mViewPager.setAdapter(mAdapter);
         mViewPager.setOffscreenPageLimit(2);
         mTabLayoutMediator = new TabLayoutMediator(mTabLayout, mViewPager,
@@ -603,13 +601,11 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
      * @return The fragment, or null.
      */
     private Fragment getFragment(int position) {
-        // Tag format for FragmentStateAdapter is "f" + itemId (default itemId is
-        // position)
         if (mAdapter == null) {
             return null;
         }
         long itemId = mAdapter.getItemId(position);
-        return getSupportFragmentManager().findFragmentByTag("f" + itemId);
+        return getSupportFragmentManager().findFragmentByTag(ItemPagerAdapter.getFragmentTag(itemId));
     }
 
     @Synthetic

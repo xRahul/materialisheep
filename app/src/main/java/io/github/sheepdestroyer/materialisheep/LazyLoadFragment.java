@@ -30,6 +30,7 @@ public abstract class LazyLoadFragment extends BaseFragment {
     private static final String STATE_EAGER_LOAD = "state:eagerLoad";
     private static final String STATE_LOADED = "state:loaded";
     private boolean mActivityCreated;
+    private boolean mLoaded;
     private LazyLoadViewModel mViewModel;
 
     /**
@@ -117,9 +118,12 @@ public abstract class LazyLoadFragment extends BaseFragment {
     /**
      * Attempts to load data if eager load is enabled and data is not yet loaded.
      */
+    /**
+     * Attempts to load data if eager load is enabled and data is not yet loaded.
+     */
     final void eagerLoad() {
-        if (mViewModel.isEagerLoad() && !mViewModel.isLoaded()) {
-            mViewModel.setLoaded(true);
+        if (mViewModel.isEagerLoad() && !mLoaded) {
+            mLoaded = true;
             load();
         }
     }

@@ -542,6 +542,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
                 .setShowArticle(true)
                 .setDefaultViewMode(mStoryViewMode));
         mViewPager.setAdapter(mAdapter);
+        mViewPager.setOffscreenPageLimit(2);
         mTabLayoutMediator = new TabLayoutMediator(mTabLayout, mViewPager,
                 (tab, position) -> tab.setText(mAdapter.getPageTitle(position)));
         mTabLayoutMediator.attach();
@@ -605,23 +606,8 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
             mTabSelectedListener = null;
         }
 
-        // Remove fragments by Tag ("f" + id). IDs are 0 and 1.
-        RecyclerView.Adapter<?> adapter = mViewPager.getAdapter();
-        if (adapter instanceof FragmentStateAdapter) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-            int itemCount = adapter.getItemCount();
-            for (int position = 0; position < itemCount; position++) {
-                long itemId = ((FragmentStateAdapter) adapter).getItemId(position);
-                String tag = "f" + itemId; // ViewPager2 tag format
-                Fragment fragment = fragmentManager.findFragmentByTag(tag);
-                if (fragment != null) {
-                    transaction.remove(fragment);
-                }
-            }
-            transaction.commitAllowingStateLoss();
-        }
+        // Clearing adapter should be enough for ViewPager2 to clean up fragments
+        mViewPager.setAdapter(null);
     }
 
     private void updateFabState(int position) {
@@ -646,7 +632,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
             return null;
         }
         long itemId = mAdapter.getItemId(position);
-        return getSupportFragmentManager().findFragmentByTag("f" + itemId);
+        return getSupportFragmentManager().findFragmentByTag(ItemPagerAdapter.getFragmentTag(itemId));
     }
 
     private void onPreferenceChanged(int key, boolean contextChanged) {

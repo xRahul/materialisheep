@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel;
 
 public class LazyLoadViewModel extends ViewModel {
     private boolean mEagerLoad;
-    private boolean mLoaded;
+
     private boolean mInitialized;
 
     /**
@@ -18,19 +18,6 @@ public class LazyLoadViewModel extends ViewModel {
 
     public void setEagerLoad(boolean eagerLoad) {
         mEagerLoad = eagerLoad;
-    }
-
-    /**
-     * Checks if the data has been loaded.
-     * 
-     * @return true if data is loaded
-     */
-    public boolean isLoaded() {
-        return mLoaded;
-    }
-
-    public void setLoaded(boolean loaded) {
-        mLoaded = loaded;
     }
 
     /**
