@@ -7,11 +7,11 @@
 - [x] Fix Gradle Deprecation Warnings (Issue #46) <!-- id: 21 -->
 
 ## Deprecation Refactoring (Long-term)
-- [ ] **Phase 1: Fragment API Modernization** <!-- id: 17 -->
-    - Replace `setHasOptionsMenu`/`onOptionsItemSelected` with `MenuProvider`
-    - Replace `onActivityCreated` with `onViewCreated`
-    - Replace `setRetainInstance` with `ViewModel`
-    - Migrate `FragmentStatePagerAdapter` to `ViewPager2`
+- [x] **Phase 1: Fragment API Modernization** <!-- id: 17 -->
+    - [x] Replace `setHasOptionsMenu`/`onOptionsItemSelected` with `MenuProvider`
+    - [x] Replace `onActivityCreated` with `onViewCreated`
+    - [x] Replace `setRetainInstance` with `ViewModel`
+    - [x] Migrate `FragmentStatePagerAdapter` to `ViewPager2`
 - [ ] **Phase 2: System & Device API Migration** <!-- id: 18 -->
     - Migrate `NetworkInfo` to `ConnectivityManager.NetworkCallback`
     - Update `Vibrator` usage to `VibrationEffect`

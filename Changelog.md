@@ -24,6 +24,14 @@
 - Fixed `R.attr` resource resolution issues by migrating to `androidx.appcompat.R.attr`.
 - Updated various AndroidX and Google Material dependencies to their latest versions.
 - Set `compileSdk` and `targetSdk` to 36.
+- **Target SDK 36 Compatibility (PR #51):**
+  - Suppressed various deprecation warnings (NetworkInfo, Fragment APIs, Parcellable, etc.) to ensure a clean build with `targetSdk` 36 (Issue #46).
+  - Added TODOs for future refactoring and migration of suppressed APIs.
+- **Modernized Fragment and View Pager Implementations (PR #56):**
+  - Migrated from deprecated `ViewPager` to `ViewPager2` using `FragmentStateAdapter`.
+  - Replaced `onActivityCreated` with `onViewCreated`.
+  - Replaced `setRetainInstance` with `LazyLoadViewModel` for state retention.
+  - Implemented `MenuProvider` API for handling menus, replacing `setHasOptionsMenu`.
 
 ### Fixed
 - Resolved `NetworkOnMainThreadException` crash in `ReadabilityClient` by offloading database caching to background thread.
