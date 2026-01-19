@@ -415,6 +415,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         }
     }
 
+    /**
+     * Toggles the fullscreen mode of the activity.
+     */
     @Synthetic
     void setFullscreen() {
         mSystemUiHelper.setFullscreen(mFullscreen);
@@ -433,6 +436,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         bindData(mItem);
     }
 
+    /**
+     * Binds determining favorite state and sets up the bookmark listener.
+     */
     @Synthetic
     void bindFavorite() {
         if (mItem == null) {
@@ -590,6 +596,12 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         }
     }
 
+    /**
+     * Retrieves the fragment at the specified position.
+     *
+     * @param position The position of the fragment.
+     * @return The fragment, or null.
+     */
     private Fragment getFragment(int position) {
         // Tag format for FragmentStateAdapter is "f" + itemId (default itemId is
         // position)

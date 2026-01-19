@@ -469,6 +469,9 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         return ItemManager.MODE_DEFAULT;
     }
 
+    /**
+     * Toggles the fullscreen mode of the activity.
+     */
     @Synthetic
     void setFullscreen() {
         mAppBar.setExpanded(!mFullscreen, true);
@@ -529,6 +532,9 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         }
     }
 
+    /**
+     * Binds the ViewPager2 with the adapter and TabLayoutMediator.
+     */
     private void bindViewPager() {
         mAdapter = new ItemPagerAdapter(this, new ItemPagerAdapter.Builder()
                 .setItem(mSelectedItem)
@@ -576,6 +582,10 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         }
     }
 
+    /**
+     * Unbinds the ViewPager2, detaching the mediator and removing callbacks.
+     * Also removes fragments managed by the adapter to prevent leaks.
+     */
     @SuppressLint("RestrictedApi")
     private void unbindViewPager() {
         if (mViewPager == null) {
@@ -625,6 +635,12 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         }
     }
 
+    /**
+     * Retrieves the fragment at the specified position from the ViewPager2 adapter.
+     *
+     * @param position The position of the fragment.
+     * @return The fragment, or null if not found.
+     */
     private Fragment getFragment(int position) {
         if (mAdapter == null) {
             return null;
