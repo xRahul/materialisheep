@@ -80,6 +80,10 @@ public abstract class LazyLoadFragment extends BaseFragment {
         outState.putBoolean(STATE_LOADED, false); // allow re-loading on state restoration
     }
 
+    /**
+     * Called when the view previously created by {@link #onCreateView} has been
+     * detached from the fragment.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -110,6 +114,9 @@ public abstract class LazyLoadFragment extends BaseFragment {
      */
     protected abstract void load();
 
+    /**
+     * Attempts to load data if eager load is enabled and data is not yet loaded.
+     */
     final void eagerLoad() {
         if (mViewModel.isEagerLoad() && !mViewModel.isLoaded()) {
             mViewModel.setLoaded(true);

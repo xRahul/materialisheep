@@ -46,6 +46,12 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
     private final int mDefaultItem;
     private final boolean mRetainInstance;
 
+    /**
+     * Constructor for ItemPagerAdapter.
+     *
+     * @param fragmentActivity The context activity
+     * @param builder          The builder containing configuration
+     */
     public ItemPagerAdapter(androidx.fragment.app.FragmentActivity fragmentActivity, @NonNull Builder builder) {
         super(fragmentActivity);
         mContext = fragmentActivity;
@@ -57,6 +63,12 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
                 builder.defaultViewMode == Preferences.StoryViewMode.Comment ? 0 : 1);
     }
 
+    /**
+     * Returns the unique ID for the item at the given position.
+     *
+     * @param position Position of the item
+     * @return The unique ID
+     */
     @Override
     public long getItemId(int position) {
         return position;
@@ -88,6 +100,11 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
         }
     }
 
+    /**
+     * Returns the total number of items in the adapter.
+     *
+     * @return The item count (1 if only comments/article, 2 if both)
+     */
     @Override
     public int getItemCount() {
         return mItem.isStoryType() && !mShowArticle ? 1 : 2;
