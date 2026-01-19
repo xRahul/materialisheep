@@ -627,12 +627,14 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
      * @param position The position of the fragment.
      * @return The fragment, or null if not found.
      */
+    /**
+     * Retrieves the fragment at the specified position.
+     *
+     * @param position The position of the fragment.
+     * @return The fragment, or null.
+     */
     private Fragment getFragment(int position) {
-        if (mAdapter == null) {
-            return null;
-        }
-        long itemId = mAdapter.getItemId(position);
-        return getSupportFragmentManager().findFragmentByTag(ItemPagerAdapter.getFragmentTag(itemId));
+        return mAdapter != null ? mAdapter.findFragment(getSupportFragmentManager(), position) : null;
     }
 
     private void onPreferenceChanged(int key, boolean contextChanged) {

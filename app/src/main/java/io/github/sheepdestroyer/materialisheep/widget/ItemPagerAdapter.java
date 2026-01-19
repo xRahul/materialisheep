@@ -161,4 +161,15 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
     public static String getFragmentTag(long itemId) {
         return "f" + itemId;
     }
+
+    /**
+     * Helper to retrieve the fragment at the specified position.
+     *
+     * @param fragmentManager The FragmentManager.
+     * @param position        The position of the fragment.
+     * @return The fragment, or null.
+     */
+    public Fragment findFragment(FragmentManager fragmentManager, int position) {
+        return fragmentManager.findFragmentByTag(getFragmentTag(getItemId(position)));
+    }
 }

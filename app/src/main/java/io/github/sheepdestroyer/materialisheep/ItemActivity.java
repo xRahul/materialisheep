@@ -564,7 +564,12 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         int defaultItem = Math.min(mAdapter.getItemCount() - 1,
                 mStoryViewMode == Preferences.StoryViewMode.Comment ? 0 : 1);
         mViewPager.setCurrentItem(defaultItem, false);
-        toggleFabs(defaultItem == 0, mNavButton, mReplyButton);
+        // Ensure initial state is updated (FABs, LazyLoad)
+        if (mPageChangeCallback != null) {
+            mPageChangeCallback.onPageSelected(defaultItem);
+        } else {
+            toggleFabs(defaultItem == 0, mNavButton, mReplyButton);
+        }
         if (story.isStoryType() && mExternalBrowser && !hasText) {
             TextView buttonArticle = (TextView) findViewById(R.id.button_article);
             buttonArticle.setVisibility(View.VISIBLE);
@@ -601,11 +606,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
      * @return The fragment, or null.
      */
     private Fragment getFragment(int position) {
-        if (mAdapter == null) {
-            return null;
-        }
-        long itemId = mAdapter.getItemId(position);
-        return getSupportFragmentManager().findFragmentByTag(ItemPagerAdapter.getFragmentTag(itemId));
+        return mAdapter != null ? mAdapter.findFragment(getSupportFragmentManager(), position) : null;
     }
 
     @Synthetic
