@@ -64,6 +64,12 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
         return position;
     }
 
+    /**
+     * Creates the fragment for the given position.
+     * 
+     * @param position The position of the fragment
+     * @return The fragment instance
+     */
     @Override
     public Fragment createFragment(int position) {
         Bundle args = new Bundle();
@@ -89,6 +95,12 @@ public class ItemPagerAdapter extends androidx.viewpager2.adapter.FragmentStateA
         return mItem.isStoryType() && !mShowArticle ? 1 : 2;
     }
 
+    /**
+     * Returns the title for the page at the given position.
+     * 
+     * @param position The position of the page
+     * @return The title as a CharSequence
+     */
     public CharSequence getPageTitle(int position) {
         if (position == 0) {
             if (mItem instanceof Item) {
