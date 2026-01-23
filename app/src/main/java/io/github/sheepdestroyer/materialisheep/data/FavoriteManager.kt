@@ -218,7 +218,8 @@ class FavoriteManager @Inject constructor(
     Observable.defer { Observable.just(itemIds!!) }
         .subscribeOn(ioScheduler)
         .doOnNext { deleteMultiple(it) }
-        .map { buildRemoved().build() }
+        .flatMapIterable { it }
+        .map { buildRemoved().appendPath(it).build() }
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
   }
