@@ -1,13 +1,15 @@
 name: CI
 
 on:
+  push:
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -20,16 +22,9 @@ jobs:
         with:
           api-level: 36
           build-tools: '36.0.0'
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
       - name: Grant execute permission to gradlew
         run: chmod +x gradlew
-      - name: Run tests
-        run: ./gradlew test
+      - name: Build and Test
+        run: ./gradlew build
