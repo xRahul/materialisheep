@@ -163,9 +163,13 @@ public class StoryView extends RelativeLayout implements Checkable {
                             mCommentDrawable, null, null, null);
                 }
                 mCommentButton.setText(String.valueOf(item.getKidCount()));
+                mCommentButton.setContentDescription(getContext().getResources()
+                        .getQuantityString(R.plurals.comments_count, item.getKidCount(), item.getKidCount()));
             } else {
                 mCommentButton.setTextColor(mAccentColorResId);
                 mCommentButton.setText(null);
+                mCommentButton.setContentDescription(getContext().getResources()
+                        .getQuantityString(R.plurals.comments_count, item.getKidCount(), item.getKidCount()));
                 mCommentButton.setCompoundDrawablesWithIntrinsicBounds(
                         mCommentDrawable, null, null, null);
             }
