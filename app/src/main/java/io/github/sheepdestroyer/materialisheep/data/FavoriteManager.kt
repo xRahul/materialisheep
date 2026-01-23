@@ -215,10 +215,10 @@ class FavoriteManager @Inject constructor(
   @SuppressLint("CheckResult")
   fun remove(context: Context, itemIds: Collection<String>?) {
     if (itemIds.orEmpty().isEmpty()) return
-    Observable.defer { Observable.fromIterable(itemIds.orEmpty()) }
+    Observable.defer { Observable.just(itemIds!!) }
         .subscribeOn(ioScheduler)
-        .doOnNext { delete(it) }
-        .map { buildRemoved().appendPath(it).build() }
+        .doOnNext { deleteMultiple(it) }
+        .map { buildRemoved().build() }
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
   }
@@ -339,6 +339,12 @@ class FavoriteManager @Inject constructor(
     val deleted = if (query.isNullOrEmpty()) savedStoriesDao.deleteAll() else savedStoriesDao.deleteByTitle(query)
     loader?.load()
     return deleted
+  }
+
+  @WorkerThread
+  private fun deleteMultiple(itemIds: Collection<String>) {
+    savedStoriesDao.deleteByItemIds(itemIds.toList())
+    loader?.load()
   }
 
   /**

@@ -34,6 +34,12 @@ interface SavedStoriesDao {
     @Query("DELETE FROM saved WHERE itemid = :itemId")
     fun deleteByItemId(itemId: String): Int
 
+    @Query("DELETE FROM saved WHERE itemid IN (:itemIds)")
+    fun deleteByItemIds(itemIds: List<String>): Int
+
+    @Query("DELETE FROM saved WHERE itemid IN (:itemIds)")
+    fun deleteByItemIds(itemIds: List<String>): Int
+
     @Query("DELETE FROM saved WHERE title LIKE '%' || :query || '%'")
     fun deleteByTitle(query: String): Int
 
