@@ -18,9 +18,8 @@ The codebase is organized into the following packages:
 *   `accounts`: Contains classes for managing user accounts.
 *   `appwidget`: Contains classes for implementing home screen widgets.
 *   `ktx`: Contains Kotlin extension functions that are used throughout the application.
-*   `activities`: Contains the activities that make up the application's UI.
-*   `fragments`: Contains the fragments that are used to build the activities' UIs.
-*   `viewmodels`: Contains the ViewModels that are used by the activities and fragments.
+*   `widget`: Contains custom Views and Adapters.
+*   `preference`: Contains preference-related classes.
 
 ## Setup
 
@@ -54,10 +53,6 @@ The codebase is organized into the following packages:
     ```
     ./gradlew assembleDebug
     ```
-3.  To build with LeakCanary enabled, run:
-    ```
-    ./gradlew assembleDebug -Pleak
-    ```
 
 ## Code Style
 
@@ -85,7 +80,8 @@ Contributions are always welcome. Please make sure you read [Contributing notes]
 ## License
 
     Copyright 2015 Ha Duy Trung
-    Copyright 2026 sheepdestroyer
+    Copyright 2020 sheepdestroyer
+    Copyright 2026 xrahul
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
