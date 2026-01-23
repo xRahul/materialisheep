@@ -42,7 +42,7 @@ import io.reactivex.rxjava3.core.Scheduler;
  */
 public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
-    private static final Set<String> AD_HOSTS = java.util.Collections.synchronizedSet(new HashSet<>());
+    private static volatile Set<String> AD_HOSTS = java.util.Collections.emptySet();
 
     /**
      * Initializes the ad blocker by loading the ad hosts from the assets file.
@@ -54,8 +54,7 @@ public class AdBlocker {
     public static void init(Context context, Scheduler scheduler) {
         Observable.fromCallable(() -> loadFromAssets(context))
                 .subscribeOn(scheduler)
-                .subscribe(result -> {
-                },
+                .subscribe(result -> AD_HOSTS = result,
                         t -> android.util.Log.e(AdBlocker.class.getSimpleName(), "Error loading ad hosts", t));
     }
 
@@ -80,27 +79,39 @@ public class AdBlocker {
     }
 
     @WorkerThread
-    private static Boolean loadFromAssets(Context context) throws IOException {
+    private static Set<String> loadFromAssets(Context context) throws IOException {
+        Set<String> hosts = new HashSet<>();
         try (InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
                 BufferedSource buffer = Okio.buffer(Okio.source(stream))) {
             String line;
             while ((line = buffer.readUtf8Line()) != null) {
-                AD_HOSTS.add(line);
+                hosts.add(line);
             }
         }
-        return true;
+        return hosts;
     }
 
     /**
-     * Recursively walking up sub domain chain until we exhaust or find a match,
+     * Iteratively walking up sub domain chain until we exhaust or find a match,
      * effectively doing a longest substring matching here
      */
     private static boolean isAdHost(String host) {
         if (TextUtils.isEmpty(host)) {
             return false;
         }
-        int index = host.indexOf(".");
-        return index >= 0 && (AD_HOSTS.contains(host) ||
-                index + 1 < host.length() && isAdHost(host.substring(index + 1)));
+        Set<String> hosts = AD_HOSTS;
+        while (true) {
+            int index = host.indexOf(".");
+            if (index < 0) {
+                return false;
+            }
+            if (hosts.contains(host)) {
+                return true;
+            }
+            if (index + 1 >= host.length()) {
+                return false;
+            }
+            host = host.substring(index + 1);
+        }
     }
 }
