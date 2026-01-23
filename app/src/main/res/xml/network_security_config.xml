@@ -23,4 +23,9 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">hacker-news.firebaseio.com</domain>
+        <domain includeSubdomains="true">hn.algolia.com</domain>
+        <domain includeSubdomains="true">news.ycombinator.com</domain>
+    </domain-config>
 </network-security-config>
