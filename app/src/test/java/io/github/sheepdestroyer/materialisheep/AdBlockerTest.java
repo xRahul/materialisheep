@@ -2,8 +2,6 @@ package io.github.sheepdestroyer.materialisheep;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -13,7 +11,6 @@ import java.util.Set;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricTestRunner.class)
 public class AdBlockerTest {
 
     @Before
@@ -37,20 +34,20 @@ public class AdBlockerTest {
         field.set(null, testHosts);
 
         // Test positive cases
-        assertTrue(AdBlocker.isAd("http://doubleclick.net"));
-        assertTrue(AdBlocker.isAd("http://g.doubleclick.net"));
-        assertTrue(AdBlocker.isAd("https://ad.service.com/foo"));
-        assertTrue(AdBlocker.isAd("https://sub.ad.service.com"));
+        assertTrue("http://doubleclick.net should be ad", AdBlocker.isAd("http://doubleclick.net"));
+        assertTrue("http://g.doubleclick.net should be ad", AdBlocker.isAd("http://g.doubleclick.net"));
+        assertTrue("https://ad.service.com/foo should be ad", AdBlocker.isAd("https://ad.service.com/foo"));
+        assertTrue("https://sub.ad.service.com should be ad", AdBlocker.isAd("https://sub.ad.service.com"));
 
         // Test negative cases
-        assertFalse(AdBlocker.isAd("http://google.com"));
-        assertFalse(AdBlocker.isAd("http://myservice.com"));
+        assertFalse("http://google.com should NOT be ad", AdBlocker.isAd("http://google.com"));
+        assertFalse("http://myservice.com should NOT be ad", AdBlocker.isAd("http://myservice.com"));
 
         // Test partial match that shouldn't match
         // "service.com" is a suffix of "ad.service.com" but not an ad host itself
-        assertFalse(AdBlocker.isAd("http://service.com"));
+        assertFalse("http://service.com should NOT be ad", AdBlocker.isAd("http://service.com"));
 
         // Test non-dot host (should ignore)
-        assertFalse(AdBlocker.isAd("http://localhost"));
+        assertFalse("http://localhost should NOT be ad", AdBlocker.isAd("http://localhost"));
     }
 }

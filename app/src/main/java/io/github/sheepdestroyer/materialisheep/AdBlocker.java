@@ -96,7 +96,7 @@ public class AdBlocker {
      * effectively doing a longest substring matching here
      */
     private static boolean isAdHost(String host) {
-        if (TextUtils.isEmpty(host)) {
+        if (host == null || host.isEmpty()) {
             return false;
         }
         Set<String> hosts = AD_HOSTS;
