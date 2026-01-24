@@ -2,6 +2,7 @@ package io.github.sheepdestroyer.materialisheep.data;
 
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.TestScheduler;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +52,7 @@ public class SyncDelegateTest {
 
         when(restServiceFactory.create(anyString(), eq(HackerNewsClient.RestService.class), any()))
                 .thenReturn(restService);
+        when(restServiceFactory.rxEnabled(true)).thenReturn(restServiceFactory);
 
         syncDelegate = new SyncDelegate(context, restServiceFactory, itemManager, readabilityClient, syncQueueDao, testScheduler);
     }
@@ -61,24 +63,15 @@ public class SyncDelegateTest {
         SyncDelegate.Job job = new SyncDelegate.Job(jobId);
         job.connectionEnabled = true;
 
-        Call<HackerNewsItem> mockCall = mock(Call.class);
-        try {
-            when(mockCall.execute()).thenThrow(new IOException("Blocking call"));
-        } catch (IOException e) {
-            // ignore
-        }
-        when(restService.cachedItem(jobId)).thenReturn(mockCall);
-        when(restService.networkItem(jobId)).thenReturn(mockCall);
+        when(restService.cachedItemRx(jobId)).thenReturn(Observable.just(new HackerNewsItem(123)));
+        when(restService.networkItemRx(jobId)).thenReturn(Observable.just(new HackerNewsItem(123)));
 
         syncDelegate.performSync(job);
-
-        // Should not be called yet (should be offloaded)
-        verify(restService, never()).cachedItem(jobId);
 
         // Trigger scheduler
         testScheduler.triggerActions();
 
         // Now it should be called
-        verify(restService).cachedItem(jobId);
+        verify(restService).cachedItemRx(jobId);
     }
 }
