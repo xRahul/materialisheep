@@ -2512,6 +2512,10 @@ Readability.prototype = {
 
       var contentScore = 0;
 
+      if (node.readability && node.readability.contentScore) {
+        contentScore = node.readability.contentScore;
+      }
+
       if (weight + contentScore < 0) {
         return true;
       }
