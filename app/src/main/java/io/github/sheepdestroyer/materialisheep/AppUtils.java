@@ -32,7 +32,6 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Parcelable;
@@ -49,6 +48,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.widget.TextView;
@@ -76,8 +77,8 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
 
-@SuppressWarnings({ "WeakerAccess", "deprecation" }) // TODO: Uses deprecated NetworkInfo, Display,
-                                                     // LocalBroadcastManager, SystemUI, Custom Tabs APIs
+@SuppressWarnings({ "WeakerAccess", "deprecation" }) // TODO: Uses deprecated Display,
+                                                     // LocalBroadcastManager, SystemUI (legacy), Custom Tabs APIs
 @PublicApi
 /**
  * A utility class providing common functions for the application.
@@ -902,12 +903,25 @@ public class AppUtils {
             if (!enabled) {
                 return;
             }
-            if (fullscreen) {
-                window.getDecorView().setSystemUiVisibility(originalUiFlags |
-                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowInsetsController controller = window.getInsetsController();
+                if (controller != null) {
+                    if (fullscreen) {
+                        controller.hide(WindowInsets.Type.navigationBars());
+                        controller.setSystemBarsBehavior(
+                                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    } else {
+                        controller.show(WindowInsets.Type.navigationBars());
+                    }
+                }
             } else {
-                window.getDecorView().setSystemUiVisibility(originalUiFlags);
+                if (fullscreen) {
+                    window.getDecorView().setSystemUiVisibility(originalUiFlags |
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                } else {
+                    window.getDecorView().setSystemUiVisibility(originalUiFlags);
+                }
             }
         }
 

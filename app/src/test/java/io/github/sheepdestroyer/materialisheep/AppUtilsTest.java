@@ -1,13 +1,24 @@
 package io.github.sheepdestroyer.materialisheep;
 
 import android.content.Context;
+import android.os.Build;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+
 import androidx.test.core.app.ApplicationProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public class AppUtilsTest {
@@ -36,5 +47,36 @@ public class AppUtilsTest {
                 // Test with disconnected network
                 shadowConnectivityManager.setDefaultNetworkActive(false);
                 assertFalse(AppUtils.hasConnection(context));
+        }
+
+        @Test
+        @Config(minSdk = Build.VERSION_CODES.R)
+        public void testSystemUiHelper_api30() {
+                Window window = mock(Window.class);
+                View decorView = mock(View.class);
+                when(window.getDecorView()).thenReturn(decorView);
+                WindowInsetsController controller = mock(WindowInsetsController.class);
+                when(window.getInsetsController()).thenReturn(controller);
+
+                AppUtils.SystemUiHelper helper = new AppUtils.SystemUiHelper(window);
+                helper.setFullscreen(true);
+                verify(controller).hide(WindowInsets.Type.navigationBars());
+                verify(controller).setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
+                helper.setFullscreen(false);
+                verify(controller).show(WindowInsets.Type.navigationBars());
+        }
+
+        @Test
+        @Config(maxSdk = Build.VERSION_CODES.Q)
+        public void testSystemUiHelper_legacy() {
+                Window window = mock(Window.class);
+                View decorView = mock(View.class);
+                when(window.getDecorView()).thenReturn(decorView);
+                when(decorView.getSystemUiVisibility()).thenReturn(0);
+
+                AppUtils.SystemUiHelper helper = new AppUtils.SystemUiHelper(window);
+                helper.setFullscreen(true);
+                verify(decorView).setSystemUiVisibility(anyInt()); // Check flags
         }
 }
