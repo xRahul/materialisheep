@@ -48,6 +48,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -110,7 +112,7 @@ public class SyncDelegate {
         mContext = context;
         mSyncQueueDao = syncQueueDao;
         mItemManager = itemManager;
-        mHnRestService = factory.create(HackerNewsClient.BASE_API_URL,
+        mHnRestService = factory.rxEnabled(true).create(HackerNewsClient.BASE_API_URL,
                 HackerNewsClient.RestService.class, new BackgroundThreadExecutor());
         mReadabilityClient = readabilityClient;
         mIoScheduler = ioScheduler;
@@ -202,28 +204,30 @@ public class SyncDelegate {
             defer(itemId);
             return;
         }
-        HackerNewsItem cachedItem;
-        if ((cachedItem = getFromCache(itemId)) != null) {
-            sync(cachedItem);
-        } else {
-            updateProgress();
-            // TODO defer on low battery as well?
-            mHnRestService.networkItem(itemId).enqueue(new Callback<HackerNewsItem>() {
-                @Override
-                public void onResponse(Call<HackerNewsItem> call,
-                        retrofit2.Response<HackerNewsItem> response) {
-                    HackerNewsItem item;
-                    if ((item = response.body()) != null) {
-                        sync(item);
-                    }
-                }
+        getFromCache(itemId)
+                .subscribeOn(mIoScheduler)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::sync, t -> fetchNetwork(itemId), () -> fetchNetwork(itemId));
+    }
 
-                @Override
-                public void onFailure(Call<HackerNewsItem> call, Throwable t) {
-                    notifyItem(itemId, null);
+    private void fetchNetwork(String itemId) {
+        updateProgress();
+        // TODO defer on low battery as well?
+        mHnRestService.networkItem(itemId).enqueue(new Callback<HackerNewsItem>() {
+            @Override
+            public void onResponse(Call<HackerNewsItem> call,
+                    retrofit2.Response<HackerNewsItem> response) {
+                HackerNewsItem item;
+                if ((item = response.body()) != null) {
+                    sync(item);
                 }
-            });
-        }
+            }
+
+            @Override
+            public void onFailure(Call<HackerNewsItem> call, Throwable t) {
+                notifyItem(itemId, null);
+            }
+        });
     }
 
     @Synthetic
@@ -318,12 +322,10 @@ public class SyncDelegate {
         mSyncQueueDao.insert(new MaterialisticDatabase.SyncQueueEntry(itemId));
     }
 
-    private HackerNewsItem getFromCache(String itemId) {
-        try {
-            return mHnRestService.cachedItem(itemId).execute().body();
-        } catch (IOException e) {
-            return null;
-        }
+    private Maybe<HackerNewsItem> getFromCache(String itemId) {
+        return mHnRestService.cachedItemRx(itemId)
+                .onErrorResumeNext(t -> Observable.empty())
+                .firstElement();
     }
 
     @Synthetic
