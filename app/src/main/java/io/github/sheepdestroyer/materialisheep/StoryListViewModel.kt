@@ -1,5 +1,6 @@
 package io.github.sheepdestroyer.materialisheep
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -22,7 +23,9 @@ class StoryListViewModel(
 
     data class StoryState(
         val previous: List<Item>? = null,
-        val current: List<Item>? = null
+        val current: List<Item>? = null,
+        val isLoading: Boolean = false,
+        val error: Throwable? = null
     )
 
     private val _stories = MutableStateFlow(StoryState())
@@ -37,11 +40,16 @@ class StoryListViewModel(
     }
 
     fun refreshStories(filter: String?, @ItemManager.CacheMode cacheMode: Int) {
-        if (_stories.value.current == null) return
+        // Force refresh even if current exists
         fetchStories(filter, cacheMode)
     }
 
     private fun fetchStories(filter: String?, @ItemManager.CacheMode cacheMode: Int) {
+        if (_stories.value.isLoading) return
+
+        _stories.update { it.copy(isLoading = true, error = null) }
+        log("Fetching stories. Filter: $filter, CacheMode: $cacheMode")
+
         viewModelScope.launch {
             try {
                 // ItemManager.getStories is blocking, so we switch to IO dispatcher
@@ -49,18 +57,26 @@ class StoryListViewModel(
                     itemManager.getStories(filter, cacheMode)
                 }
                 val itemsList = itemsArray?.toList() ?: emptyList()
+                log("Fetched ${itemsList.size} stories.")
 
                 _stories.update { currentState ->
                     StoryState(
                         previous = currentState.current,
-                        current = itemsList
+                        current = itemsList,
+                        isLoading = false,
+                        error = null
                     )
                 }
             } catch (e: Exception) {
-                // In a real app we would expose error state.
-                // For now just logging as per original behavior (which logged error).
-                android.util.Log.e("StoryListViewModel", "Error loading stories", e)
+                Log.e(TAG, "Error loading stories", e)
+                _stories.update { it.copy(isLoading = false, error = e) }
             }
+        }
+    }
+
+    private fun log(message: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, message)
         }
     }
 
@@ -75,5 +91,9 @@ class StoryListViewModel(
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
+    }
+
+    companion object {
+        private const val TAG = "StoryListViewModel"
     }
 }

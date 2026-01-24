@@ -82,7 +82,8 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   **Dependency Injection:** Dagger 2.
     *   **Networking:** Retrofit 2 with OkHttp.
     *   **Persistence:** Room Database.
-    *   **Concurrency:** RxJava 3 / RxAndroid.
+    *   **Concurrency:** Hybrid: RxJava 3 (Data Layer) and Kotlin Coroutines (ViewModel).
+    *   **Observability:** Comprehensive logging of user flows, errors, and UI states (Debug builds).
 
 ## 6. Future Roadmap
 *   **Modernization:**

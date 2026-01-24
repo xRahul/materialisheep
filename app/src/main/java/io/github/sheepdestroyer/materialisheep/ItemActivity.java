@@ -163,6 +163,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (BuildConfig.DEBUG) {
+            android.util.Log.d("ItemActivity", "onCreate: " + getIntent().getComponent());
+        }
         super.onCreate(savedInstanceState);
         ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
         mExternalBrowser = Preferences.externalBrowserEnabled(this);
@@ -473,7 +476,13 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @SuppressWarnings("ConstantConditions")
     private void bindData(@Nullable final WebItem story) {
         if (story == null) {
+            if (BuildConfig.DEBUG) {
+                android.util.Log.w("ItemActivity", "bindData: story is null");
+            }
             return;
+        }
+        if (BuildConfig.DEBUG) {
+            android.util.Log.d("ItemActivity", "bindData: " + story.getId() + " - " + story.getDisplayedTitle());
         }
         mCustomTabsDelegate.mayLaunchUrl(Uri.parse(story.getUrl()), null, null);
         bindFavorite();
