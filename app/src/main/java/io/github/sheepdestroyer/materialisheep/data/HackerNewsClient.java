@@ -236,11 +236,26 @@ public class HackerNewsClient implements ItemManager, UserManager {
         if (itemIds == null) {
             return new Item[0];
         }
-        Item[] items = new Item[itemIds.length];
-        for (int i = 0; i < itemIds.length; i++) {
-            items[i] = getItem(itemIds[i], cacheMode);
+        return Observable.fromArray(itemIds)
+                .concatMapEager(id -> getItemRx(id, cacheMode)
+                        .map(item -> Optional.ofNullable((Item) item))
+                        .onErrorReturn(t -> Optional.empty()))
+                .toList()
+                .blockingGet()
+                .stream()
+                .map(o -> o.orElse(null))
+                .toArray(Item[]::new);
+    }
+
+    private Observable<HackerNewsItem> getItemRx(String itemId, @CacheMode int cacheMode) {
+        switch (cacheMode) {
+            case MODE_NETWORK:
+                return mRestService.networkItemRx(itemId);
+            case MODE_DEFAULT:
+            case MODE_CACHE:
+            default:
+                return mRestService.itemRx(itemId);
         }
-        return items;
     }
 
     @Override
