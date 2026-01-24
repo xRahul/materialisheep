@@ -53,6 +53,7 @@ import javax.inject.Named;
 import static io.github.sheepdestroyer.materialisheep.DataModule.HN;
 import io.github.sheepdestroyer.materialisheep.ActivityModule;
 import io.github.sheepdestroyer.materialisheep.AppUtils;
+import io.github.sheepdestroyer.materialisheep.BuildConfig;
 import io.github.sheepdestroyer.materialisheep.ComposeActivity;
 import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
 import io.github.sheepdestroyer.materialisheep.Preferences;
@@ -328,6 +329,9 @@ public class StoryRecyclerViewAdapter extends
     }
 
     public void setItems(Item[] items) {
+        if (BuildConfig.DEBUG) {
+            android.util.Log.d("StoryRecyclerViewAdapter", "setItems: count=" + (items != null ? items.length : 0));
+        }
         setUpdated(items);
         mItems.clear();
         mItems.addAll(items);
@@ -483,6 +487,9 @@ public class StoryRecyclerViewAdapter extends
     @Synthetic
     void onItemLoaded(Item item) {
         int position = getItems().indexOf(item);
+        if (BuildConfig.DEBUG) {
+            android.util.Log.d("StoryRecyclerViewAdapter", "onItemLoaded: " + item.getId() + " at position " + position);
+        }
         // ignore changes if item was invalidated by refresh / filter
         if (position >= 0 && position < getItemCount()) {
             notifyItemChanged(position);

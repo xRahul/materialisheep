@@ -237,11 +237,24 @@ public class ListFragment extends BaseListFragment {
             if (state == null) {
                 return;
             }
-            if (state.getPrevious() != null) {
-                onItemsLoaded(state.getPrevious().toArray(new Item[0]));
-            }
-            if (state.getCurrent() != null) {
-                onItemsLoaded(state.getCurrent().toArray(new Item[0]));
+            if (state.getError() != null) {
+                onItemsLoaded(new Item[0]); // Trigger error view (empty list)
+                if (state.getError().getMessage() != null) {
+                    Toast.makeText(getContext(), state.getError().getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                if (state.isLoading()) {
+                    mSwipeRefreshLayout.setRefreshing(true);
+                } else if (state.getCurrent() != null) {
+                     mSwipeRefreshLayout.setRefreshing(false);
+                }
+
+                if (state.getPrevious() != null) {
+                    onItemsLoaded(state.getPrevious().toArray(new Item[0]));
+                }
+                if (state.getCurrent() != null) {
+                    onItemsLoaded(state.getCurrent().toArray(new Item[0]));
+                }
             }
         });
         mStoryListViewModel.getStories(mFilter, mCacheMode);

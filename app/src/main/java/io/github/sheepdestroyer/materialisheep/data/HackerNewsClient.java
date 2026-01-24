@@ -89,7 +89,10 @@ public class HackerNewsClient implements ItemManager, UserManager {
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
                 .subscribe(listener::onResponse,
-                        t -> listener.onError(t != null ? t.getMessage() : ""));
+                        t -> {
+                            android.util.Log.e("HackerNewsClient", "Error fetching stories", t);
+                            listener.onError(t != null ? t.getMessage() : "Unknown error");
+                        });
     }
 
     @Override
@@ -127,7 +130,10 @@ public class HackerNewsClient implements ItemManager, UserManager {
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
                 .subscribe(optionalItem -> listener.onResponse(optionalItem.orElse(null)),
-                        t -> listener.onError(t != null ? t.getMessage() : ""));
+                        t -> {
+                            android.util.Log.e("HackerNewsClient", "Error fetching item " + itemId, t);
+                            listener.onError(t != null ? t.getMessage() : "Unknown error");
+                        });
 
     }
 
@@ -183,7 +189,10 @@ public class HackerNewsClient implements ItemManager, UserManager {
                 })
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
-                .subscribe(listener::onResponse, t -> listener.onError(t != null ? t.getMessage() : ""));
+                .subscribe(listener::onResponse, t -> {
+                    android.util.Log.e("HackerNewsClient", "Error fetching items", t);
+                    listener.onError(t != null ? t.getMessage() : "Unknown error");
+                });
     }
 
     @Override
@@ -191,6 +200,7 @@ public class HackerNewsClient implements ItemManager, UserManager {
         try {
             return toItems(getStoriesCall(filter, cacheMode).execute().body());
         } catch (IOException e) {
+            android.util.Log.e("HackerNewsClient", "Error fetching stories synchronously", e);
             return new Item[0];
         }
     }

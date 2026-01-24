@@ -81,7 +81,10 @@ public class AlgoliaClient implements ItemManager {
                 .map(this::toItems)
                 .observeOn(mMainThreadScheduler)
                 .subscribe(listener::onResponse,
-                        t -> listener.onError(t != null ? t.getMessage() : ""));
+                        t -> {
+                            android.util.Log.e("AlgoliaClient", "Error fetching stories", t);
+                            listener.onError(t != null ? t.getMessage() : "Unknown error");
+                        });
     }
 
     @Override
@@ -106,6 +109,7 @@ public class AlgoliaClient implements ItemManager {
         try {
             return toItems(search(filter).execute().body());
         } catch (IOException e) {
+            android.util.Log.e("AlgoliaClient", "Error fetching stories synchronously", e);
             return new Item[0];
         }
     }

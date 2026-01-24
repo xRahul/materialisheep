@@ -12,6 +12,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowLooper
+import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
 class StoryListViewModelTest {
@@ -51,6 +52,8 @@ class StoryListViewModelTest {
         assertEquals(1, state.current?.size)
         assertEquals(item, state.current?.get(0))
         assertNull(state.previous)
+        assertFalse(state.isLoading)
+        assertNull(state.error)
     }
 
     @Test
@@ -78,6 +81,8 @@ class StoryListViewModelTest {
         val state = viewModel.stories.value
         assertEquals(2, state.current?.size) // New list
         assertEquals(1, state.previous?.size) // Old list
+        assertFalse(state.isLoading)
+        assertNull(state.error)
     }
 
     @Test
@@ -99,4 +104,5 @@ class StoryListViewModelTest {
         // Mockito verify
         org.mockito.Mockito.verify(itemManager, org.mockito.Mockito.times(1)).getStories("filter", ItemManager.MODE_DEFAULT)
     }
+
 }
