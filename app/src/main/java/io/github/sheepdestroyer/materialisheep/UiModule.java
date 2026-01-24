@@ -30,7 +30,6 @@ import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
 import io.github.sheepdestroyer.materialisheep.widget.SinglePageItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.StoryRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.SubmissionRecyclerViewAdapter;
-import io.github.sheepdestroyer.materialisheep.widget.ThreadPreviewRecyclerViewAdapter;
 
 @Module
 /**
@@ -84,6 +83,16 @@ class UiModule {
      */
     @Provides
     public AlertDialogBuilder provideAlertDialogBuilder() {
+        return new AlertDialogBuilder.Impl();
+    }
+
+    /**
+     * Provides a singleton instance of typed {@link AlertDialogBuilder}.
+     *
+     * @return The singleton instance of {@link AlertDialogBuilder}.
+     */
+    @Provides
+    public AlertDialogBuilder<androidx.appcompat.app.AlertDialog> provideTypedAlertDialogBuilder() {
         return new AlertDialogBuilder.Impl();
     }
 

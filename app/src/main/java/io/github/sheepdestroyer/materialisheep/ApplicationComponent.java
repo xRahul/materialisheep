@@ -29,7 +29,6 @@ import io.github.sheepdestroyer.materialisheep.widget.StoryRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.MultiPageItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.SinglePageItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.SubmissionRecyclerViewAdapter;
-import io.github.sheepdestroyer.materialisheep.widget.ThreadPreviewRecyclerViewAdapter;
 
 @Singleton
 @Component(modules = { ApplicationModule.class, ActivityModule.class, UiModule.class })
@@ -104,8 +103,6 @@ public interface ApplicationComponent {
     void inject(SinglePageItemRecyclerViewAdapter singlePageItemRecyclerViewAdapter);
 
     void inject(SubmissionRecyclerViewAdapter submissionRecyclerViewAdapter);
-
-    void inject(ThreadPreviewRecyclerViewAdapter threadPreviewRecyclerViewAdapter);
 
     // Clients
 }
