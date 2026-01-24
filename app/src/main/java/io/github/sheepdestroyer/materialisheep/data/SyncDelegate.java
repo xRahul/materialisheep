@@ -114,7 +114,7 @@ public class SyncDelegate {
         mContext = context;
         mSyncQueueDao = syncQueueDao;
         mItemManager = itemManager;
-        mHnRestService = factory.create(HackerNewsClient.BASE_API_URL,
+        mHnRestService = factory.rxEnabled(true).create(HackerNewsClient.BASE_API_URL,
                 HackerNewsClient.RestService.class, new BackgroundThreadExecutor());
         mReadabilityClient = readabilityClient;
         mIoScheduler = ioScheduler;
@@ -188,46 +188,42 @@ public class SyncDelegate {
             message.what = Integer.valueOf(mJob.id);
             mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
             mSyncProgress = new SyncProgress(mJob);
-            mDisposables.add(mIoScheduler.scheduleDirect(() -> sync(mJob.id)));
+            mDisposables.add(syncRx(mJob.id)
+                    .subscribeOn(mIoScheduler)
+                    .subscribe(item -> {}, Throwable::printStackTrace));
         } else {
-            mDisposables.add(mIoScheduler.scheduleDirect(this::syncDeferredItems));
+            mDisposables.add(Observable.fromCallable(mSyncQueueDao::getAll)
+                    .flatMapIterable(list -> list)
+                    .concatMap(this::syncRx)
+                    .subscribeOn(mIoScheduler)
+                    .subscribe(item -> {}, Throwable::printStackTrace, this::finish));
         }
     }
 
-    private void syncDeferredItems() {
-        java.util.List<String> itemIds = mSyncQueueDao.getAll();
-        for (String itemId : itemIds) {
-            sync(itemId);
-        }
-        finish();
-    }
-
-    private void sync(String itemId) {
+    private Observable<HackerNewsItem> syncRx(String itemId) {
         if (!mJob.connectionEnabled) {
             defer(itemId);
-            return;
+            return Observable.empty();
         }
-        HackerNewsItem cachedItem;
-        if ((cachedItem = getFromCache(itemId)) != null) {
-            sync(cachedItem);
-        } else {
-            if (mSyncProgress != null) {
-                updateProgress();
-            }
-            // TODO defer on low battery as well?
-            try {
-                retrofit2.Response<HackerNewsItem> response = mHnRestService.networkItem(itemId).execute();
-                HackerNewsItem item = response.body();
-                if (item != null) {
-                    sync(item);
-                } else {
-                    notifyItem(itemId, null);
-                }
-            } catch (IOException e) {
-                notifyItem(itemId, null);
-            }
-        }
+        return getFromCacheRx(itemId)
+                .onErrorResumeNext(e -> Observable.empty())
+                .switchIfEmpty(Observable.defer(() -> {
+                    if (mSyncProgress != null) {
+                        updateProgress();
+                    }
+                    // TODO defer on low battery as well?
+                    return mHnRestService.networkItemRx(itemId)
+                            .doOnNext(item -> {
+                                if (item == null) {
+                                    notifyItem(itemId, null);
+                                }
+                            })
+                            .doOnError(e -> notifyItem(itemId, null))
+                            .onErrorResumeNext(e -> Observable.empty());
+                }))
+                .doOnNext(this::sync);
     }
+
 
     @Synthetic
     void sync(@NonNull HackerNewsItem item) {
@@ -342,12 +338,9 @@ public class SyncDelegate {
         mSyncQueueDao.insert(new MaterialisticDatabase.SyncQueueEntry(itemId));
     }
 
-    private HackerNewsItem getFromCache(String itemId) {
-        try {
-            return mHnRestService.cachedItem(itemId).execute().body();
-        } catch (IOException e) {
-            return null;
-        }
+
+    private Observable<HackerNewsItem> getFromCacheRx(String itemId) {
+        return mHnRestService.cachedItemRx(itemId);
     }
 
     @Synthetic
