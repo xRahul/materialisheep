@@ -70,7 +70,6 @@ import androidx.browser.customtabs.CustomTabsSession;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.core.view.GravityCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import io.github.sheepdestroyer.materialisheep.annotation.PublicApi;
 import io.github.sheepdestroyer.materialisheep.data.HackerNewsClient;
 import io.github.sheepdestroyer.materialisheep.data.Item;
@@ -397,11 +396,15 @@ public class AppUtils {
      * @return True if connected to WiFi, false otherwise.
      */
     public static boolean isOnWiFi(Context context) {
-        NetworkInfo activeNetwork = ((ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting() &&
-                activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        android.net.Network network = cm.getActiveNetwork();
+        if (network == null) {
+            return false;
+        }
+        android.net.NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+        return capabilities != null
+                && capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI);
     }
 
     /**
@@ -411,9 +414,17 @@ public class AppUtils {
      * @return True if there is a connection, false otherwise.
      */
     public static boolean hasConnection(Context context) {
-        NetworkInfo activeNetworkInfo = ((ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        android.net.Network network = cm.getActiveNetwork();
+        if (network == null) {
+            return false;
+        }
+        android.net.NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+        return capabilities != null && (capabilities
+                .hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                || capabilities.hasCapability(
+                        android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED));
     }
 
     /**
@@ -587,8 +598,10 @@ public class AppUtils {
      * @param fab         The FloatingActionButton to toggle.
      * @param item        The web item associated with the FAB.
      * @param commentMode True if in comment mode, false otherwise.
+     * @param listener    The listener to invoke when in non-comment mode.
      */
-    public static void toggleFabAction(FloatingActionButton fab, WebItem item, boolean commentMode) {
+    public static void toggleFabAction(FloatingActionButton fab, WebItem item, boolean commentMode,
+            View.OnClickListener listener) {
         Context context = fab.getContext();
         fab.setImageResource(commentMode ? R.drawable.ic_reply_white_24dp : R.drawable.ic_zoom_out_map_white_24dp);
         fab.setOnClickListener(v -> {
@@ -597,10 +610,8 @@ public class AppUtils {
                         .putExtra(ComposeActivity.EXTRA_PARENT_ID, item.getId())
                         .putExtra(ComposeActivity.EXTRA_PARENT_TEXT,
                                 item instanceof Item ? ((Item) item).getText() : null));
-            } else {
-                LocalBroadcastManager.getInstance(context)
-                        .sendBroadcast(new Intent(WebFragment.ACTION_FULLSCREEN)
-                                .putExtra(WebFragment.EXTRA_FULLSCREEN, true));
+            } else if (listener != null) {
+                listener.onClick(v);
             }
         });
     }
@@ -681,11 +692,16 @@ public class AppUtils {
      * @return The display height in pixels.
      */
     public static int getDisplayHeight(Context context) {
-        Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
-                .getDefaultDisplay();
-        Point point = new Point();
-        display.getSize(point);
-        return point.y;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
+                    .getCurrentWindowMetrics().getBounds().height();
+        } else {
+            Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
+                    .getDefaultDisplay();
+            Point point = new Point();
+            display.getSize(point);
+            return point.y;
+        }
     }
 
     /**
