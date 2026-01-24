@@ -54,7 +54,7 @@ class NetworkHttpsTest {
 
         // Stub call execution to return a real Response object
         val realResponse = Response.Builder()
-            .request(Request.Builder().url("https://dummy.com").build())
+            .request(Request.Builder().url("https://example.com").build())
             .protocol(Protocol.HTTP_1_1)
             .code(HttpURLConnection.HTTP_MOVED_TEMP)
             .message("Found")
@@ -70,12 +70,12 @@ class NetworkHttpsTest {
 
     private fun anyRequest(): Request {
         ArgumentMatchers.any(Request::class.java)
-        return Request.Builder().url("https://dummy.com").build()
+        return Request.Builder().url("https://example.com").build()
     }
 
     private fun captureRequest(captor: ArgumentCaptor<Request>): Request {
         captor.capture()
-        return Request.Builder().url("https://dummy.com").build()
+        return Request.Builder().url("https://example.com").build()
     }
 
     @Test
