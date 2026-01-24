@@ -467,12 +467,14 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     @Synthetic
     void setFullscreen() {
         mAppBar.setExpanded(!mFullscreen, true);
-        mTabLayout.setVisibility(mFullscreen ? View.GONE : View.VISIBLE);
-        mListView.setVisibility(mFullscreen ? View.GONE : View.VISIBLE);
+        if (mIsMultiPane) {
+            mTabLayout.setVisibility(mFullscreen ? View.GONE : View.VISIBLE);
+            mListView.setVisibility(mFullscreen ? View.GONE : View.VISIBLE);
+            mViewPager.setUserInputEnabled(!mFullscreen);
+            AppUtils.toggleFab(mReplyButton, !mFullscreen);
+            mBackPressedCallback.setEnabled(mFullscreen);
+        }
         mKeyDelegate.setAppBarEnabled(!mFullscreen);
-        mViewPager.setUserInputEnabled(!mFullscreen);
-        AppUtils.toggleFab(mReplyButton, !mFullscreen);
-        mBackPressedCallback.setEnabled(mIsMultiPane && mFullscreen);
     }
 
     private Scrollable getScrollableList() {

@@ -27,8 +27,6 @@ import android.webkit.WebResourceResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
 
 import okhttp3.HttpUrl;
 import okio.BufferedSource;
@@ -42,7 +40,7 @@ import io.reactivex.rxjava3.core.Scheduler;
  */
 public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
-    private static volatile Set<String> AD_HOSTS = java.util.Collections.emptySet();
+    private static volatile TrieNode AD_HOSTS = new TrieNode();
 
     /**
      * Initializes the ad blocker by loading the ad hosts from the assets file.
@@ -79,16 +77,16 @@ public class AdBlocker {
     }
 
     @WorkerThread
-    private static Set<String> loadFromAssets(Context context) throws IOException {
-        Set<String> hosts = new HashSet<>();
+    private static TrieNode loadFromAssets(Context context) throws IOException {
+        TrieNode root = new TrieNode();
         try (InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
                 BufferedSource buffer = Okio.buffer(Okio.source(stream))) {
             String line;
             while ((line = buffer.readUtf8Line()) != null) {
-                hosts.add(line);
+                root.add(line);
             }
         }
-        return hosts;
+        return root;
     }
 
     /**
@@ -99,19 +97,36 @@ public class AdBlocker {
         if (host == null || host.isEmpty()) {
             return false;
         }
-        Set<String> hosts = AD_HOSTS;
-        while (true) {
-            int index = host.indexOf(".");
-            if (index < 0) {
+        TrieNode node = AD_HOSTS;
+        for (int i = host.length() - 1; i >= 0; i--) {
+            node = node.getChild(host.charAt(i));
+            if (node == null) {
                 return false;
             }
-            if (hosts.contains(host)) {
-                return true;
+            if (node.isEnd) {
+                // Check if we are at a dot or start of string
+                if (i == 0 || host.charAt(i - 1) == '.') {
+                    return true;
+                }
             }
-            if (index + 1 >= host.length()) {
-                return false;
+        }
+        return false;
+    }
+
+    static class TrieNode {
+        private final java.util.Map<Character, TrieNode> children = new java.util.HashMap<>();
+        boolean isEnd;
+
+        void add(String host) {
+            TrieNode node = this;
+            for (int i = host.length() - 1; i >= 0; i--) {
+                node = node.children.computeIfAbsent(host.charAt(i), k -> new TrieNode());
             }
-            host = host.substring(index + 1);
+            node.isEnd = true;
+        }
+
+        TrieNode getChild(char c) {
+            return children.get(c);
         }
     }
 }

@@ -29,9 +29,24 @@ import androidx.annotation.VisibleForTesting;
  * A simple sync adapter that triggers OkHttp requests so their responses become available in the
  * cache for subsequent requests.
  */
-class ItemSyncAdapter extends AbstractThreadedSyncAdapter {
-    private final RestServiceFactory mFactory;
-    private final ReadabilityClient mReadabilityClient;
+import javax.inject.Inject;
+import javax.inject.Named;
+import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
+import io.github.sheepdestroyer.materialisheep.DataModule;
+
+public class ItemSyncAdapter extends AbstractThreadedSyncAdapter {
+    @Inject
+    RestServiceFactory mFactory;
+    @Inject
+    ReadabilityClient mReadabilityClient;
+    @Inject
+    @Named(DataModule.HN)
+    ItemManager mItemManager;
+    @Inject
+    MaterialisticDatabase.SyncQueueDao mSyncQueueDao;
+    @Inject
+    @Named(DataModule.IO_THREAD)
+    io.reactivex.rxjava3.core.Scheduler mIoScheduler;
 
     /**
      * Constructs a new {@code ItemSyncAdapter}.
@@ -43,8 +58,7 @@ class ItemSyncAdapter extends AbstractThreadedSyncAdapter {
     ItemSyncAdapter(Context context, RestServiceFactory factory,
                            ReadabilityClient readabilityClient) {
         super(context, true);
-        mFactory = factory;
-        mReadabilityClient = readabilityClient;
+        ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);
     }
 
     @Override
@@ -56,6 +70,6 @@ class ItemSyncAdapter extends AbstractThreadedSyncAdapter {
     @VisibleForTesting
     @NonNull
     SyncDelegate createSyncDelegate() {
-        return new SyncDelegate(getContext(), mFactory, mReadabilityClient);
+        return new SyncDelegate(getContext(), mFactory, mItemManager, mReadabilityClient, mSyncQueueDao, mIoScheduler);
     }
 }

@@ -49,6 +49,21 @@ class SessionManager @Inject constructor(
       })
 
   /**
+   * Checks if multiple items have been viewed.
+   *
+   * @param itemIds the IDs of the items to check
+   * @return an [Observable] that emits a list of booleans indicating if each item has been viewed
+   */
+  @WorkerThread
+  fun isViewed(itemIds: List<String>): Observable<List<Boolean>> = Observable.just(
+      if (itemIds.isEmpty()) {
+        emptyList()
+      } else {
+        cache.isViewed(itemIds)
+      }
+  )
+
+  /**
    * Marks an item as having been viewed.
    *
    * @param itemId the ID of the item that has been viewed

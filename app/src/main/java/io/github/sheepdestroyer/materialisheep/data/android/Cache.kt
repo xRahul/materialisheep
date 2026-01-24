@@ -44,6 +44,11 @@ class Cache @Inject constructor(
 
   override fun isViewed(itemId: String?) = readStoriesDao.selectByItemId(itemId) != null
 
+  override fun isViewed(itemIds: List<String>): List<Boolean> {
+    val viewed = readStoriesDao.selectByItemIds(itemIds).map { it.itemId }.toHashSet()
+    return itemIds.map { viewed.contains(it) }
+  }
+
   @SuppressLint("CheckResult")
   override fun setViewed(itemId: String?) {
     if (itemId == null) return
@@ -55,4 +60,9 @@ class Cache @Inject constructor(
   }
 
   override fun isFavorite(itemId: String?) = itemId != null && savedStoriesDao.selectByItemId(itemId) != null
+
+  override fun isFavorite(itemIds: List<String>): List<Boolean> {
+    val favorites = savedStoriesDao.selectByItemIds(itemIds).map { it.itemId }.toHashSet()
+    return itemIds.map { favorites.contains(it) }
+  }
 }

@@ -148,37 +148,43 @@ public class HackerNewsClient implements ItemManager, UserManager {
             return;
         }
 
-        Observable.fromArray(itemIds)
-                .flatMap(id -> {
-                    Observable<HackerNewsItem> itemObservable;
-                    switch (cacheMode) {
-                        case MODE_NETWORK:
-                            itemObservable = mRestService.networkItemRx(id);
-                            break;
-                        case MODE_CACHE:
-                            itemObservable = mRestService.cachedItemRx(id)
-                                    .onErrorResumeNext(t -> mRestService.itemRx(id));
-                            break;
-                        default:
-                            itemObservable = mRestService.itemRx(id);
-                            break;
-                    }
-                    return Observable.zip(
-                            mSessionManager.isViewed(id),
-                            mFavoriteManager.check(id),
-                            itemObservable.map(Optional::of).onErrorReturn(t -> Optional.empty()),
-                            (isViewed, favorite, optionalItem) -> {
-                                if (optionalItem.isPresent()) {
-                                    HackerNewsItem item = optionalItem.get();
-                                    item.preload();
-                                    item.setIsViewed(isViewed);
-                                    item.setFavorite(favorite);
-                                    return optionalItem;
+        java.util.List<String> idList = java.util.Arrays.asList(itemIds);
+        Observable.zip(
+                mSessionManager.isViewed(idList),
+                mFavoriteManager.check(idList),
+                (viewed, favorite) -> new android.util.Pair<>(viewed, favorite))
+                .flatMap(pair -> {
+                    java.util.List<Boolean> viewed = pair.first;
+                    java.util.List<Boolean> favorite = pair.second;
+                    return Observable.range(0, itemIds.length)
+                            .flatMap(i -> {
+                                String id = itemIds[i];
+                                Observable<HackerNewsItem> itemObservable;
+                                switch (cacheMode) {
+                                    case MODE_NETWORK:
+                                        itemObservable = mRestService.networkItemRx(id);
+                                        break;
+                                    case MODE_CACHE:
+                                        itemObservable = mRestService.cachedItemRx(id)
+                                                .onErrorResumeNext(t -> mRestService.itemRx(id));
+                                        break;
+                                    default:
+                                        itemObservable = mRestService.itemRx(id);
+                                        break;
                                 }
-                                return Optional.<HackerNewsItem>empty();
-                            }
-                    );
-                }, 8)
+                                return itemObservable.map(Optional::of).onErrorReturn(t -> Optional.empty())
+                                        .map(optionalItem -> {
+                                            if (optionalItem.isPresent()) {
+                                                HackerNewsItem item = optionalItem.get();
+                                                item.preload();
+                                                item.setIsViewed(viewed.get(i));
+                                                item.setFavorite(favorite.get(i));
+                                                return optionalItem;
+                                            }
+                                            return Optional.<HackerNewsItem>empty();
+                                        });
+                            }, 8);
+                })
                 .toList()
                 .map(list -> {
                     java.util.List<HackerNewsItem> valid = new java.util.ArrayList<>();

@@ -114,6 +114,7 @@ public class StoryRecyclerViewAdapter extends
     final ArraySet<Item> mAdded = new ArraySet<>();
     @Synthetic
     final ArrayMap<String, Integer> mPromoted = new ArrayMap<>();
+    private final java.util.Map<String, Item> mItemMap = new java.util.HashMap<>();
     @Synthetic
     final Set<String> mPendingIds = new HashSet<>();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -335,6 +336,12 @@ public class StoryRecyclerViewAdapter extends
         setUpdated(items);
         mItems.clear();
         mItems.addAll(items);
+        mItemMap.clear();
+        if (items != null) {
+            for (Item item : items) {
+                mItemMap.put(item.getId(), item);
+            }
+        }
     }
 
     public void setHighlightUpdated(boolean highlightUpdated) {
@@ -498,13 +505,10 @@ public class StoryRecyclerViewAdapter extends
 
     @Synthetic
     void updateItem(Item loaded) {
-        for (int i = 0; i < mItems.size(); i++) {
-            Item existing = mItems.get(i);
-            if (TextUtils.equals(existing.getId(), loaded.getId())) {
-                existing.populate(loaded);
-                onItemLoaded(existing);
-                return;
-            }
+        Item existing = mItemMap.get(loaded.getId());
+        if (existing != null) {
+            existing.populate(loaded);
+            onItemLoaded(existing);
         }
     }
 

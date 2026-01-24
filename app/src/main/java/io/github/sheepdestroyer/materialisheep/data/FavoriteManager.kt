@@ -237,6 +237,19 @@ class FavoriteManager @Inject constructor(
     cache.isFavorite(itemId)
   })
 
+  /**
+   * Checks if multiple items are favorites.
+   *
+   * @param itemIds the IDs of the items to check
+   * @return an [Observable] that emits a list of booleans indicating if each item is a favorite
+   */
+  @WorkerThread
+  fun check(itemIds: List<String>) = Observable.just(if (itemIds.isEmpty()) {
+    emptyList()
+  } else {
+    cache.isFavorite(itemIds)
+  })
+
   @WorkerThread
   private fun toFile(context: Context, cursor: Cursor): Uri? {
     if (cursor.count == 0) return null

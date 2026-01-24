@@ -25,8 +25,23 @@ import io.github.sheepdestroyer.materialisheep.data.AlgoliaClient;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MaterialisticApplication extends android.app.Application {
-    public static Typeface TYPE_FACE = null;
+    private static volatile Typeface sTypeface = null;
     public ApplicationComponent applicationComponent;
+
+    public static Typeface getTypeface(android.content.Context context) {
+        if (sTypeface == null) {
+            synchronized (MaterialisticApplication.class) {
+                if (sTypeface == null) {
+                    sTypeface = FontCache.getInstance().get(context, Preferences.Theme.getTypeface(context));
+                }
+            }
+        }
+        return sTypeface;
+    }
+
+    public static void setTypeface(Typeface typeface) {
+        sTypeface = typeface;
+    }
 
     @Override
     public void onCreate() {
@@ -61,7 +76,6 @@ public class MaterialisticApplication extends android.app.Application {
             });
         }
         Preferences.migrate(this);
-        TYPE_FACE = FontCache.getInstance().get(this, Preferences.Theme.getTypeface(this));
         AppUtils.registerAccountsUpdatedListener(this);
         AdBlocker.init(this, Schedulers.io());
     }

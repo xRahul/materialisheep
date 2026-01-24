@@ -42,4 +42,7 @@ interface SavedStoriesDao {
 
     @Query("SELECT * FROM saved WHERE itemid = :itemId")
     fun selectByItemId(itemId: String): SavedStory?
+
+    @Query("SELECT * FROM saved WHERE itemid IN (:itemIds)")
+    fun selectByItemIds(itemIds: List<String>): List<SavedStory>
 }
