@@ -19,7 +19,7 @@ android {
         }()
         def buildNumber = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "0")
         versionCode 80 + buildNumber
-        versionName "1.0.${buildNumber}"
+        versionName "3.4.${buildNumber}"
         buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         buildConfigField "int", "LATEST_RELEASE", "77"
         buildConfigField "String", "GITHUB_TOKEN", "\"\""
