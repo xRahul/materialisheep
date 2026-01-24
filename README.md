@@ -54,6 +54,31 @@ The codebase is organized into the following packages:
     ./gradlew assembleDebug
     ```
 
+### Release Signing
+
+To sign the release APK via GitHub Actions, you need to set up the following secrets in your repository settings:
+
+1.  **Generate a Keystore** (if you don't have one):
+    ```bash
+    keytool -genkey -v -keystore app-release.jks -alias my-alias -keyalg RSA -keysize 2048 -validity 10000
+    ```
+
+2.  **Base64 Encode the Keystore**:
+    ```bash
+    # Linux/macOS
+    base64 -w 0 app-release.jks > app-release.jks.base64
+
+    # Windows (PowerShell)
+    [Convert]::ToBase64String([IO.File]::ReadAllBytes('app-release.jks')) | Out-File -Encoding ascii app-release.jks.base64
+    ```
+
+3.  **Add Secrets to GitHub**:
+    Go to **Settings** > **Secrets and variables** > **Actions** > **New repository secret** and add:
+    *   `KEY_STORE_BASE64`: The content of `app-release.jks.base64`.
+    *   `KEY_STORE_PASSWORD`: The password for the keystore.
+    *   `KEY_ALIAS`: The alias used when generating the key (e.g., `my-alias`).
+    *   `KEY_PASSWORD`: The password for the key (often same as keystore password).
+
 ## Code Style
 
 This project follows the official [Kotlin style guide](https://developer.android.com/kotlin/style-guide). Please make sure your contributions adhere to these guidelines.

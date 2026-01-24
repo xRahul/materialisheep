@@ -30,6 +30,26 @@ android {
         resConfigs 'en', 'zh-rCN', 'es'
     }
 
+    signingConfigs {
+        release {}
+    }
+
+    def keystoreBase64 = System.getenv("KEY_STORE_BASE64")
+    def keystorePassword = System.getenv("KEY_STORE_PASSWORD")
+    def keyAlias = System.getenv("KEY_ALIAS")
+    def keyPassword = System.getenv("KEY_PASSWORD")
+
+    if (keystoreBase64 != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+        def keystoreFile = new File(layout.buildDirectory.get().asFile, "release.jks")
+        keystoreFile.parentFile.mkdirs()
+        keystoreFile.bytes = keystoreBase64.decodeBase64()
+
+        signingConfigs.release.storeFile = keystoreFile
+        signingConfigs.release.storePassword = keystorePassword
+        signingConfigs.release.keyAlias = keyAlias
+        signingConfigs.release.keyPassword = keyPassword
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
@@ -37,6 +57,9 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     lintOptions {
