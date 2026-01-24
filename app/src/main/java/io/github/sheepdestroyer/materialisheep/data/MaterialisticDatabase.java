@@ -27,8 +27,9 @@ import java.util.List;
 @Database(entities = {
         MaterialisticDatabase.SavedStory.class,
         MaterialisticDatabase.ReadStory.class,
-        MaterialisticDatabase.Readable.class
-}, version = 4, exportSchema = false)
+        MaterialisticDatabase.Readable.class,
+        MaterialisticDatabase.SyncQueueEntry.class
+}, version = 5, exportSchema = false)
 /**
  * A Room database for storing saved stories, read stories, and readable
  * content.
@@ -73,6 +74,11 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
                 database.execSQL(DbConstants.SQL_INSERT_READABILITY_READABLE);
                 database.execSQL(DbConstants.SQL_DROP_READABILITY_TABLE);
             }
+        }, new Migration(4, 5) {
+            @Override
+            public void migrate(@NonNull SupportSQLiteDatabase database) {
+                database.execSQL(DbConstants.SQL_CREATE_SYNC_QUEUE_TABLE);
+            }
         });
     }
 
@@ -99,6 +105,8 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     public abstract ReadStoriesDao getReadStoriesDao();
 
     public abstract ReadableDao getReadableDao();
+
+    public abstract SyncQueueDao getSyncQueueDao();
 
     /**
      * Gets a {@link LiveData} that is notified of changes to the database.
@@ -341,6 +349,9 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
 
         @Query("SELECT * FROM read WHERE itemid = :itemId LIMIT 1")
         ReadStory selectByItemId(String itemId);
+
+        @Query("SELECT * FROM read WHERE itemid IN (:itemIds)")
+        List<ReadStory> selectByItemIds(List<String> itemIds);
     }
 
     /**
@@ -355,11 +366,59 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
         Readable selectByItemId(String itemId);
     }
 
+    /**
+     * A Room entity that represents a sync queue entry.
+     */
+    @Entity(tableName = "sync_queue")
+    public static class SyncQueueEntry {
+        @PrimaryKey(autoGenerate = true)
+        @ColumnInfo(name = "_id")
+        private int id;
+        @ColumnInfo(name = "itemid")
+        private String itemId;
+
+        public SyncQueueEntry(String itemId) {
+            this.itemId = itemId;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getItemId() {
+            return itemId;
+        }
+
+        public void setItemId(String itemId) {
+            this.itemId = itemId;
+        }
+    }
+
+    /**
+     * A DAO for accessing the sync queue.
+     */
+    @Dao
+    public interface SyncQueueDao {
+        @Insert(onConflict = OnConflictStrategy.IGNORE)
+        void insert(SyncQueueEntry entry);
+
+        @Query("SELECT itemid FROM sync_queue")
+        List<String> getAll();
+
+        @Query("DELETE FROM sync_queue WHERE itemid = :itemId")
+        void delete(String itemId);
+    }
+
     static class DbConstants {
         static final String DB_NAME = "Materialistic.db";
         static final String SQL_CREATE_READ_TABLE = "CREATE TABLE read (_id INTEGER NOT NULL PRIMARY KEY, itemid TEXT)";
         static final String SQL_CREATE_READABLE_TABLE = "CREATE TABLE readable (_id INTEGER NOT NULL PRIMARY KEY, itemid TEXT, content TEXT)";
         static final String SQL_CREATE_SAVED_TABLE = "CREATE TABLE saved (_id INTEGER NOT NULL PRIMARY KEY, itemid TEXT, url TEXT, title TEXT, time TEXT)";
+        static final String SQL_CREATE_SYNC_QUEUE_TABLE = "CREATE TABLE sync_queue (_id INTEGER NOT NULL PRIMARY KEY, itemid TEXT)";
         static final String SQL_INSERT_FAVORITE_SAVED = "INSERT INTO saved SELECT * FROM favorite";
         static final String SQL_INSERT_VIEWED_READ = "INSERT INTO read SELECT * FROM viewed";
         static final String SQL_INSERT_READABILITY_READABLE = "INSERT INTO readable SELECT * FROM readability";

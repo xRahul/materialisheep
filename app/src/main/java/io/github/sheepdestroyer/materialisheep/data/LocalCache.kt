@@ -49,6 +49,14 @@ interface LocalCache {
   fun isViewed(itemId: String?): Boolean
 
   /**
+   * Checks if multiple items have been viewed.
+   *
+   * @param itemIds the IDs of the items
+   * @return a list of booleans indicating if each item has been viewed
+   */
+  fun isViewed(itemIds: List<String>): List<Boolean>
+
+  /**
    * Marks an item as viewed.
    *
    * @param itemId the ID of the item
@@ -62,4 +70,12 @@ interface LocalCache {
    * @return `true` if the item is a favorite, `false` otherwise
    */
   fun isFavorite(itemId: String?): Boolean
+
+  /**
+   * Checks if multiple items are favorites.
+   *
+   * @param itemIds the IDs of the items
+   * @return a list of booleans indicating if each item is a favorite
+   */
+  fun isFavorite(itemIds: List<String>): List<Boolean>
 }

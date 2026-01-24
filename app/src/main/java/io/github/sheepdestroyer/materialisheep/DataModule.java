@@ -241,6 +241,17 @@ public class DataModule {
     }
 
     /**
+     * Provides a singleton instance of {@link MaterialisticDatabase.SyncQueueDao}.
+     *
+     * @param database The {@link MaterialisticDatabase} instance.
+     * @return The singleton instance of {@link MaterialisticDatabase.SyncQueueDao}.
+     */
+    @Provides
+    public MaterialisticDatabase.SyncQueueDao provideSyncQueueDao(MaterialisticDatabase database) {
+        return database.getSyncQueueDao();
+    }
+
+    /**
      * Provides a singleton instance of {@link SupportSQLiteOpenHelper}.
      *
      * @param database The {@link MaterialisticDatabase} instance.

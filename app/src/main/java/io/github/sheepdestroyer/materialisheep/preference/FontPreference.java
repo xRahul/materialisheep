@@ -56,7 +56,7 @@ public class FontPreference extends SpinnerPreference {
     @Override
     protected boolean persistString(String value) {
         if (TextUtils.equals(getKey(), getContext().getString(R.string.pref_font))) {
-            MaterialisticApplication.TYPE_FACE = FontCache.getInstance().get(getContext(), value);
+            MaterialisticApplication.setTypeface(FontCache.getInstance().get(getContext(), value));
         }
         return super.persistString(value);
     }

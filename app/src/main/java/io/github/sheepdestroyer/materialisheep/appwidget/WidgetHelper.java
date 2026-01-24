@@ -51,7 +51,6 @@ import static android.content.Context.MODE_PRIVATE;
 /**
  * A helper class for managing widgets.
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated AppWidgetManager/RemoteViews APIs
 class WidgetHelper {
     private static final String SP_NAME = "WidgetConfiguration_%1$d";
     private static final int DEFAULT_FREQUENCY_HOUR = 6;
@@ -112,7 +111,7 @@ class WidgetHelper {
      * @param appWidgetId the ID of the widget to refresh
      */
     void refresh(int appWidgetId) {
-        mAppWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, android.R.id.list);
+        mAppWidgetManager.notifyAppWidgetViewDataChanged(new int[]{appWidgetId}, android.R.id.list);
         update(appWidgetId);
     }
 
@@ -165,6 +164,7 @@ class WidgetHelper {
                         PendingIntent.FLAG_IMMUTABLE));
     }
 
+    @SuppressWarnings("deprecation")
     private void updateCollection(int appWidgetId, RemoteViews remoteViews, WidgetConfig config) {
         remoteViews.setTextViewText(R.id.subtitle,
                 DateUtils.formatDateTime(mContext, System.currentTimeMillis(),

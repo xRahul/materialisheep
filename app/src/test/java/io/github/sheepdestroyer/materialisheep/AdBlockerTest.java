@@ -15,23 +15,23 @@ public class AdBlockerTest {
 
     @Before
     public void setUp() throws Exception {
-        // Reset AD_HOSTS to empty set before each test
+        // Reset AD_HOSTS to empty trie before each test
         Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
         field.setAccessible(true);
-        field.set(null, Collections.emptySet());
+        field.set(null, new AdBlocker.TrieNode());
     }
 
     @Test
     public void testIsAd() throws Exception {
         // Setup mock hosts
-        Set<String> testHosts = new HashSet<>();
-        testHosts.add("doubleclick.net");
-        testHosts.add("ad.service.com");
+        AdBlocker.TrieNode root = new AdBlocker.TrieNode();
+        root.add("doubleclick.net");
+        root.add("ad.service.com");
 
         // Inject hosts
         Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
         field.setAccessible(true);
-        field.set(null, testHosts);
+        field.set(null, root);
 
         // Test positive cases
         assertTrue("http://doubleclick.net should be ad", AdBlocker.isAd("http://doubleclick.net"));

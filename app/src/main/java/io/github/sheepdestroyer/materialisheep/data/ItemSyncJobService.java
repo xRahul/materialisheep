@@ -28,7 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import io.github.sheepdestroyer.materialisheep.DataModule;
 import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
 
 /**
@@ -39,6 +41,14 @@ public class ItemSyncJobService extends JobService {
     RestServiceFactory mFactory;
     @Inject
     ReadabilityClient mReadabilityClient;
+    @Inject
+    @Named(DataModule.HN)
+    ItemManager mItemManager;
+    @Inject
+    MaterialisticDatabase.SyncQueueDao mSyncQueueDao;
+    @Inject
+    @Named(DataModule.IO_THREAD)
+    io.reactivex.rxjava3.core.Scheduler mIoScheduler;
     private final Map<String, SyncDelegate> mSyncDelegates = new HashMap<>();
 
     @Override
@@ -74,6 +84,6 @@ public class ItemSyncJobService extends JobService {
     @VisibleForTesting
     @NonNull
     SyncDelegate createSyncDelegate() {
-        return new SyncDelegate(this, mFactory, mReadabilityClient);
+        return new SyncDelegate(this, mFactory, mItemManager, mReadabilityClient, mSyncQueueDao, mIoScheduler);
     }
 }

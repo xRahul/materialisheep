@@ -22,6 +22,7 @@ import javax.inject.Singleton;
 import dagger.Component;
 import io.github.sheepdestroyer.materialisheep.appwidget.WidgetService;
 import io.github.sheepdestroyer.materialisheep.appwidget.WidgetConfigActivity;
+import io.github.sheepdestroyer.materialisheep.data.ItemSyncAdapter;
 import io.github.sheepdestroyer.materialisheep.data.ItemSyncJobService;
 import io.github.sheepdestroyer.materialisheep.data.AlgoliaClient;
 import io.github.sheepdestroyer.materialisheep.data.ItemSyncService;
@@ -38,6 +39,8 @@ public interface ApplicationComponent {
 
     // Services
     void inject(ItemSyncService itemSyncService);
+
+    void inject(ItemSyncAdapter itemSyncAdapter);
 
     void inject(WidgetService widgetService);
 

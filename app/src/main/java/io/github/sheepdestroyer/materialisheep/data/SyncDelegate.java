@@ -27,7 +27,6 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,10 +40,12 @@ import android.text.format.DateUtils;
 import android.webkit.WebView;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import io.reactivex.rxjava3.core.Observable;
 
@@ -55,6 +56,7 @@ import androidx.annotation.UiThread;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import io.github.sheepdestroyer.materialisheep.AppUtils;
+import io.github.sheepdestroyer.materialisheep.DataModule;
 import io.github.sheepdestroyer.materialisheep.BuildConfig;
 import io.github.sheepdestroyer.materialisheep.ItemActivity;
 import io.github.sheepdestroyer.materialisheep.Preferences;
@@ -69,15 +71,16 @@ import retrofit2.Callback;
  * A delegate for syncing data.
  */
 public class SyncDelegate {
-    static final String SYNC_PREFERENCES_FILE = "_syncpreferences";
     private static final String NOTIFICATION_GROUP_KEY = "group";
     private static final String SYNC_ACCOUNT_NAME = "Materialistic";
     private static final long TIMEOUT_MILLIS = DateUtils.MINUTE_IN_MILLIS;
     private static final String DOWNLOADS_CHANNEL_ID = "downloads";
 
     private final HackerNewsClient.RestService mHnRestService;
+    private final ItemManager mItemManager;
     private final ReadabilityClient mReadabilityClient;
-    private final SharedPreferences mSharedPreferences;
+    private final MaterialisticDatabase.SyncQueueDao mSyncQueueDao;
+    private final io.reactivex.rxjava3.core.Scheduler mIoScheduler;
     private final NotificationManager mNotificationManager;
     private final NotificationCompat.Builder mNotificationBuilder;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -97,16 +100,20 @@ public class SyncDelegate {
      *                          REST services
      * @param readabilityClient the {@link ReadabilityClient} to use for fetching
      *                          readable content
+     * @param syncQueueDao      the {@link MaterialisticDatabase.SyncQueueDao} to
+     *                          use for managing the sync queue
      */
     @Inject
-    SyncDelegate(Context context, RestServiceFactory factory,
-            ReadabilityClient readabilityClient) {
+    SyncDelegate(Context context, RestServiceFactory factory, @Named(DataModule.HN) ItemManager itemManager,
+            ReadabilityClient readabilityClient, MaterialisticDatabase.SyncQueueDao syncQueueDao,
+            @Named(DataModule.IO_THREAD) io.reactivex.rxjava3.core.Scheduler ioScheduler) {
         mContext = context;
-        mSharedPreferences = context.getSharedPreferences(
-                context.getPackageName() + SYNC_PREFERENCES_FILE, Context.MODE_PRIVATE);
+        mSyncQueueDao = syncQueueDao;
+        mItemManager = itemManager;
         mHnRestService = factory.create(HackerNewsClient.BASE_API_URL,
                 HackerNewsClient.RestService.class, new BackgroundThreadExecutor());
         mReadabilityClient = readabilityClient;
+        mIoScheduler = ioScheduler;
         mNotificationManager = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -184,7 +191,7 @@ public class SyncDelegate {
     }
 
     private void syncDeferredItems() {
-        Set<String> itemIds = mSharedPreferences.getAll().keySet();
+        java.util.List<String> itemIds = mSyncQueueDao.getAll();
         for (String itemId : itemIds) {
             scheduleSync(mContext, new JobBuilder(mContext, itemId).setNotificationEnabled(false).build());
         }
@@ -221,7 +228,7 @@ public class SyncDelegate {
 
     @Synthetic
     void sync(@NonNull HackerNewsItem item) {
-        mSharedPreferences.edit().remove(item.getId()).apply();
+        mSyncQueueDao.delete(item.getId());
         notifyItem(item.getId(), item);
         syncReadability(item);
         syncArticle(item);
@@ -261,7 +268,6 @@ public class SyncDelegate {
         mWebView.loadUrl(item.getUrl());
     }
 
-    @android.annotation.SuppressLint("CheckResult")
     private void syncChildren(@NonNull HackerNewsItem item) {
         if (mJob.commentsEnabled && item.getKids() != null) {
             if (!mJob.connectionEnabled) {
@@ -270,31 +276,46 @@ public class SyncDelegate {
                 }
                 return;
             }
-            java.util.List<Long> kids = new java.util.ArrayList<>();
-            for (long id : item.getKids()) {
-                kids.add(id);
+            long[] kids = item.getKids();
+            String[] ids = new String[kids.length];
+            for (int i = 0; i < kids.length; i++) {
+                ids[i] = String.valueOf(kids[i]);
             }
-            Observable.fromIterable(kids)
-                    .flatMap(id -> {
-                        String itemId = String.valueOf(id);
-                        return mHnRestService.cachedItemRx(itemId)
-                                .onErrorResumeNext(t -> mHnRestService.networkItemRx(itemId))
-                                .map(java.util.Optional::of)
-                                .onErrorReturn(t -> java.util.Optional.empty())
-                                .map(opt -> new android.util.Pair<>(itemId, opt.orElse(null)));
-                    }, 8)
-                    .subscribe(pair -> {
-                        if (pair.second != null) {
-                            sync(pair.second);
-                        } else {
-                            notifyItem(pair.first, null);
+            mItemManager.getItems(ids, ItemManager.MODE_CACHE, new ResponseListener<Item[]>() {
+                @Override
+                public void onResponse(@Nullable Item[] response) {
+                    mIoScheduler.scheduleDirect(() -> {
+                        Set<String> foundIds = new HashSet<>();
+                        if (response != null) {
+                            for (Item child : response) {
+                                if (child instanceof HackerNewsItem) {
+                                    sync((HackerNewsItem) child);
+                                    foundIds.add(child.getId());
+                                }
+                            }
+                        }
+                        for (String id : ids) {
+                            if (!foundIds.contains(id)) {
+                                notifyItem(id, null);
+                            }
                         }
                     });
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    mIoScheduler.scheduleDirect(() -> {
+                        for (String id : ids) {
+                            notifyItem(id, null);
+                        }
+                    });
+                }
+            });
         }
     }
 
     private void defer(String itemId) {
-        mSharedPreferences.edit().putBoolean(itemId, true).apply();
+        mSyncQueueDao.insert(new MaterialisticDatabase.SyncQueueEntry(itemId));
     }
 
     private HackerNewsItem getFromCache(String itemId) {
