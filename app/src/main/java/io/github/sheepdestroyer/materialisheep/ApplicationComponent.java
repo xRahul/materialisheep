@@ -20,6 +20,7 @@ package io.github.sheepdestroyer.materialisheep;
 import javax.inject.Singleton;
 
 import dagger.Component;
+import io.github.sheepdestroyer.materialisheep.appwidget.WidgetRefreshJobService;
 import io.github.sheepdestroyer.materialisheep.appwidget.WidgetService;
 import io.github.sheepdestroyer.materialisheep.appwidget.WidgetConfigActivity;
 import io.github.sheepdestroyer.materialisheep.data.ItemSyncAdapter;
@@ -43,6 +44,8 @@ public interface ApplicationComponent {
     void inject(ItemSyncAdapter itemSyncAdapter);
 
     void inject(WidgetService widgetService);
+
+    void inject(WidgetRefreshJobService widgetRefreshJobService);
 
     void inject(ItemSyncJobService itemSyncJobService);
 
