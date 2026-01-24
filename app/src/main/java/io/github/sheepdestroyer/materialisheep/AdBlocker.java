@@ -114,19 +114,56 @@ public class AdBlocker {
     }
 
     static class TrieNode {
-        private final java.util.Map<Character, TrieNode> children = new java.util.HashMap<>();
+        private char[] keys = new char[0];
+        private TrieNode[] children = new TrieNode[0];
         boolean isEnd;
 
         void add(String host) {
             TrieNode node = this;
             for (int i = host.length() - 1; i >= 0; i--) {
-                node = node.children.computeIfAbsent(host.charAt(i), k -> new TrieNode());
+                char c = host.charAt(i);
+                node = node.getOrCreateChild(c);
             }
             node.isEnd = true;
         }
 
         TrieNode getChild(char c) {
-            return children.get(c);
+            int idx = java.util.Arrays.binarySearch(keys, c);
+            if (idx >= 0) {
+                return children[idx];
+            }
+            return null;
+        }
+
+        private TrieNode getOrCreateChild(char c) {
+            int idx = java.util.Arrays.binarySearch(keys, c);
+            if (idx >= 0) {
+                return children[idx];
+            }
+            // Insert
+            int insertPos = -(idx + 1);
+            int len = keys.length;
+            char[] newKeys = new char[len + 1];
+            TrieNode[] newChildren = new TrieNode[len + 1];
+
+            if (insertPos > 0) {
+                System.arraycopy(keys, 0, newKeys, 0, insertPos);
+                System.arraycopy(children, 0, newChildren, 0, insertPos);
+            }
+
+            newKeys[insertPos] = c;
+            TrieNode newNode = new TrieNode();
+            newChildren[insertPos] = newNode;
+
+            if (insertPos < len) {
+                System.arraycopy(keys, insertPos, newKeys, insertPos + 1, len - insertPos);
+                System.arraycopy(children, insertPos, newChildren, insertPos + 1, len - insertPos);
+            }
+
+            keys = newKeys;
+            children = newChildren;
+
+            return newNode;
         }
     }
 }

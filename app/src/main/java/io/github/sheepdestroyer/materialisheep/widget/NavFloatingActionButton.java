@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -29,6 +30,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.WindowMetrics;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -38,14 +40,12 @@ import java.util.Locale;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.view.GestureDetectorCompat;
 import io.github.sheepdestroyer.materialisheep.AppUtils;
 import io.github.sheepdestroyer.materialisheep.Navigable;
 import io.github.sheepdestroyer.materialisheep.Preferences;
 import io.github.sheepdestroyer.materialisheep.R;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 
-@SuppressWarnings("deprecation") // TODO: Uses deprecated Vibrator, Display, GestureDetectorCompat APIs
 public class NavFloatingActionButton extends FloatingActionButton implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String PREFERENCES_FAB = "_fab";
     private static final String PREFERENCES_FAB_X = "%1$s_%2$d_%3$d_x";
@@ -132,7 +132,7 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
     @SuppressLint("ClickableViewAccessibility")
     @Synthetic
     void bindNavigationPad() {
-        GestureDetectorCompat detectorCompat = new GestureDetectorCompat(getContext(),
+        GestureDetector detector = new GestureDetector(getContext(),
                 new GestureDetector.SimpleOnGestureListener() {
                     @Override
                     public boolean onDown(MotionEvent e) {
@@ -164,7 +164,12 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
                         }
                         mNavigable.onNavigate(direction);
                         if (mVibrationEnabled) {
-                            mVibrator.vibrate(VIBRATE_DURATION_MS);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS,
+                                        VibrationEffect.DEFAULT_AMPLITUDE));
+                            } else {
+                                mVibrator.vibrate(VIBRATE_DURATION_MS);
+                            }
                         }
                         trackKonami(direction);
                         return false;
@@ -183,7 +188,7 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
             @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                return detectorCompat.onTouchEvent(motionEvent);
+                return detector.onTouchEvent(motionEvent);
             }
         });
     }
@@ -192,7 +197,12 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
     @Synthetic
     void startDrag(float startX, float startY) {
         if (mVibrationEnabled) {
-            mVibrator.vibrate(VIBRATE_DURATION_MS * 2);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS * 2,
+                        VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                mVibrator.vibrate(VIBRATE_DURATION_MS * 2);
+            }
         }
         Toast.makeText(getContext(), R.string.hint_drag, Toast.LENGTH_SHORT).show();
         // noinspection Convert2Lambda
@@ -227,8 +237,13 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
         } else if (mNextKonamiCode == KONAMI_CODE.length - 1) {
             mNextKonamiCode = 0;
             if (mVibrationEnabled) {
-                mVibrator.vibrate(new long[] { 0, VIBRATE_DURATION_MS * 2,
-                        100, VIBRATE_DURATION_MS * 2 }, -1);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mVibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, VIBRATE_DURATION_MS * 2,
+                            100, VIBRATE_DURATION_MS * 2}, -1));
+                } else {
+                    mVibrator.vibrate(new long[]{0, VIBRATE_DURATION_MS * 2,
+                            100, VIBRATE_DURATION_MS * 2}, -1);
+                }
             }
             new AlertDialog.Builder(getContext())
                     .setView(R.layout.dialog_konami)
@@ -270,8 +285,19 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
 
     private DisplayMetrics getDisplayMetrics() {
         DisplayMetrics metrics = new DisplayMetrics();
-        ((WindowManager) getContext().getSystemService(Activity.WINDOW_SERVICE))
-                .getDefaultDisplay().getMetrics(metrics);
+        WindowManager windowManager = (WindowManager) getContext().getSystemService(Activity.WINDOW_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
+            metrics.widthPixels = windowMetrics.getBounds().width();
+            metrics.heightPixels = windowMetrics.getBounds().height();
+            metrics.density = getResources().getDisplayMetrics().density;
+            metrics.densityDpi = getResources().getDisplayMetrics().densityDpi;
+            metrics.scaledDensity = getResources().getDisplayMetrics().scaledDensity;
+            metrics.xdpi = getResources().getDisplayMetrics().xdpi;
+            metrics.ydpi = getResources().getDisplayMetrics().ydpi;
+        } else {
+            windowManager.getDefaultDisplay().getMetrics(metrics);
+        }
         return metrics;
     }
 

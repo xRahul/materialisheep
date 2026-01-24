@@ -16,16 +16,43 @@
 
 package io.github.sheepdestroyer.materialisheep.appwidget;
 
-import android.annotation.TargetApi;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
+import io.github.sheepdestroyer.materialisheep.data.ItemManager;
+
+import static io.github.sheepdestroyer.materialisheep.DataModule.ALGOLIA;
+import static io.github.sheepdestroyer.materialisheep.DataModule.HN;
+
 public class WidgetRefreshJobService extends JobService {
+    @Inject
+    @Named(HN)
+    ItemManager mItemManager;
+    @Inject
+    @Named(ALGOLIA)
+    ItemManager mSearchManager;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        ((MaterialisticApplication) getApplication()).applicationComponent.inject(this);
+    }
+
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-        new WidgetHelper(this).refresh(jobParameters.getJobId());
-        jobFinished(jobParameters, false); // if we're able to start job means we have network conn
+        int appWidgetId = jobParameters.getExtras().getInt(WidgetHelper.EXTRA_APP_WIDGET_ID, jobParameters.getJobId());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            new Thread(() -> new WidgetHelper(this).refreshApi31(appWidgetId,
+                    mItemManager, mSearchManager, () -> jobFinished(jobParameters, false))).start();
+        } else {
+            new WidgetHelper(this).refresh(appWidgetId);
+            jobFinished(jobParameters, false); // if we're able to start job means we have network conn
+        }
         return true;
     }
 

@@ -50,7 +50,7 @@ public class AppUtilsTest {
         }
 
         @Test
-        @Config(minSdk = Build.VERSION_CODES.R)
+        @Config(sdk = {Build.VERSION_CODES.R})
         public void testSystemUiHelper_api30() {
                 Window window = mock(Window.class);
                 View decorView = mock(View.class);
@@ -68,7 +68,7 @@ public class AppUtilsTest {
         }
 
         @Test
-        @Config(maxSdk = Build.VERSION_CODES.Q)
+        @Config(sdk = {Build.VERSION_CODES.Q})
         public void testSystemUiHelper_legacy() {
                 Window window = mock(Window.class);
                 View decorView = mock(View.class);
