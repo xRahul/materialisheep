@@ -256,6 +256,11 @@
             android:theme="@style/AppAlertDialog">
         </activity>
         <activity
+            android:name=".CrashActivity"
+            android:label="Crash Report"
+            android:process=":crash"
+            android:theme="@style/AppTheme" />
+        <activity
             android:name=".appwidget.WidgetConfigActivity"
             android:theme="@style/AppAlertDialog"
             android:exported="true">

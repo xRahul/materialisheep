@@ -45,6 +45,20 @@ public class MaterialisticApplication extends android.app.Application {
                     .detectAll()
                     .penaltyLog()
                     .build());
+
+            Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                e.printStackTrace(pw);
+                String stackTrace = sw.toString();
+
+                android.content.Intent intent = new android.content.Intent(this, CrashActivity.class);
+                intent.putExtra(CrashActivity.EXTRA_LOG, stackTrace);
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+
+                System.exit(1);
+            });
         }
         Preferences.migrate(this);
         TYPE_FACE = FontCache.getInstance().get(this, Preferences.Theme.getTypeface(this));
