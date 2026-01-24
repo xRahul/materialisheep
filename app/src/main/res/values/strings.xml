@@ -322,5 +322,7 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="notification_channel_downloads">Downloads</string>
     <string name="reply">Reply</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 
 </resources>
