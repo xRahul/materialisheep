@@ -9,7 +9,6 @@ android {
         applicationId "io.github.sheepdestroyer.materialisheep"
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 79
         def gitHash = { ->
             try {
                 def hash = "git rev-parse --short HEAD".execute().text.trim()
@@ -18,7 +17,9 @@ android {
                 "unknown"
             }
         }()
-        versionName "3.3-" + gitHash
+        def buildNumber = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        versionCode 80 + buildNumber
+        versionName "3.4.${buildNumber}"
         buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         buildConfigField "int", "LATEST_RELEASE", "77"
         buildConfigField "String", "GITHUB_TOKEN", "\"\""

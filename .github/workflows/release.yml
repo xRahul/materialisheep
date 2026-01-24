@@ -1,14 +1,13 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -18,9 +17,6 @@ jobs:
           distribution: 'temurin'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
-        with:
-          api-level: 36
-          build-tools: '36.0.0'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Grant execute permission to gradlew
@@ -37,3 +33,10 @@ jobs:
         with:
           name: app-release
           path: app/build/outputs/apk/release/*.apk
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v3.4.${{ github.run_number }}
+          name: Release v3.4.${{ github.run_number }}
+          make_latest: true
+          files: app/build/outputs/apk/release/*.apk
