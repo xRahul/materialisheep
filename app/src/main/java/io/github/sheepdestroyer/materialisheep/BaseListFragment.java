@@ -40,7 +40,7 @@ import io.github.sheepdestroyer.materialisheep.widget.SnappyLinearLayoutManager;
  * and managing
  * adapter state.
  */
-abstract class BaseListFragment extends BaseFragment implements Scrollable {
+public abstract class BaseListFragment extends BaseFragment implements Scrollable {
     private static final String STATE_ADAPTER = "state:adapter";
     @Inject
     CustomTabsDelegate mCustomTabsDelegate;
