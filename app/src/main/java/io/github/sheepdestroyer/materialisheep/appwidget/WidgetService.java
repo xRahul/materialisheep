@@ -106,6 +106,18 @@ public class WidgetService extends RemoteViewsService {
         @Override
         public void onDataSetChanged() {
             mItems = mItemManager.getStories(mFilter, ItemManager.MODE_NETWORK);
+            if (mItems != null) {
+                int count = Math.min(mItems.length, MAX_ITEMS);
+                for (int i = 0; i < count; i++) {
+                    Item item = mItems[i];
+                    if (!isItemAvailable(item)) {
+                        Item remoteItem = mItemManager.getItem(item.getId(), ItemManager.MODE_NETWORK);
+                        if (remoteItem != null) {
+                            item.populate(remoteItem);
+                        }
+                    }
+                }
+            }
         }
 
         @Override
@@ -127,12 +139,7 @@ public class WidgetService extends RemoteViewsService {
                 return remoteViews;
             }
             if (!isItemAvailable(item)) {
-                Item remoteItem = mItemManager.getItem(item.getId(), ItemManager.MODE_NETWORK);
-                if (remoteItem != null) {
-                    item.populate(remoteItem);
-                } else {
-                    return remoteViews;
-                }
+                return remoteViews;
             }
             remoteViews.setTextViewText(R.id.title, item.getDisplayedTitle());
             remoteViews.setTextViewText(R.id.score, new SpannableStringBuilder()

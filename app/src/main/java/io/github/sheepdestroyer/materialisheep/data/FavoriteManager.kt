@@ -352,12 +352,17 @@ class FavoriteManager @Inject constructor(
    * A cursor wrapper to retrieve associated {@link Favorite}
    */
   private class Cursor(cursor: android.database.Cursor) : CursorWrapper(cursor) {
+    private val idxId = cursor.getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_ITEM_ID)
+    private val idxUrl = cursor.getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_URL)
+    private val idxTitle = cursor.getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TITLE)
+    private val idxTime = cursor.getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TIME)
+
     val favorite: Favorite
       get() = Favorite(
-          getString(getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_ITEM_ID)),
-          getString(getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_URL)),
-          getString(getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TITLE)),
-          getString(getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TIME)).toLong())
+          getString(idxId),
+          getString(idxUrl),
+          getString(idxTitle),
+          getString(idxTime).toLong())
   }
 
   inner class FavoriteRoomLoader(private val filter: String?,
