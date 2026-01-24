@@ -29,21 +29,29 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PersistableBundle;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.text.style.ForegroundColorSpan;
 import android.widget.RemoteViews;
 
 import java.util.Locale;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+import io.github.sheepdestroyer.materialisheep.AppUtils;
 import io.github.sheepdestroyer.materialisheep.BestActivity;
 import io.github.sheepdestroyer.materialisheep.ListActivity;
 import io.github.sheepdestroyer.materialisheep.NewActivity;
 import io.github.sheepdestroyer.materialisheep.R;
 import io.github.sheepdestroyer.materialisheep.SearchActivity;
+import io.github.sheepdestroyer.materialisheep.data.Item;
+import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 
 import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
@@ -54,6 +62,8 @@ import static android.content.Context.MODE_PRIVATE;
 class WidgetHelper {
     private static final String SP_NAME = "WidgetConfiguration_%1$d";
     private static final int DEFAULT_FREQUENCY_HOUR = 6;
+    static final String EXTRA_APP_WIDGET_ID = "APP_WIDGET_ID";
+    private static final int IMMEDIATE_JOB_ID_OFFSET = 1000000;
     private final Context mContext;
     private final AppWidgetManager mAppWidgetManager;
     private final AlarmManager mAlarmManager;
@@ -103,6 +113,17 @@ class WidgetHelper {
         updateTitle(remoteViews, config);
         updateCollection(appWidgetId, remoteViews, config);
         mAppWidgetManager.updateAppWidget(appWidgetId, remoteViews);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PersistableBundle extras = new PersistableBundle();
+            extras.putInt(EXTRA_APP_WIDGET_ID, appWidgetId);
+            getJobScheduler().schedule(new JobInfo.Builder(appWidgetId + IMMEDIATE_JOB_ID_OFFSET,
+                    new ComponentName(mContext.getPackageName(), WidgetRefreshJobService.class.getName()))
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setExtras(extras)
+                    .setOverrideDeadline(0)
+                    .build());
+        }
     }
 
     /**
@@ -110,9 +131,107 @@ class WidgetHelper {
      *
      * @param appWidgetId the ID of the widget to refresh
      */
+    @SuppressWarnings("deprecation")
     void refresh(int appWidgetId) {
-        mAppWidgetManager.notifyAppWidgetViewDataChanged(new int[]{appWidgetId}, android.R.id.list);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            mAppWidgetManager.notifyAppWidgetViewDataChanged(new int[]{appWidgetId}, android.R.id.list);
+        }
         update(appWidgetId);
+    }
+
+    @TargetApi(Build.VERSION_CODES.S)
+    void refreshApi31(int appWidgetId, ItemManager itemManager, ItemManager searchManager, Runnable onComplete) {
+        WidgetConfig config = WidgetConfig.createWidgetConfig(mContext,
+                getConfig(appWidgetId, R.string.pref_widget_theme),
+                getConfig(appWidgetId, R.string.pref_widget_section),
+                getConfig(appWidgetId, R.string.pref_widget_query));
+
+        String filter;
+        int hotThreshold;
+        ItemManager manager;
+        if (config.customQuery) {
+            manager = searchManager;
+            filter = config.section;
+            hotThreshold = AppUtils.HOT_THRESHOLD_NORMAL;
+        } else if (TextUtils.equals(config.section,
+                mContext.getString(R.string.pref_widget_section_value_best))) {
+            manager = itemManager;
+            filter = ItemManager.BEST_FETCH_MODE;
+            hotThreshold = AppUtils.HOT_THRESHOLD_HIGH;
+        } else if (TextUtils.equals(config.section,
+                mContext.getString(R.string.pref_widget_section_value_top))) {
+            manager = itemManager;
+            filter = ItemManager.TOP_FETCH_MODE;
+            hotThreshold = AppUtils.HOT_THRESHOLD_NORMAL;
+        } else {
+            manager = itemManager;
+            filter = config.section;
+            hotThreshold = AppUtils.HOT_THRESHOLD_NORMAL;
+        }
+
+        Item[] items = manager.getStories(filter, ItemManager.MODE_NETWORK);
+        RemoteViews.RemoteCollectionItems.Builder itemsBuilder = new RemoteViews.RemoteCollectionItems.Builder();
+
+        if (items != null) {
+            int count = Math.min(items.length, 10);
+            for (int i = 0; i < count; i++) {
+                Item item = items[i];
+                if (item != null && item.getLocalRevision() <= 0) {
+                     Item remoteItem = manager.getItem(item.getId(), ItemManager.MODE_NETWORK);
+                     if (remoteItem != null) {
+                         item.populate(remoteItem);
+                     }
+                }
+
+                if (item != null && item.getLocalRevision() > 0) {
+                     RemoteViews itemView = new RemoteViews(mContext.getPackageName(),
+                            config.isLightTheme ? R.layout.item_widget_light : R.layout.item_widget);
+                     bindItem(mContext, itemView, item, hotThreshold);
+                     itemsBuilder.addItem(item.getLongId(), itemView);
+                }
+            }
+        }
+
+        RemoteViews remoteViews = new RemoteViews(mContext.getPackageName(), config.widgetLayout);
+        updateTitle(remoteViews, config);
+
+        remoteViews.setTextViewText(R.id.subtitle,
+                DateUtils.formatDateTime(mContext, System.currentTimeMillis(),
+                        DateUtils.FORMAT_ABBREV_ALL | DateUtils.FORMAT_SHOW_TIME));
+        remoteViews.setOnClickPendingIntent(R.id.button_refresh,
+                createRefreshPendingIntent(appWidgetId));
+
+        remoteViews.setPendingIntentTemplate(android.R.id.list,
+                PendingIntent.getActivity(mContext, 0, new Intent(Intent.ACTION_VIEW),
+                        PendingIntent.FLAG_IMMUTABLE));
+
+        remoteViews.setRemoteAdapter(android.R.id.list, itemsBuilder.build());
+
+        mAppWidgetManager.updateAppWidget(appWidgetId, remoteViews);
+        if (onComplete != null) {
+             onComplete.run();
+        }
+    }
+
+    private static void bindItem(Context context, RemoteViews remoteViews, Item item, int hotThreshold) {
+        remoteViews.setTextViewText(R.id.title, item.getDisplayedTitle());
+        remoteViews.setTextViewText(R.id.score, new SpannableStringBuilder()
+                .append(getSpan(context, item.getScore(), "%1$dp", hotThreshold * AppUtils.HOT_FACTOR))
+                .append(" - ")
+                .append(getSpan(context, item.getKidCount(), "%1$dc", hotThreshold)));
+        remoteViews.setOnClickFillInIntent(R.id.item_view, new Intent().setData(
+                AppUtils.createItemUri(item.getId())));
+    }
+
+    private static SpannableString getSpan(Context context, int value, String format, int hotThreshold) {
+        String text = String.format(Locale.US, format, value);
+        SpannableString spannable = new SpannableString(text);
+        if (value >= hotThreshold) {
+            spannable.setSpan(new ForegroundColorSpan(
+                    ContextCompat.getColor(context, R.color.orange500)),
+                    0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        return spannable;
     }
 
     /**
@@ -129,9 +248,14 @@ class WidgetHelper {
         String frequency = getConfig(appWidgetId, R.string.pref_widget_frequency);
         long frequencyHourMillis = DateUtils.HOUR_IN_MILLIS
                 * (TextUtils.isEmpty(frequency) ? DEFAULT_FREQUENCY_HOUR : Integer.valueOf(frequency));
+
+        PersistableBundle extras = new PersistableBundle();
+        extras.putInt(EXTRA_APP_WIDGET_ID, appWidgetId);
+
         getJobScheduler().schedule(new JobInfo.Builder(appWidgetId,
                 new ComponentName(mContext.getPackageName(), WidgetRefreshJobService.class.getName()))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setExtras(extras)
                 .setPeriodic(frequencyHourMillis)
                 .build());
     }
@@ -171,14 +295,18 @@ class WidgetHelper {
                         DateUtils.FORMAT_ABBREV_ALL | DateUtils.FORMAT_SHOW_TIME));
         remoteViews.setOnClickPendingIntent(R.id.button_refresh,
                 createRefreshPendingIntent(appWidgetId));
-        Intent intent = new Intent(mContext, WidgetService.class)
-                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                .putExtra(WidgetService.EXTRA_CUSTOM_QUERY, config.customQuery)
-                .putExtra(WidgetService.EXTRA_SECTION, config.section)
-                .putExtra(WidgetService.EXTRA_LIGHT_THEME, config.isLightTheme);
-        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-        remoteViews.setRemoteAdapter(android.R.id.list, intent);
-        remoteViews.setEmptyView(android.R.id.list, R.id.empty);
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            Intent intent = new Intent(mContext, WidgetService.class)
+                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    .putExtra(WidgetService.EXTRA_CUSTOM_QUERY, config.customQuery)
+                    .putExtra(WidgetService.EXTRA_SECTION, config.section)
+                    .putExtra(WidgetService.EXTRA_LIGHT_THEME, config.isLightTheme);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+            remoteViews.setRemoteAdapter(android.R.id.list, intent);
+            remoteViews.setEmptyView(android.R.id.list, R.id.empty);
+        }
+
         remoteViews.setPendingIntentTemplate(android.R.id.list,
                 PendingIntent.getActivity(mContext, 0, new Intent(Intent.ACTION_VIEW),
                         PendingIntent.FLAG_IMMUTABLE));
