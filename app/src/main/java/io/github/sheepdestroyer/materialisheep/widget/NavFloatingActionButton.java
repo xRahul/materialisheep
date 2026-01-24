@@ -120,10 +120,16 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
     public void setNavigable(Navigable navigable) {
         mNavigable = navigable;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Synthetic
     void bindNavigationPad() {
         GestureDetectorCompat detectorCompat = new GestureDetectorCompat(getContext(),
@@ -137,6 +143,7 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
                     public boolean onSingleTapConfirmed(MotionEvent e) {
                         Toast.makeText(getContext(), R.string.hint_nav_short,
                                 Toast.LENGTH_LONG).show();
+                        performClick();
                         return true;
                     }
 
@@ -181,6 +188,7 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
         });
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Synthetic
     void startDrag(float startX, float startY) {
         if (mVibrationEnabled) {
