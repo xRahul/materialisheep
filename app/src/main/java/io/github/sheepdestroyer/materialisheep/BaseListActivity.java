@@ -64,7 +64,6 @@ import com.google.android.material.tabs.TabLayoutMediator;
  * handles different layouts
  * for portrait and landscape orientations and manages multi-pane functionality.
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated Parcelable APIs
 public abstract class BaseListActivity extends DrawerActivity implements MultiPaneListener {
 
     protected static final String LIST_FRAGMENT_TAG = BaseListActivity.class.getName() +
