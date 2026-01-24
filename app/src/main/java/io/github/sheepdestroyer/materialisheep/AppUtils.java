@@ -32,7 +32,6 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Parcelable;
@@ -49,6 +48,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.widget.TextView;
@@ -76,8 +77,7 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
 
-@SuppressWarnings({ "WeakerAccess", "deprecation" }) // TODO: Uses deprecated NetworkInfo, Display,
-                                                     // LocalBroadcastManager, SystemUI, Custom Tabs APIs
+@SuppressWarnings("WeakerAccess")
 @PublicApi
 /**
  * A utility class providing common functions for the application.
@@ -374,6 +374,7 @@ public class AppUtils {
      * @param timeMillis The time in milliseconds.
      * @return The abbreviated time span string.
      */
+    @SuppressWarnings("deprecation")
     public static String getAbbreviatedTimeSpan(long timeMillis) {
         long span = Math.max(System.currentTimeMillis() - timeMillis, 0);
         if (span >= DateUtils.YEAR_IN_MILLIS) {
@@ -500,7 +501,6 @@ public class AppUtils {
      *
      * @param context The context to use.
      */
-    @SuppressWarnings("deprecation")
     public static void openPlayStore(Context context) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_URL));
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
@@ -660,6 +660,7 @@ public class AppUtils {
      * @param window The window to modify.
      * @param color  The color to set.
      */
+    @SuppressWarnings("deprecation")
     public static void setStatusBarColor(Window window, int color) {
         window.setStatusBarColor(color);
     }
@@ -693,6 +694,7 @@ public class AppUtils {
      * @param context The context to use.
      * @return The display height in pixels.
      */
+    @SuppressWarnings("deprecation")
     public static int getDisplayHeight(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
@@ -820,6 +822,7 @@ public class AppUtils {
     }
 
     @NonNull
+    @SuppressWarnings("deprecation")
     private static Intent createViewIntent(Context context, @Nullable WebItem item,
             String url, @Nullable CustomTabsSession session) {
         if (Preferences.customTabsEnabled(context)) {
@@ -887,14 +890,22 @@ public class AppUtils {
         return AndroidUtils.TextUtils.equals(thisUrl, thatUrl);
     }
 
+    @SuppressWarnings("deprecation")
     static class SystemUiHelper {
         private final Window window;
         private final int originalUiFlags;
+        private int originalBehavior;
         private boolean enabled = true;
 
         SystemUiHelper(Window window) {
             this.window = window;
             this.originalUiFlags = window.getDecorView().getSystemUiVisibility();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowInsetsController controller = window.getInsetsController();
+                if (controller != null) {
+                    originalBehavior = controller.getSystemBarsBehavior();
+                }
+            }
         }
 
         @SuppressLint("InlinedApi")
@@ -902,12 +913,25 @@ public class AppUtils {
             if (!enabled) {
                 return;
             }
-            if (fullscreen) {
-                window.getDecorView().setSystemUiVisibility(originalUiFlags |
-                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowInsetsController controller = window.getInsetsController();
+                if (controller != null) {
+                    if (fullscreen) {
+                        controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                        controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    } else {
+                        controller.show(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                        controller.setSystemBarsBehavior(originalBehavior);
+                    }
+                }
             } else {
-                window.getDecorView().setSystemUiVisibility(originalUiFlags);
+                if (fullscreen) {
+                    window.getDecorView().setSystemUiVisibility(originalUiFlags |
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                } else {
+                    window.getDecorView().setSystemUiVisibility(originalUiFlags);
+                }
             }
         }
 
