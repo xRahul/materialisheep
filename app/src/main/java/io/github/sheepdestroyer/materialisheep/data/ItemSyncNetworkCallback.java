@@ -16,26 +16,26 @@
 
 package io.github.sheepdestroyer.materialisheep.data;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.os.Build;
-import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import io.github.sheepdestroyer.materialisheep.AppUtils;
 
-/**
- * A {@link BroadcastReceiver} that triggers a sync when the device connects to
- * a Wi-Fi network.
- */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated ConnectivityManager/NetworkInfo APIs
-public class ItemSyncWifiReceiver extends BroadcastReceiver {
+@RequiresApi(api = Build.VERSION_CODES.N)
+public class ItemSyncNetworkCallback extends ConnectivityManager.NetworkCallback {
+    private final Context context;
+
+    public ItemSyncNetworkCallback(Context context) {
+        this.context = context.getApplicationContext();
+    }
+
     @Override
-    public void onReceive(Context context, Intent intent) {
-        if (!TextUtils.equals(intent.getAction(), ConnectivityManager.CONNECTIVITY_ACTION)) {
-            return;
-        }
+    public void onAvailable(@NonNull Network network) {
         if (AppUtils.isOnWiFi(context)) {
             SyncDelegate.scheduleSync(context, new SyncDelegate.JobBuilder(context, null).build());
         }

@@ -78,5 +78,7 @@ public class MaterialisticApplication extends android.app.Application {
         Preferences.migrate(this);
         AppUtils.registerAccountsUpdatedListener(this);
         AdBlocker.init(this, Schedulers.io());
+        android.net.ConnectivityManager connectivityManager = (android.net.ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+        connectivityManager.registerDefaultNetworkCallback(new io.github.sheepdestroyer.materialisheep.data.ItemSyncNetworkCallback(this));
     }
 }
