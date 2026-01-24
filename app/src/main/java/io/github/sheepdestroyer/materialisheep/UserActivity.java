@@ -40,6 +40,7 @@ import javax.inject.Named;
 import static io.github.sheepdestroyer.materialisheep.DataModule.HN;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
@@ -158,13 +159,7 @@ public class UserActivity extends ThemedActivity implements Scrollable {
         mScrollableHelper = new KeyDelegate.RecyclerViewHelper(mRecyclerView,
                 KeyDelegate.RecyclerViewHelper.SCROLL_ITEM);
         if (savedInstanceState != null) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                mUser = savedInstanceState.getParcelable(STATE_USER, UserManager.User.class);
-            } else {
-                @SuppressWarnings("deprecation")
-                UserManager.User user = savedInstanceState.getParcelable(STATE_USER);
-                mUser = user;
-            }
+            mUser = BundleCompat.getParcelable(savedInstanceState, STATE_USER, UserManager.User.class);
         }
         if (mUser == null) {
             load();
