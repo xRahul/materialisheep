@@ -509,9 +509,13 @@ public class WebFragment extends LazyLoadFragment
         AppUtils.toggleWebViewZoom(mWebView.getSettings(), isFullscreen);
         ViewGroup.LayoutParams params = mWebView.getLayoutParams();
         if (isFullscreen) {
-            mScrollView.removeView(mScrollViewContent);
+            if (mScrollViewContent.getParent() != mFullscreenView) {
+                if (mScrollViewContent.getParent() != null) {
+                    ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
+                }
+                mFullscreenView.addView(mScrollViewContent);
+            }
             mWebView.scrollTo(mScrollView.getScrollX(), mScrollView.getScrollY());
-            mFullscreenView.addView(mScrollViewContent);
             params.height = ViewGroup.LayoutParams.MATCH_PARENT;
         } else {
             reset();
@@ -522,8 +526,12 @@ public class WebFragment extends LazyLoadFragment
             while (mWebView.zoomOut() && i < 30) {
                 i++;
             }
-            mFullscreenView.removeView(mScrollViewContent);
-            mScrollView.addView(mScrollViewContent);
+            if (mScrollViewContent.getParent() != mScrollView) {
+                if (mScrollViewContent.getParent() != null) {
+                    ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
+                }
+                mScrollView.addView(mScrollViewContent);
+            }
             mScrollView.post(() -> mScrollView.scrollTo(mWebView.getScrollX(), mWebView.getScrollY()));
             params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
         }
