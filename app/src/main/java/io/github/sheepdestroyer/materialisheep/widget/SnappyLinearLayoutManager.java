@@ -29,7 +29,6 @@ import io.github.sheepdestroyer.materialisheep.AppUtils;
  * to
  * always snap to start
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated getExtraLayoutSpace API
 public class SnappyLinearLayoutManager extends LinearLayoutManager {
 
     private final int mExtraSpace;
@@ -60,7 +59,12 @@ public class SnappyLinearLayoutManager extends LinearLayoutManager {
     }
 
     @Override
-    protected int getExtraLayoutSpace(RecyclerView.State state) {
-        return mExtraSpace == 0 ? super.getExtraLayoutSpace(state) : mExtraSpace;
+    protected void calculateExtraLayoutSpace(@androidx.annotation.NonNull RecyclerView.State state,
+            @androidx.annotation.NonNull int[] extraLayoutSpace) {
+        if (mExtraSpace == 0) {
+            super.calculateExtraLayoutSpace(state, extraLayoutSpace);
+        } else {
+            extraLayoutSpace[1] = mExtraSpace;
+        }
     }
 }

@@ -20,21 +20,21 @@ public class AppUtilsTest {
                                 .shadowOf(connectivityManager);
 
                 // Test with no connection
-                shadowConnectivityManager.setActiveNetworkInfo(null);
+                shadowConnectivityManager.setDefaultNetworkActive(false);
                 assertFalse(AppUtils.hasConnection(context));
 
                 // Test with connection
-                shadowConnectivityManager.setActiveNetworkInfo(
-                                org.robolectric.shadows.ShadowNetworkInfo.newInstance(
-                                                android.net.NetworkInfo.DetailedState.CONNECTED,
-                                                android.net.ConnectivityManager.TYPE_WIFI, 0, true, true));
+                shadowConnectivityManager.setDefaultNetworkActive(true);
+                android.net.Network activeNetwork = connectivityManager.getActiveNetwork();
+                if (activeNetwork != null) {
+                        android.net.NetworkCapabilities caps = new android.net.NetworkCapabilities();
+                        org.robolectric.Shadows.shadowOf(caps).addCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                        shadowConnectivityManager.setNetworkCapabilities(activeNetwork, caps);
+                }
                 assertTrue(AppUtils.hasConnection(context));
 
                 // Test with disconnected network
-                shadowConnectivityManager.setActiveNetworkInfo(
-                                org.robolectric.shadows.ShadowNetworkInfo.newInstance(
-                                                android.net.NetworkInfo.DetailedState.DISCONNECTED,
-                                                android.net.ConnectivityManager.TYPE_WIFI, 0, true, false));
+                shadowConnectivityManager.setDefaultNetworkActive(false);
                 assertFalse(AppUtils.hasConnection(context));
         }
 }

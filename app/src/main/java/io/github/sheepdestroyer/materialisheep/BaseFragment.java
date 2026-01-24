@@ -72,7 +72,7 @@ public abstract class BaseFragment extends Fragment {
 
             @Override
             public boolean onMenuItemSelected(@androidx.annotation.NonNull android.view.MenuItem menuItem) {
-                return BaseFragment.this.onOptionsItemSelected(menuItem);
+                return BaseFragment.this.onMenuItemSelected(menuItem);
             }
 
             @Override
@@ -119,5 +119,15 @@ public abstract class BaseFragment extends Fragment {
      */
     protected void prepareOptionsMenu(Menu menu) {
         // override to prepare options menu
+    }
+
+    /**
+     * Handles menu item selection.
+     *
+     * @param item The menu item.
+     * @return True if the item was handled, false otherwise.
+     */
+    protected boolean onMenuItemSelected(android.view.MenuItem item) {
+        return false;
     }
 }

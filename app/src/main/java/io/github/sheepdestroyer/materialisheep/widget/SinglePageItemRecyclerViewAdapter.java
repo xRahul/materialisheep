@@ -46,7 +46,6 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 import io.github.sheepdestroyer.materialisheep.MaterialisticApplication;
 
-@SuppressWarnings("deprecation") // TODO: Uses deprecated Parcel API
 public class SinglePageItemRecyclerViewAdapter
         extends ItemRecyclerViewAdapter<ToggleItemViewHolder> {
     private static final int VIEW_TYPE_FOOTER = -1;
@@ -396,10 +395,15 @@ public class SinglePageItemRecyclerViewAdapter
             addAll(0, list);
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "deprecation"})
         @Synthetic
         SavedState(Parcel source) {
-            ArrayList<Item> savedList = source.readArrayList(Item.class.getClassLoader());
+            ArrayList<Item> savedList;
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                savedList = source.readArrayList(Item.class.getClassLoader(), Item.class);
+            } else {
+                savedList = source.readArrayList(Item.class.getClassLoader());
+            }
             addAll(0, savedList);
             expanded.addAll(source.createStringArrayList());
         }

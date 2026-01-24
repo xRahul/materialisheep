@@ -16,8 +16,6 @@
 
 package io.github.sheepdestroyer.materialisheep.data;
 
-import android.text.format.DateUtils;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -35,7 +33,6 @@ import io.reactivex.rxjava3.core.Scheduler;
  * An {@link ItemManager} that uses the Algolia REST API to fetch popular
  * stories.
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated DateUtils APIs
 public class AlgoliaPopularClient extends AlgoliaClient {
 
     /**
@@ -98,16 +95,16 @@ public class AlgoliaPopularClient extends AlgoliaClient {
         switch (filter) {
             case LAST_24H:
             default:
-                timestamp -= DateUtils.DAY_IN_MILLIS;
+                timestamp -= java.util.concurrent.TimeUnit.DAYS.toMillis(1);
                 break;
             case PAST_WEEK:
-                timestamp -= DateUtils.WEEK_IN_MILLIS;
+                timestamp -= java.util.concurrent.TimeUnit.DAYS.toMillis(7);
                 break;
             case PAST_MONTH:
-                timestamp -= DateUtils.WEEK_IN_MILLIS * 4;
+                timestamp -= java.util.concurrent.TimeUnit.DAYS.toMillis(28);
                 break;
             case PAST_YEAR:
-                timestamp -= DateUtils.YEAR_IN_MILLIS;
+                timestamp -= java.util.concurrent.TimeUnit.DAYS.toMillis(365);
                 break;
         }
         return timestamp;

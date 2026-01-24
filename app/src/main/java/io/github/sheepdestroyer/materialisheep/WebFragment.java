@@ -17,10 +17,8 @@
 package io.github.sheepdestroyer.materialisheep;
 
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import androidx.core.os.BundleCompat;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -38,6 +36,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.core.view.MenuProvider;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.widget.EditText;
@@ -60,7 +59,6 @@ import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.FileDownloader;
 import io.github.sheepdestroyer.materialisheep.data.Item;
@@ -80,14 +78,12 @@ import static android.view.View.VISIBLE;
 /**
  * A fragment that displays a web page.
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated LocalBroadcastManager/Fragment APIs
+@SuppressWarnings("deprecation") // TODO: Uses deprecated Fragment APIs
 public class WebFragment extends LazyLoadFragment
         implements Scrollable, KeyDelegate.BackInterceptor {
     public static final String EXTRA_ITEM = WebFragment.class.getName() + ".EXTRA_ITEM";
     private static final String STATE_EMPTY = "state:empty";
     private static final String STATE_READABILITY = "state:readability";
-    static final String ACTION_FULLSCREEN = WebFragment.class.getName() + ".ACTION_FULLSCREEN";
-    static final String EXTRA_FULLSCREEN = WebFragment.class.getName() + ".EXTRA_FULLSCREEN";
     private static final String STATE_FULLSCREEN = "state:fullscreen";
     private static final String STATE_CONTENT = "state:content";
     private static final int DEFAULT_PROGRESS = 20;
@@ -105,12 +101,7 @@ public class WebFragment extends LazyLoadFragment
     PopupMenu mPopupMenu;
     private KeyDelegate.NestedScrollViewHelper mScrollableHelper;
     private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            setFullscreen(intent.getBooleanExtra(WebFragment.EXTRA_FULLSCREEN, false));
-        }
-    };
+    private FullscreenViewModel mFullscreenViewModel;
     private ViewGroup mFullscreenView;
     private ViewGroup mScrollViewContent;
     @Synthetic
@@ -133,8 +124,6 @@ public class WebFragment extends LazyLoadFragment
     private boolean mIsHackerNewsUrl, mEmpty, mReadability;
     private PdfAndroidJavascriptBridge mPdfAndroidJavascriptBridge;
 
-    @SuppressWarnings("deprecation") // Using deprecated LocalBroadcastManager; migration to LiveData/Flow requires
-                                     // architectural changes
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -143,8 +132,8 @@ public class WebFragment extends LazyLoadFragment
                 R.string.pref_readability_font,
                 R.string.pref_readability_line_height,
                 R.string.pref_readability_text_size);
-        LocalBroadcastManager.getInstance(context).registerReceiver(mReceiver,
-                new IntentFilter(ACTION_FULLSCREEN));
+        mFullscreenViewModel = new androidx.lifecycle.ViewModelProvider(requireActivity()).get(FullscreenViewModel.class);
+        mFullscreenViewModel.getIsFullscreen().observe(this, this::setFullscreen);
     }
 
     @Override
@@ -184,8 +173,6 @@ public class WebFragment extends LazyLoadFragment
         return mFragmentView;
     }
 
-    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
-                                     // Activity cooperation
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -196,7 +183,6 @@ public class WebFragment extends LazyLoadFragment
         if (mFullscreen) {
             setFullscreen(true);
         }
-
     }
 
     @Override
@@ -214,10 +200,8 @@ public class WebFragment extends LazyLoadFragment
         menu.findItem(R.id.menu_font_options).setVisible(fontEnabled());
     }
 
-    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
-                                     // Activity cooperation
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onMenuItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_font_options) {
             showPreferences();
             return true;
@@ -227,7 +211,7 @@ public class WebFragment extends LazyLoadFragment
             load();
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        return super.onMenuItemSelected(item);
     }
 
     @Override
@@ -264,12 +248,9 @@ public class WebFragment extends LazyLoadFragment
         // Subscriptions are fire-and-forget and managed internally.
     }
 
-    @SuppressWarnings("deprecation") // Using deprecated LocalBroadcastManager; migration to LiveData/Flow requires
-                                     // architectural changes
     @Override
     public void onDetach() {
         mPreferenceObservable.unsubscribe(getActivity());
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mReceiver);
         super.onDetach();
     }
 
@@ -420,12 +401,7 @@ public class WebFragment extends LazyLoadFragment
             }
         });
         view.findViewById(R.id.button_exit)
-                .setOnClickListener(v -> {
-                    @SuppressWarnings("deprecation") // Using deprecated LocalBroadcastManager
-                    android.content.Intent intent = new Intent(WebFragment.ACTION_FULLSCREEN)
-                            .putExtra(EXTRA_FULLSCREEN, false);
-                    LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
-                });
+                .setOnClickListener(v -> mFullscreenViewModel.setFullscreen(false));
         mButtonNext.setOnClickListener(v -> mWebView.findNext(true));
         mButtonMore.setOnClickListener(v -> mPopupMenu.create(getActivity(), mButtonMore, Gravity.NO_GRAVITY)
                 .inflate(R.menu.menu_web)
