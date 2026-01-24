@@ -21,6 +21,13 @@ import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import io.reactivex.rxjava3.schedulers.Schedulers
 
+/**
+ * Verifies that the application clients are configured to use HTTPS URLs.
+ *
+ * Note: These tests verify the *application code's intent* (using https:// schemes).
+ * The OS-level enforcement of HTTPS (blocking cleartext traffic) is handled by
+ * app/src/main/res/xml/network_security_config.xml, which is applied by the Android framework.
+ */
 @RunWith(RobolectricTestRunner::class)
 class NetworkHttpsTest {
 
@@ -54,7 +61,7 @@ class NetworkHttpsTest {
 
         // Stub call execution to return a real Response object
         val realResponse = Response.Builder()
-            .request(Request.Builder().url("https://example.com").build())
+            .request(Request.Builder().url("https://github.com").build())
             .protocol(Protocol.HTTP_1_1)
             .code(HttpURLConnection.HTTP_MOVED_TEMP)
             .message("Found")
@@ -70,12 +77,12 @@ class NetworkHttpsTest {
 
     private fun anyRequest(): Request {
         ArgumentMatchers.any(Request::class.java)
-        return Request.Builder().url("https://example.com").build()
+        return Request.Builder().url("https://github.com").build()
     }
 
     private fun captureRequest(captor: ArgumentCaptor<Request>): Request {
         captor.capture()
-        return Request.Builder().url("https://example.com").build()
+        return Request.Builder().url("https://github.com").build()
     }
 
     @Test
