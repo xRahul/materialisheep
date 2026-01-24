@@ -63,7 +63,7 @@ public class ItemSyncJobService extends JobService {
         SyncDelegate syncDelegate = createSyncDelegate();
         mSyncDelegates.put(jobId, syncDelegate);
         syncDelegate.subscribe(token -> {
-            if (TextUtils.equals(jobId, token)) {
+            if (TextUtils.equals(jobId, token) || (token == null && TextUtils.isEmpty(new SyncDelegate.Job(jobParameters.getExtras()).id))) {
                 jobFinished(jobParameters, false);
                 mSyncDelegates.remove(jobId);
             }
