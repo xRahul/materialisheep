@@ -151,9 +151,11 @@ public class AppUtils {
      * @param textView The TextView to set the text on.
      * @param html     The HTML content to set.
      */
+    @SuppressLint("ClickableViewAccessibility")
     public static void setTextWithLinks(TextView textView, CharSequence html) {
         textView.setText(html);
         // TODO https://code.google.com/p/android/issues/detail?id=191430
+        // Use custom touch listener to fix LinkMovementMethod consuming all touch events
         // noinspection Convert2Lambda
         textView.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")

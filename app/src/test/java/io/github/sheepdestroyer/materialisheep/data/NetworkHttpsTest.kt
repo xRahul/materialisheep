@@ -71,18 +71,15 @@ class NetworkHttpsTest {
     }
 
     private fun anyClass(): Class<*> {
-        ArgumentMatchers.any(Class::class.java)
-        return String::class.java
+        return ArgumentMatchers.any(Class::class.java) ?: String::class.java
     }
 
     private fun anyRequest(): Request {
-        ArgumentMatchers.any(Request::class.java)
-        return Request.Builder().url("https://github.com").build()
+        return ArgumentMatchers.any(Request::class.java) ?: Request.Builder().url("https://github.com").build()
     }
 
     private fun captureRequest(captor: ArgumentCaptor<Request>): Request {
-        captor.capture()
-        return Request.Builder().url("https://github.com").build()
+        return captor.capture() ?: Request.Builder().url("https://github.com").build()
     }
 
     @Test

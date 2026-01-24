@@ -4,6 +4,7 @@ import android.content.Intent
 import android.text.TextUtils
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.sheepdestroyer.materialisheep.AlertDialogBuilder
 import io.github.sheepdestroyer.materialisheep.AppUtils
@@ -31,9 +32,21 @@ class ThreadPreviewAdapter(
     }
 
     fun submitList(newItems: List<Item>) {
+        val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = items.size
+            override fun getNewListSize(): Int = newItems.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return items[oldItemPosition].longId == newItems[newItemPosition].longId
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return items[oldItemPosition].displayedTitle == newItems[newItemPosition].displayedTitle
+            }
+        })
         items.clear()
         items.addAll(newItems)
-        notifyDataSetChanged() // For simplicity with this small list. DiffUtil could be used but maybe overkill for static thread preview.
+        diffResult.dispatchUpdatesTo(this)
     }
 
     override fun getItem(position: Int): Item? {

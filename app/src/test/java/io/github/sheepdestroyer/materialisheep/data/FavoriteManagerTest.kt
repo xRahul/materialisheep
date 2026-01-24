@@ -47,7 +47,7 @@ class FavoriteManagerTest {
 
         // Mock database calls
         `when`(database.getSavedStoriesDao()).thenReturn(savedStoriesDao)
-        `when`(database.getLiveData()).thenReturn(Mockito.mock(androidx.lifecycle.MutableLiveData::class.java) as androidx.lifecycle.MutableLiveData<Uri>)
+        `when`(database.getLiveData()).thenReturn(androidx.lifecycle.MutableLiveData<Uri>())
 
         favoriteManager = FavoriteManager(localCache, Schedulers.trampoline(), savedStoriesDao)
     }
