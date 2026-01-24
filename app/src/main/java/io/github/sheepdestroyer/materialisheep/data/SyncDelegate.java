@@ -42,7 +42,9 @@ import android.webkit.WebView;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -195,8 +197,9 @@ public class SyncDelegate {
     private void syncDeferredItems() {
         java.util.List<String> itemIds = mSyncQueueDao.getAll();
         for (String itemId : itemIds) {
-            scheduleSync(mContext, new JobBuilder(mContext, itemId).setNotificationEnabled(false).build());
+            sync(itemId);
         }
+        finish();
     }
 
     private void sync(String itemId) {
@@ -208,23 +211,21 @@ public class SyncDelegate {
         if ((cachedItem = getFromCache(itemId)) != null) {
             sync(cachedItem);
         } else {
-            updateProgress();
+            if (mSyncProgress != null) {
+                updateProgress();
+            }
             // TODO defer on low battery as well?
-            mHnRestService.networkItem(itemId).enqueue(new Callback<HackerNewsItem>() {
-                @Override
-                public void onResponse(Call<HackerNewsItem> call,
-                        retrofit2.Response<HackerNewsItem> response) {
-                    HackerNewsItem item;
-                    if ((item = response.body()) != null) {
-                        sync(item);
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<HackerNewsItem> call, Throwable t) {
+            try {
+                retrofit2.Response<HackerNewsItem> response = mHnRestService.networkItem(itemId).execute();
+                HackerNewsItem item = response.body();
+                if (item != null) {
+                    sync(item);
+                } else {
                     notifyItem(itemId, null);
                 }
-            });
+            } catch (IOException e) {
+                notifyItem(itemId, null);
+            }
         }
     }
 
@@ -240,7 +241,17 @@ public class SyncDelegate {
     private void syncReadability(@NonNull HackerNewsItem item) {
         if (mJob.readabilityEnabled && item.isStoryType()) {
             final String itemId = item.getId();
-            mReadabilityClient.parse(itemId, item.getRawUrl(), content -> notifyReadability());
+            if (mSyncProgress == null) {
+                CountDownLatch latch = new CountDownLatch(1);
+                mReadabilityClient.parse(itemId, item.getRawUrl(), content -> latch.countDown());
+                try {
+                    latch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } else {
+                mReadabilityClient.parse(itemId, item.getRawUrl(), content -> notifyReadability());
+            }
         }
     }
 
@@ -283,36 +294,47 @@ public class SyncDelegate {
             for (int i = 0; i < kids.length; i++) {
                 ids[i] = String.valueOf(kids[i]);
             }
-            mItemManager.getItems(ids, ItemManager.MODE_CACHE, new ResponseListener<Item[]>() {
-                @Override
-                public void onResponse(@Nullable Item[] response) {
-                    mIoScheduler.scheduleDirect(() -> {
-                        Set<String> foundIds = new HashSet<>();
-                        if (response != null) {
-                            for (Item child : response) {
-                                if (child instanceof HackerNewsItem) {
-                                    sync((HackerNewsItem) child);
-                                    foundIds.add(child.getId());
+            if (mSyncProgress == null) {
+                Item[] response = mItemManager.getItems(ids, ItemManager.MODE_CACHE);
+                if (response != null) {
+                    for (Item child : response) {
+                        if (child instanceof HackerNewsItem) {
+                            sync((HackerNewsItem) child);
+                        }
+                    }
+                }
+            } else {
+                mItemManager.getItems(ids, ItemManager.MODE_CACHE, new ResponseListener<Item[]>() {
+                    @Override
+                    public void onResponse(@Nullable Item[] response) {
+                        mIoScheduler.scheduleDirect(() -> {
+                            Set<String> foundIds = new HashSet<>();
+                            if (response != null) {
+                                for (Item child : response) {
+                                    if (child instanceof HackerNewsItem) {
+                                        sync((HackerNewsItem) child);
+                                        foundIds.add(child.getId());
+                                    }
                                 }
                             }
-                        }
-                        for (String id : ids) {
-                            if (!foundIds.contains(id)) {
+                            for (String id : ids) {
+                                if (!foundIds.contains(id)) {
+                                    notifyItem(id, null);
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        mIoScheduler.scheduleDirect(() -> {
+                            for (String id : ids) {
                                 notifyItem(id, null);
                             }
-                        }
-                    });
-                }
-
-                @Override
-                public void onError(String errorMessage) {
-                    mIoScheduler.scheduleDirect(() -> {
-                        for (String id : ids) {
-                            notifyItem(id, null);
-                        }
-                    });
-                }
-            });
+                        });
+                    }
+                });
+            }
         }
     }
 
@@ -330,10 +352,12 @@ public class SyncDelegate {
 
     @Synthetic
     void notifyItem(@NonNull String id, @Nullable HackerNewsItem item) {
-        mSyncProgress.finishItem(id, item,
-                mJob.commentsEnabled && mJob.connectionEnabled,
-                mJob.readabilityEnabled && mJob.connectionEnabled);
-        updateProgress();
+        if (mSyncProgress != null) {
+            mSyncProgress.finishItem(id, item,
+                    mJob.commentsEnabled && mJob.connectionEnabled,
+                    mJob.readabilityEnabled && mJob.connectionEnabled);
+            updateProgress();
+        }
     }
 
     private void notifyReadability() {
