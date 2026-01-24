@@ -48,6 +48,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -81,6 +82,7 @@ public class SyncDelegate {
     private final ReadabilityClient mReadabilityClient;
     private final MaterialisticDatabase.SyncQueueDao mSyncQueueDao;
     private final io.reactivex.rxjava3.core.Scheduler mIoScheduler;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     private final NotificationManager mNotificationManager;
     private final NotificationCompat.Builder mNotificationBuilder;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -184,9 +186,9 @@ public class SyncDelegate {
             message.what = Integer.valueOf(mJob.id);
             mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
             mSyncProgress = new SyncProgress(mJob);
-            sync(mJob.id);
+            mDisposables.add(mIoScheduler.scheduleDirect(() -> sync(mJob.id)));
         } else {
-            syncDeferredItems();
+            mDisposables.add(mIoScheduler.scheduleDirect(this::syncDeferredItems));
         }
     }
 
@@ -377,7 +379,7 @@ public class SyncDelegate {
     }
 
     void stopSync() {
-        // TODO
+        mDisposables.clear();
         mJob.connectionEnabled = false;
         int id = Integer.valueOf(mJob.id);
         mNotificationManager.cancel(id);
