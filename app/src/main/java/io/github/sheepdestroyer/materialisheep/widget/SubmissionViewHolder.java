@@ -21,10 +21,10 @@ import android.widget.TextView;
 
 import io.github.sheepdestroyer.materialisheep.R;
 
-class SubmissionViewHolder extends ItemRecyclerViewAdapter.ItemViewHolder {
+public class SubmissionViewHolder extends ItemRecyclerViewAdapter.ItemViewHolder {
     final TextView mTitleTextView;
 
-    SubmissionViewHolder(View itemView) {
+    public SubmissionViewHolder(View itemView) {
         super(itemView);
         mTitleTextView = (android.widget.TextView) itemView.findViewById(R.id.title);
         mCommentButton.setText(R.string.view_story);
