@@ -231,11 +231,13 @@ class FavoriteManager @Inject constructor(
    * @return an [Observable] that emits `true` if the story is a favorite, `false` otherwise
    */
   @WorkerThread
-  fun check(itemId: String?) = Observable.just(if (itemId.isNullOrEmpty()) {
-    false
-  } else {
-    cache.isFavorite(itemId)
-  })
+  fun check(itemId: String?) = Observable.fromCallable {
+    if (itemId.isNullOrEmpty()) {
+      false
+    } else {
+      cache.isFavorite(itemId)
+    }
+  }
 
   /**
    * Checks if multiple items are favorites.
@@ -244,11 +246,13 @@ class FavoriteManager @Inject constructor(
    * @return an [Observable] that emits a list of booleans indicating if each item is a favorite
    */
   @WorkerThread
-  fun check(itemIds: List<String>) = Observable.just(if (itemIds.isEmpty()) {
-    emptyList()
-  } else {
-    cache.isFavorite(itemIds)
-  })
+  fun check(itemIds: List<String>) = Observable.fromCallable {
+    if (itemIds.isEmpty()) {
+      emptyList()
+    } else {
+      cache.isFavorite(itemIds)
+    }
+  }
 
   @WorkerThread
   private fun toFile(context: Context, cursor: Cursor): Uri? {

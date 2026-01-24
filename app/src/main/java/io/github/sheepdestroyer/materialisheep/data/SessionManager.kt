@@ -41,12 +41,13 @@ class SessionManager @Inject constructor(
    * @return an [Observable] that emits `true` if the item has been viewed, `false` otherwise
    */
   @WorkerThread
-  fun isViewed(itemId: String?): Observable<Boolean> = Observable.just(
-      if (itemId.isNullOrEmpty()) {
-        false
-      } else {
-        cache.isViewed(itemId)
-      })
+  fun isViewed(itemId: String?): Observable<Boolean> = Observable.fromCallable {
+    if (itemId.isNullOrEmpty()) {
+      false
+    } else {
+      cache.isViewed(itemId)
+    }
+  }
 
   /**
    * Checks if multiple items have been viewed.
@@ -55,13 +56,13 @@ class SessionManager @Inject constructor(
    * @return an [Observable] that emits a list of booleans indicating if each item has been viewed
    */
   @WorkerThread
-  fun isViewed(itemIds: List<String>): Observable<List<Boolean>> = Observable.just(
-      if (itemIds.isEmpty()) {
-        emptyList()
-      } else {
-        cache.isViewed(itemIds)
-      }
-  )
+  fun isViewed(itemIds: List<String>): Observable<List<Boolean>> = Observable.fromCallable {
+    if (itemIds.isEmpty()) {
+      emptyList()
+    } else {
+      cache.isViewed(itemIds)
+    }
+  }
 
   /**
    * Marks an item as having been viewed.
