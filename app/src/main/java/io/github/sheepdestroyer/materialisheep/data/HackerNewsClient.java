@@ -132,6 +132,61 @@ public class HackerNewsClient implements ItemManager, UserManager {
     }
 
     @Override
+    @android.annotation.SuppressLint("CheckResult")
+    public void getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener) {
+        if (listener == null) {
+            return;
+        }
+        if (itemIds == null || itemIds.length == 0) {
+            listener.onResponse(new Item[0]);
+            return;
+        }
+
+        Observable.fromArray(itemIds)
+                .flatMap(id -> {
+                    Observable<HackerNewsItem> itemObservable;
+                    switch (cacheMode) {
+                        case MODE_NETWORK:
+                            itemObservable = mRestService.networkItemRx(id);
+                            break;
+                        case MODE_CACHE:
+                            itemObservable = mRestService.cachedItemRx(id)
+                                    .onErrorResumeNext(t -> mRestService.itemRx(id));
+                            break;
+                        default:
+                            itemObservable = mRestService.itemRx(id);
+                            break;
+                    }
+                    return Observable.zip(
+                            mSessionManager.isViewed(id),
+                            mFavoriteManager.check(id),
+                            itemObservable.map(Optional::of).onErrorReturn(t -> Optional.empty()),
+                            (isViewed, favorite, optionalItem) -> {
+                                if (optionalItem.isPresent()) {
+                                    HackerNewsItem item = optionalItem.get();
+                                    item.preload();
+                                    item.setIsViewed(isViewed);
+                                    item.setFavorite(favorite);
+                                    return optionalItem;
+                                }
+                                return Optional.<HackerNewsItem>empty();
+                            }
+                    );
+                }, 8)
+                .toList()
+                .map(list -> {
+                    java.util.List<HackerNewsItem> valid = new java.util.ArrayList<>();
+                    for (Optional<HackerNewsItem> o : list) {
+                        o.ifPresent(valid::add);
+                    }
+                    return valid.toArray(new HackerNewsItem[0]);
+                })
+                .subscribeOn(mIoScheduler)
+                .observeOn(mMainThreadScheduler)
+                .subscribe(listener::onResponse, t -> listener.onError(t != null ? t.getMessage() : ""));
+    }
+
+    @Override
     public Item[] getStories(String filter, @CacheMode int cacheMode) {
         try {
             return toItems(getStoriesCall(filter, cacheMode).execute().body());
@@ -158,6 +213,18 @@ public class HackerNewsClient implements ItemManager, UserManager {
         } catch (IOException e) {
             return null;
         }
+    }
+
+    @Override
+    public Item[] getItems(String[] itemIds, @CacheMode int cacheMode) {
+        if (itemIds == null) {
+            return new Item[0];
+        }
+        Item[] items = new Item[itemIds.length];
+        for (int i = 0; i < itemIds.length; i++) {
+            items[i] = getItem(itemIds[i], cacheMode);
+        }
+        return items;
     }
 
     @Override

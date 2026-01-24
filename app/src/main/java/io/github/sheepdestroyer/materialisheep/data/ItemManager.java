@@ -90,6 +90,15 @@ public interface ItemManager {
     void getItem(String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener);
 
     /**
+     * Gets an array of items by their IDs.
+     *
+     * @param itemIds   the IDs of the items to get
+     * @param cacheMode the cache mode to use
+     * @param listener  the listener to be notified of the response
+     */
+    void getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener);
+
+    /**
      * Gets an array of stories.
      *
      * @param filter    the filter to apply to the stories
@@ -108,4 +117,14 @@ public interface ItemManager {
      */
     @WorkerThread
     Item getItem(String itemId, @CacheMode int cacheMode);
+
+    /**
+     * Gets an array of items by their IDs synchronously.
+     *
+     * @param itemIds   the IDs of the items to get
+     * @param cacheMode the cache mode to use
+     * @return an array of items
+     */
+    @WorkerThread
+    Item[] getItems(String[] itemIds, @CacheMode int cacheMode);
 }

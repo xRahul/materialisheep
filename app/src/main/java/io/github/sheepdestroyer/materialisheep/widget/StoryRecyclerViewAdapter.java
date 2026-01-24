@@ -23,6 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.collection.ArrayMap;
@@ -41,7 +43,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -109,6 +113,20 @@ public class StoryRecyclerViewAdapter extends
     final ArraySet<Item> mAdded = new ArraySet<>();
     @Synthetic
     final ArrayMap<String, Integer> mPromoted = new ArrayMap<>();
+    @Synthetic
+    final Set<String> mPendingIds = new HashSet<>();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mLoadRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mPendingIds.isEmpty()) {
+                return;
+            }
+            String[] ids = mPendingIds.toArray(new String[0]);
+            mPendingIds.clear();
+            mItemManager.getItems(ids, getItemCacheMode(), new ItemsResponseListener(StoryRecyclerViewAdapter.this));
+        }
+    };
     @Synthetic
     int mFavoriteRevision = 1;
     private String mUsername;
@@ -354,7 +372,9 @@ public class StoryRecyclerViewAdapter extends
             return;
         }
         item.setLocalRevision(0);
-        mItemManager.getItem(item.getId(), getItemCacheMode(), new ItemResponseListener(this, item));
+        mPendingIds.add(item.getId());
+        mHandler.removeCallbacks(mLoadRunnable);
+        mHandler.post(mLoadRunnable);
     }
 
     @Override
@@ -466,6 +486,18 @@ public class StoryRecyclerViewAdapter extends
         // ignore changes if item was invalidated by refresh / filter
         if (position >= 0 && position < getItemCount()) {
             notifyItemChanged(position);
+        }
+    }
+
+    @Synthetic
+    void updateItem(Item loaded) {
+        for (int i = 0; i < mItems.size(); i++) {
+            Item existing = mItems.get(i);
+            if (TextUtils.equals(existing.getId(), loaded.getId())) {
+                existing.populate(loaded);
+                onItemLoaded(existing);
+                return;
+            }
         }
     }
 
@@ -600,6 +632,28 @@ public class StoryRecyclerViewAdapter extends
         @Override
         public void onError(String errorMessage) {
             // do nothing
+        }
+    }
+
+    static class ItemsResponseListener implements ResponseListener<Item[]> {
+        private final WeakReference<StoryRecyclerViewAdapter> mAdapter;
+
+        ItemsResponseListener(StoryRecyclerViewAdapter adapter) {
+            mAdapter = new WeakReference<>(adapter);
+        }
+
+        @Override
+        public void onResponse(Item[] items) {
+            StoryRecyclerViewAdapter adapter = mAdapter.get();
+            if (adapter != null && adapter.isAttached() && items != null) {
+                for (Item item : items) {
+                    adapter.updateItem(item);
+                }
+            }
+        }
+
+        @Override
+        public void onError(String error) {
         }
     }
 
