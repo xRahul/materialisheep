@@ -166,7 +166,7 @@ public abstract class ThemedActivity extends AppCompatActivity {
         }
         int color = ContextCompat.getColor(this,
                 AppUtils.getThemedResId(this, androidx.appcompat.R.attr.colorPrimary));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        if (Build.VERSION.SDK_INT >= 33) {
             setTaskDescription(new ActivityManager.TaskDescription.Builder()
                     .setLabel(title.toString())
                     .setIcon(R.drawable.ic_app)
