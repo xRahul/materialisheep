@@ -153,6 +153,7 @@ class HackerNewsItem implements Item {
         pendingVoted = source.readInt() == 1;
         next = source.readLong();
         previous = source.readLong();
+        displayedText = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(source);
     }
 
     @Override
@@ -236,6 +237,7 @@ class HackerNewsItem implements Item {
         dest.writeInt(pendingVoted ? 1 : 0);
         dest.writeLong(next);
         dest.writeLong(previous);
+        TextUtils.writeToParcel(displayedText, dest, flags);
     }
 
     @Override

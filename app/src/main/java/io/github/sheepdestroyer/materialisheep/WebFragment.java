@@ -78,7 +78,6 @@ import static android.view.View.VISIBLE;
 /**
  * A fragment that displays a web page.
  */
-@SuppressWarnings("deprecation") // TODO: Uses deprecated Fragment APIs
 public class WebFragment extends LazyLoadFragment
         implements Scrollable, KeyDelegate.BackInterceptor {
     public static final String EXTRA_ITEM = WebFragment.class.getName() + ".EXTRA_ITEM";

@@ -46,6 +46,8 @@ import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 
+import io.reactivex.rxjava3.core.Observable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -83,6 +85,7 @@ public class SyncDelegate {
     private final Context mContext;
     private ProgressListener mListener;
     private Job mJob;
+    private boolean mFinished;
     @VisibleForTesting
     CacheableWebView mWebView;
 
@@ -258,11 +261,35 @@ public class SyncDelegate {
         mWebView.loadUrl(item.getUrl());
     }
 
+    @android.annotation.SuppressLint("CheckResult")
     private void syncChildren(@NonNull HackerNewsItem item) {
         if (mJob.commentsEnabled && item.getKids() != null) {
-            for (long id : item.getKids()) {
-                sync(String.valueOf(id));
+            if (!mJob.connectionEnabled) {
+                for (long id : item.getKids()) {
+                    defer(String.valueOf(id));
+                }
+                return;
             }
+            java.util.List<Long> kids = new java.util.ArrayList<>();
+            for (long id : item.getKids()) {
+                kids.add(id);
+            }
+            Observable.fromIterable(kids)
+                    .flatMap(id -> {
+                        String itemId = String.valueOf(id);
+                        return mHnRestService.cachedItemRx(itemId)
+                                .onErrorResumeNext(t -> mHnRestService.networkItemRx(itemId))
+                                .map(java.util.Optional::of)
+                                .onErrorReturn(t -> java.util.Optional.empty())
+                                .map(opt -> new android.util.Pair<>(itemId, opt.orElse(null)));
+                    }, 8)
+                    .subscribe(pair -> {
+                        if (pair.second != null) {
+                            sync(pair.second);
+                        } else {
+                            notifyItem(pair.first, null);
+                        }
+                    });
         }
     }
 
@@ -317,6 +344,10 @@ public class SyncDelegate {
     }
 
     private void finish() {
+        if (mFinished) {
+            return;
+        }
+        mFinished = true;
         if (mListener != null) {
             mListener.onDone(mJob.id);
             mListener = null;

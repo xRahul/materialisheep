@@ -89,6 +89,11 @@ public class AlgoliaClient implements ItemManager {
         mHackerNewsClient.getItem(itemId, cacheMode, listener);
     }
 
+    @Override
+    public void getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener) {
+        mHackerNewsClient.getItems(itemIds, cacheMode, listener);
+    }
+
     /**
      * Fetches stories from the Algolia API synchronously.
      *
@@ -108,6 +113,11 @@ public class AlgoliaClient implements ItemManager {
     @Override
     public Item getItem(String itemId, @CacheMode int cacheMode) {
         return mHackerNewsClient.getItem(itemId, cacheMode);
+    }
+
+    @Override
+    public Item[] getItems(String[] itemIds, @CacheMode int cacheMode) {
+        return mHackerNewsClient.getItems(itemIds, cacheMode);
     }
 
     /**
@@ -142,6 +152,43 @@ public class AlgoliaClient implements ItemManager {
             HackerNewsItem item = new HackerNewsItem(
                     Long.parseLong(hits[i].objectID));
             item.rank = i + 1;
+            final String title = hits[i].title;
+            final String url = hits[i].url;
+            final String author = hits[i].author;
+            final int score = hits[i].points;
+            final int descendants = hits[i].num_comments;
+            final long time = hits[i].created_at_i;
+            item.populate(new HackerNewsItem(0) {
+                @Override
+                public String getTitle() {
+                    return title;
+                }
+
+                @Override
+                public String getRawUrl() {
+                    return url;
+                }
+
+                @Override
+                public String getBy() {
+                    return author;
+                }
+
+                @Override
+                public int getScore() {
+                    return score;
+                }
+
+                @Override
+                public int getDescendants() {
+                    return descendants;
+                }
+
+                @Override
+                public long getTime() {
+                    return time;
+                }
+            });
             stories[i] = item;
         }
         return stories;
@@ -157,7 +204,7 @@ public class AlgoliaClient implements ItemManager {
          * @param etag  the ETag for a conditional request, can be null
          * @return an Observable of search results
          */
-        @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
+        @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID,title,url,author,points,num_comments,created_at_i&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByDateRx(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
@@ -168,7 +215,7 @@ public class AlgoliaClient implements ItemManager {
          * @param etag  the ETag for a conditional request, can be null
          * @return an Observable of search results
          */
-        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
+        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID,title,url,author,points,num_comments,created_at_i&attributesToHighlight=none")
         Observable<AlgoliaHits> searchRx(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
@@ -180,7 +227,7 @@ public class AlgoliaClient implements ItemManager {
          * @param etag           the ETag for a conditional request, can be null
          * @return an Observable of search results
          */
-        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
+        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID,title,url,author,points,num_comments,created_at_i&attributesToHighlight=none")
         Observable<AlgoliaHits> searchByMinTimestampRx(@Query("numericFilters") String numericFilters,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
@@ -191,7 +238,7 @@ public class AlgoliaClient implements ItemManager {
          * @param etag  the ETag for a conditional request, can be null
          * @return a {@link Call} of search results
          */
-        @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
+        @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID,title,url,author,points,num_comments,created_at_i&attributesToHighlight=none")
         Call<AlgoliaHits> searchByDate(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
@@ -202,7 +249,7 @@ public class AlgoliaClient implements ItemManager {
          * @param etag  the ETag for a conditional request, can be null
          * @return a {@link Call} of search results
          */
-        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
+        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID,title,url,author,points,num_comments,created_at_i&attributesToHighlight=none")
         Call<AlgoliaHits> search(@Query("query") String query,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
 
@@ -214,7 +261,7 @@ public class AlgoliaClient implements ItemManager {
          * @param etag           the ETag for a conditional request, can be null
          * @return a {@link Call} of search results
          */
-        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
+        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID,title,url,author,points,num_comments,created_at_i&attributesToHighlight=none")
         Call<AlgoliaHits> searchByMinTimestamp(@Query("numericFilters") String numericFilters,
                 @Header(HEADER_IF_NONE_MATCH) @Nullable String etag);
     }
@@ -229,5 +276,23 @@ public class AlgoliaClient implements ItemManager {
         @Keep
         @Synthetic
         String objectID;
+        @Keep
+        @Synthetic
+        String title;
+        @Keep
+        @Synthetic
+        String url;
+        @Keep
+        @Synthetic
+        String author;
+        @Keep
+        @Synthetic
+        int points;
+        @Keep
+        @Synthetic
+        int num_comments;
+        @Keep
+        @Synthetic
+        long created_at_i;
     }
 }

@@ -20,21 +20,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <include layout="@layout/empty_search"  />
-
-    <include layout="@layout/empty_list" />
-
     <io.github.sheepdestroyer.materialisheep.widget.AppBarSwipeRefreshLayout
         android:id="@id/swipe_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@id/recycler_view"
-            android:paddingBottom="?attr/actionBarSize"
-            android:clipToPadding="false"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent">
+
+            <include layout="@layout/empty_search"  />
+
+            <include layout="@layout/empty_list" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@id/recycler_view"
+                android:paddingBottom="?attr/actionBarSize"
+                android:clipToPadding="false"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </FrameLayout>
 
     </io.github.sheepdestroyer.materialisheep.widget.AppBarSwipeRefreshLayout>
 
