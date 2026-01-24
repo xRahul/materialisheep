@@ -229,19 +229,22 @@ public class ListFragment extends BaseListFragment {
             }
 
         });
-        mStoryListViewModel = new ViewModelProvider(this).get(StoryListViewModel.class);
-        mStoryListViewModel.inject(itemManager, mIoThreadScheduler);
-        mStoryListViewModel.getStories(mFilter, mCacheMode).observe(getViewLifecycleOwner(), itemLists -> {
-            if (itemLists == null) {
+        mStoryListViewModel = new ViewModelProvider(this, new StoryListViewModel.Factory(
+                itemManager,
+                kotlinx.coroutines.Dispatchers.getIO()
+        )).get(StoryListViewModel.class);
+        mStoryListViewModel.getStoriesLiveData().observe(getViewLifecycleOwner(), state -> {
+            if (state == null) {
                 return;
             }
-            if (itemLists.first != null) {
-                onItemsLoaded(itemLists.first);
+            if (state.getPrevious() != null) {
+                onItemsLoaded(state.getPrevious().toArray(new Item[0]));
             }
-            if (itemLists.second != null) {
-                onItemsLoaded(itemLists.second);
+            if (state.getCurrent() != null) {
+                onItemsLoaded(state.getCurrent().toArray(new Item[0]));
             }
         });
+        mStoryListViewModel.getStories(mFilter, mCacheMode);
     }
 
     /**
