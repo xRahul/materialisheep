@@ -202,7 +202,8 @@ class WidgetHelper {
                 createRefreshPendingIntent(appWidgetId));
 
         remoteViews.setPendingIntentTemplate(android.R.id.list,
-                PendingIntent.getActivity(mContext, 0, new Intent(Intent.ACTION_VIEW),
+                PendingIntent.getActivity(mContext, 0, new Intent(Intent.ACTION_VIEW)
+                        .setPackage(mContext.getPackageName()),
                         PendingIntent.FLAG_IMMUTABLE));
 
         remoteViews.setRemoteAdapter(android.R.id.list, itemsBuilder.build());
@@ -308,7 +309,8 @@ class WidgetHelper {
         }
 
         remoteViews.setPendingIntentTemplate(android.R.id.list,
-                PendingIntent.getActivity(mContext, 0, new Intent(Intent.ACTION_VIEW),
+                PendingIntent.getActivity(mContext, 0, new Intent(Intent.ACTION_VIEW)
+                        .setPackage(mContext.getPackageName()),
                         PendingIntent.FLAG_IMMUTABLE));
     }
 
