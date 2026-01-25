@@ -207,6 +207,7 @@ class WidgetHelper {
                         PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
 
         remoteViews.setRemoteAdapter(android.R.id.list, itemsBuilder.build());
+        remoteViews.setEmptyView(android.R.id.list, R.id.empty);
 
         mAppWidgetManager.updateAppWidget(appWidgetId, remoteViews);
         if (onComplete != null) {
