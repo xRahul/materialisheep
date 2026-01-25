@@ -406,6 +406,7 @@ public class SyncDelegate {
     private PendingIntent getItemActivity(String itemId) {
         return PendingIntent.getActivity(mContext, 0,
                 new Intent(Intent.ACTION_VIEW)
+                        .setPackage(mContext.getPackageName())
                         .setData(AppUtils.createItemUri(itemId))
                         .putExtra(ItemActivity.EXTRA_CACHE_MODE, ItemManager.MODE_CACHE)
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
