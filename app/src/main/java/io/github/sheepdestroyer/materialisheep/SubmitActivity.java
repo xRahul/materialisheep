@@ -242,10 +242,9 @@ public class SubmitActivity extends ThemedActivity {
         } else if (successful) {
             Toast.makeText(this, R.string.submit_successful, Toast.LENGTH_SHORT).show();
             if (!isDestroyed()) {
-                Intent intent = new Intent(this, NewActivity.class);
-                intent.putExtra(NewActivity.EXTRA_REFRESH, true);
-                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(intent); // TODO should go to profile instead?
+                Intent intent = new Intent(this, UserActivity.class);
+                intent.putExtra(UserActivity.EXTRA_USERNAME, Preferences.getUsername(this));
+                startActivity(intent);
                 finish();
             }
         } else if (!isDestroyed()) {
