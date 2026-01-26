@@ -13,10 +13,10 @@
     - [x] Replace `setRetainInstance` with `ViewModel`
     - [x] Migrate `FragmentStatePagerAdapter` to `ViewPager2`
 - [ ] **Phase 2: System & Device API Migration** <!-- id: 18 -->
-    - Migrate `NetworkInfo` to `ConnectivityManager.NetworkCallback`
-    - Update `Vibrator` usage to `VibrationEffect`
-    - Adopt `WindowMetrics` and `WindowInsetsController`
-    - Implement Edge-to-Edge (replace `setStatusBarColor`)
+    - [x] Migrate `NetworkInfo` to `ConnectivityManager.NetworkCallback`
+    - [x] Update `Vibrator` usage to `VibrationEffect`
+    - [x] Adopt `WindowMetrics` and `WindowInsetsController`
+    - [ ] Implement Edge-to-Edge (replace `setStatusBarColor`)
 - [ ] **Phase 3: Widget & View Cleanup** <!-- id: 19 -->
     - Update `RemoteViews` adapter API
     - Fix `setLayoutFrozen` (RecyclerView) and `BottomSheetCallback`

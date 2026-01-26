@@ -25,12 +25,10 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.view.WindowMetrics;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -270,28 +268,15 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
         setY(getPreferences().getFloat(mPreferenceY, getY()));
     }
 
-    private DisplayMetrics getDisplayMetrics() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager windowManager = (WindowManager) getContext().getSystemService(Activity.WINDOW_SERVICE);
-        WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
-        metrics.widthPixels = windowMetrics.getBounds().width();
-        metrics.heightPixels = windowMetrics.getBounds().height();
-        metrics.density = getResources().getDisplayMetrics().density;
-        metrics.densityDpi = getResources().getDisplayMetrics().densityDpi;
-        metrics.scaledDensity = getResources().getDisplayMetrics().scaledDensity;
-        metrics.xdpi = getResources().getDisplayMetrics().xdpi;
-        metrics.ydpi = getResources().getDisplayMetrics().ydpi;
-        return metrics;
-    }
-
     private SharedPreferences getPreferences() {
         if (mPreferences == null) {
             mPreferences = getSharedPreferences(getContext());
-            DisplayMetrics metrics = getDisplayMetrics();
+            WindowManager windowManager = (WindowManager) getContext().getSystemService(Activity.WINDOW_SERVICE);
+            android.graphics.Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
             mPreferenceX = String.format(Locale.US, PREFERENCES_FAB_X,
-                    getContext().getClass().getName(), metrics.widthPixels, metrics.heightPixels);
+                    getContext().getClass().getName(), bounds.width(), bounds.height());
             mPreferenceY = String.format(Locale.US, PREFERENCES_FAB_Y,
-                    getContext().getClass().getName(), metrics.widthPixels, metrics.heightPixels);
+                    getContext().getClass().getName(), bounds.width(), bounds.height());
         }
         return mPreferences;
     }

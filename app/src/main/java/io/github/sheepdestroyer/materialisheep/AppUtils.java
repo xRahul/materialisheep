@@ -44,7 +44,6 @@ import android.text.format.DateUtils;
 import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
 import android.view.ContextThemeWrapper;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -327,8 +326,9 @@ public class AppUtils {
      * @return The dimension in dp.
      */
     public static int getDimensionInDp(Context context, @DimenRes int dimenResId) {
-        return (int) (context.getResources().getDimension(dimenResId) /
-                context.getResources().getDisplayMetrics().density);
+        float density = context.getResources().getConfiguration().densityDpi /
+                (float) android.util.DisplayMetrics.DENSITY_DEFAULT;
+        return (int) (context.getResources().getDimension(dimenResId) / density);
     }
 
     /**
@@ -795,7 +795,9 @@ public class AppUtils {
     }
 
     private static float toHtmlPx(Context context, float dimen) {
-        return dimen / context.getResources().getDisplayMetrics().density;
+        float density = context.getResources().getConfiguration().densityDpi /
+                (float) android.util.DisplayMetrics.DENSITY_DEFAULT;
+        return dimen / density;
     }
 
     private static CharSequence trim(CharSequence charSequence) {
