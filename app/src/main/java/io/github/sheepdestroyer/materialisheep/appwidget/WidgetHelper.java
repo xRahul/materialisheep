@@ -38,7 +38,11 @@ import android.text.format.DateUtils;
 import android.text.style.ForegroundColorSpan;
 import android.widget.RemoteViews;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
@@ -174,15 +178,37 @@ class WidgetHelper {
 
         if (items != null) {
             int count = Math.min(items.length, 10);
+            List<String> idsToFetch = new ArrayList<>();
             for (int i = 0; i < count; i++) {
                 Item item = items[i];
                 if (item != null && item.getLocalRevision() <= 0) {
-                     Item remoteItem = manager.getItem(item.getId(), ItemManager.MODE_NETWORK);
-                     if (remoteItem != null) {
-                         item.populate(remoteItem);
-                     }
+                    idsToFetch.add(item.getId());
+                }
+            }
+            if (!idsToFetch.isEmpty()) {
+                Item[] remoteItems = manager.getItems(idsToFetch.toArray(new String[0]), ItemManager.MODE_NETWORK);
+                Map<String, Item> remoteItemMap = new HashMap<>();
+                if (remoteItems != null) {
+                    for (Item remoteItem : remoteItems) {
+                        if (remoteItem != null) {
+                            remoteItemMap.put(remoteItem.getId(), remoteItem);
+                        }
+                    }
                 }
 
+                for (int i = 0; i < count; i++) {
+                    Item item = items[i];
+                    if (item != null && item.getLocalRevision() <= 0) {
+                        Item remoteItem = remoteItemMap.get(item.getId());
+                        if (remoteItem != null) {
+                            item.populate(remoteItem);
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < count; i++) {
+                Item item = items[i];
                 if (item != null && item.getLocalRevision() > 0) {
                      RemoteViews itemView = new RemoteViews(mContext.getPackageName(),
                             config.isLightTheme ? R.layout.item_widget_light : R.layout.item_widget);
