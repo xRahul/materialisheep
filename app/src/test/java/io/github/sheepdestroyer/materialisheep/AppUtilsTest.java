@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 public class AppUtilsTest {
     @Test
+    @SuppressWarnings("deprecation")
     public void testIsLowBattery() {
         Context context = ApplicationProvider.getApplicationContext();
         Intent intent = new Intent(Intent.ACTION_BATTERY_CHANGED);
@@ -103,6 +104,7 @@ public class AppUtilsTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.R)
+    @SuppressWarnings("deprecation")
     public void testSystemUiHelperNew() {
         Window window = mock(Window.class);
         View decorView = mock(View.class);

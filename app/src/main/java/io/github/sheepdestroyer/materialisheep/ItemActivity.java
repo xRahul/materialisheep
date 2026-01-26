@@ -589,6 +589,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                 isFavorite ? R.drawable.ic_bookmark_white_24dp : R.drawable.ic_bookmark_border_white_24dp);
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T getCurrent(Class<T> clazz) {
         if (mAdapter == null) {
             return null;

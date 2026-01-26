@@ -37,7 +37,7 @@ public class SubmitActivityTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         MaterialisticApplication application = ApplicationProvider.getApplicationContext();
         application.applicationComponent = applicationComponent;
 
