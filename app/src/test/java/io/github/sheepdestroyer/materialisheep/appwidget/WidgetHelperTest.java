@@ -2,7 +2,12 @@ package io.github.sheepdestroyer.materialisheep.appwidget;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 import android.appwidget.AppWidgetManager;
@@ -21,6 +26,7 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowAppWidgetManager;
 
 import io.github.sheepdestroyer.materialisheep.R;
+import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 
 @RunWith(RobolectricTestRunner.class)
@@ -63,5 +69,28 @@ public class WidgetHelperTest {
 
         assertNotNull("ListView should have an empty view set", emptyView);
         assertEquals(R.id.empty, emptyView.getId());
+    }
+
+    @Test
+    public void refreshApi31_usesParallelFetching() {
+        ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
+        int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
+
+        // Setup mock items
+        Item[] stories = new Item[10];
+        for (int i = 0; i < 10; i++) {
+            Item item = mock(Item.class);
+            when(item.getId()).thenReturn(String.valueOf(i));
+            when(item.getLocalRevision()).thenReturn(0); // Ensure it triggers the update logic
+            stories[i] = item;
+        }
+        when(itemManager.getStories(any(), anyInt())).thenReturn(stories);
+        when(itemManager.getItems(any(String[].class), anyInt())).thenReturn(new Item[10]);
+
+        widgetHelper.refreshApi31(appWidgetId, itemManager, searchManager, null);
+
+        // Verify that getItems was called 1 time and getItem was called 0 times
+        verify(itemManager, org.mockito.Mockito.times(1)).getItems(any(String[].class), anyInt());
+        verify(itemManager, org.mockito.Mockito.never()).getItem(anyString(), anyInt());
     }
 }
