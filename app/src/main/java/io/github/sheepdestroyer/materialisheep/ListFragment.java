@@ -238,7 +238,7 @@ public class ListFragment extends BaseListFragment {
                 return;
             }
             if (state.getError() != null) {
-                onItemsLoaded(new Item[0]); // Trigger error view (empty list)
+                onItemsLoaded(null); // Trigger error view (empty list)
                 if (state.getError().getMessage() != null) {
                     Toast.makeText(getContext(), state.getError().getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -326,9 +326,7 @@ public class ListFragment extends BaseListFragment {
             return;
         }
         if (items == null) {
-            mSwipeRefreshLayout.setRefreshing(false);
             if (getAdapter().getItems() == null || getAdapter().getItems().size() == 0) {
-                // TODO make refreshing indicator visible in error view
                 mEmptyView.setVisibility(View.GONE);
                 mRecyclerView.setVisibility(View.INVISIBLE);
                 mErrorView.setVisibility(View.VISIBLE);
@@ -346,10 +344,10 @@ public class ListFragment extends BaseListFragment {
                 mRecyclerView.setVisibility(View.VISIBLE);
             }
             mErrorView.setVisibility(View.GONE);
-            mSwipeRefreshLayout.setRefreshing(false);
             if (mRefreshCallback != null) {
                 mRefreshCallback.onRefreshed();
             }
         }
+        mSwipeRefreshLayout.setRefreshing(false);
     }
 }
