@@ -120,12 +120,10 @@ public class SyncDelegate {
         mIoScheduler = ioScheduler;
         mNotificationManager = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(DOWNLOADS_CHANNEL_ID,
-                    context.getString(R.string.notification_channel_downloads),
-                    NotificationManager.IMPORTANCE_LOW);
-            mNotificationManager.createNotificationChannel(channel);
-        }
+        NotificationChannel channel = new NotificationChannel(DOWNLOADS_CHANNEL_ID,
+                context.getString(R.string.notification_channel_downloads),
+                NotificationManager.IMPORTANCE_LOW);
+        mNotificationManager.createNotificationChannel(channel);
         mNotificationBuilder = new NotificationCompat.Builder(context, DOWNLOADS_CHANNEL_ID);
         mNotificationBuilder
                 .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),

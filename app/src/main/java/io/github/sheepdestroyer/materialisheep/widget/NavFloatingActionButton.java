@@ -164,12 +164,8 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
                         }
                         mNavigable.onNavigate(direction);
                         if (mVibrationEnabled) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS,
-                                        VibrationEffect.DEFAULT_AMPLITUDE));
-                            } else {
-                                mVibrator.vibrate(VIBRATE_DURATION_MS);
-                            }
+                            mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS,
+                                    VibrationEffect.DEFAULT_AMPLITUDE));
                         }
                         trackKonami(direction);
                         return false;
@@ -197,12 +193,8 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
     @Synthetic
     void startDrag(float startX, float startY) {
         if (mVibrationEnabled) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS * 2,
-                        VibrationEffect.DEFAULT_AMPLITUDE));
-            } else {
-                mVibrator.vibrate(VIBRATE_DURATION_MS * 2);
-            }
+            mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS * 2,
+                    VibrationEffect.DEFAULT_AMPLITUDE));
         }
         Toast.makeText(getContext(), R.string.hint_drag, Toast.LENGTH_SHORT).show();
         // noinspection Convert2Lambda
@@ -237,13 +229,8 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
         } else if (mNextKonamiCode == KONAMI_CODE.length - 1) {
             mNextKonamiCode = 0;
             if (mVibrationEnabled) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    mVibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, VIBRATE_DURATION_MS * 2,
-                            100, VIBRATE_DURATION_MS * 2}, -1));
-                } else {
-                    mVibrator.vibrate(new long[]{0, VIBRATE_DURATION_MS * 2,
-                            100, VIBRATE_DURATION_MS * 2}, -1);
-                }
+                mVibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, VIBRATE_DURATION_MS * 2,
+                        100, VIBRATE_DURATION_MS * 2}, -1));
             }
             new AlertDialog.Builder(getContext())
                     .setView(R.layout.dialog_konami)
@@ -286,18 +273,14 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
     private DisplayMetrics getDisplayMetrics() {
         DisplayMetrics metrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) getContext().getSystemService(Activity.WINDOW_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
-            metrics.widthPixels = windowMetrics.getBounds().width();
-            metrics.heightPixels = windowMetrics.getBounds().height();
-            metrics.density = getResources().getDisplayMetrics().density;
-            metrics.densityDpi = getResources().getDisplayMetrics().densityDpi;
-            metrics.scaledDensity = getResources().getDisplayMetrics().scaledDensity;
-            metrics.xdpi = getResources().getDisplayMetrics().xdpi;
-            metrics.ydpi = getResources().getDisplayMetrics().ydpi;
-        } else {
-            windowManager.getDefaultDisplay().getMetrics(metrics);
-        }
+        WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
+        metrics.widthPixels = windowMetrics.getBounds().width();
+        metrics.heightPixels = windowMetrics.getBounds().height();
+        metrics.density = getResources().getDisplayMetrics().density;
+        metrics.densityDpi = getResources().getDisplayMetrics().densityDpi;
+        metrics.scaledDensity = getResources().getDisplayMetrics().scaledDensity;
+        metrics.xdpi = getResources().getDisplayMetrics().xdpi;
+        metrics.ydpi = getResources().getDisplayMetrics().ydpi;
         return metrics;
     }
 
