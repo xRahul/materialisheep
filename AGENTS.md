@@ -32,6 +32,12 @@ The project has been upgraded to a modern Android build environment. Strict adhe
 - **Kotlin Version:** 2.2.10 (Downgraded from 2.3.0 due to CodeQL incompatibility)
 - The Gradle wrapper (`./gradlew`) is included in the repository and should be used for all build commands. It will automatically download the correct Gradle version.
 
+### 4. CodeQL Analysis
+
+This repository uses a custom **Advanced Setup** workflow (`.github/workflows/codeql.yml`).
+
+**IMPORTANT:** You must disable GitHub's **Default Setup** for CodeQL in the repository settings. If Default Setup is enabled, the custom workflow will fail to upload results. See `docs/CODEQL_SETUP.md` for detailed instructions.
+
 ## Building the Project
 
 - **Clean the project:**
