@@ -209,7 +209,10 @@ public class SyncDelegate {
                     if (mSyncProgress != null) {
                         updateProgress();
                     }
-                    // TODO defer on low battery as well?
+                    if (AppUtils.isLowBattery(mContext)) {
+                        defer(itemId);
+                        return Observable.empty();
+                    }
                     return mHnRestService.networkItemRx(itemId)
                             .doOnNext(item -> {
                                 if (item == null) {

@@ -1,6 +1,7 @@
 package io.github.sheepdestroyer.materialisheep.data;
 
 import android.content.Context;
+import android.content.Intent;
 import androidx.test.core.app.ApplicationProvider;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.TestScheduler;
@@ -73,5 +74,29 @@ public class SyncDelegateTest {
 
         // Now it should be called
         verify(restService).cachedItemRx(jobId);
+    }
+
+    @Test
+    public void performSync_defersOnLowBattery() {
+        // Set low battery
+        Intent intent = new Intent(Intent.ACTION_BATTERY_CHANGED);
+        intent.putExtra(android.os.BatteryManager.EXTRA_LEVEL, 10);
+        intent.putExtra(android.os.BatteryManager.EXTRA_SCALE, 100);
+        intent.putExtra(android.os.BatteryManager.EXTRA_STATUS, android.os.BatteryManager.BATTERY_STATUS_DISCHARGING);
+        context.sendStickyBroadcast(intent);
+
+        String jobId = "123";
+        SyncDelegate.Job job = new SyncDelegate.Job(jobId);
+        job.connectionEnabled = true;
+
+        // Simulate cache miss
+        when(restService.cachedItemRx(jobId)).thenReturn(Observable.empty());
+
+        syncDelegate.performSync(job);
+
+        testScheduler.triggerActions();
+
+        verify(syncQueueDao).insert(any(MaterialisticDatabase.SyncQueueEntry.class));
+        verify(restService, never()).networkItemRx(jobId);
     }
 }
