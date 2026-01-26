@@ -7,6 +7,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.PrimaryKey;
@@ -29,7 +30,7 @@ import java.util.List;
         MaterialisticDatabase.ReadStory.class,
         MaterialisticDatabase.Readable.class,
         MaterialisticDatabase.SyncQueueEntry.class
-}, version = 5, exportSchema = false)
+}, version = 6, exportSchema = false)
 /**
  * A Room database for storing saved stories, read stories, and readable
  * content.
@@ -78,6 +79,11 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
             @Override
             public void migrate(@NonNull SupportSQLiteDatabase database) {
                 database.execSQL(DbConstants.SQL_CREATE_SYNC_QUEUE_TABLE);
+            }
+        }, new Migration(5, 6) {
+            @Override
+            public void migrate(@NonNull SupportSQLiteDatabase database) {
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_read_itemid ON read(itemid)");
             }
         });
     }
@@ -141,7 +147,7 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     /**
      * A Room entity that represents a read story.
      */
-    @Entity(tableName = "read")
+    @Entity(tableName = "read", indices = {@Index("itemid")})
     public static class ReadStory {
         @PrimaryKey(autoGenerate = true)
         @ColumnInfo(name = "_id")
