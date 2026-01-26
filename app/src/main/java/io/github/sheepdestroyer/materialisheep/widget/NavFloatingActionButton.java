@@ -176,7 +176,7 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
                         if (mNavigable == null) {
                             return;
                         }
-                        startDrag(e.getX(), e.getY());
+                        startDrag(getX() - e.getRawX(), getY() - e.getRawY());
                     }
                 });
         // noinspection Convert2Lambda
@@ -191,7 +191,7 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
 
     @SuppressLint("ClickableViewAccessibility")
     @Synthetic
-    void startDrag(float startX, float startY) {
+    void startDrag(float offsetX, float offsetY) {
         if (mVibrationEnabled) {
             mVibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION_MS * 2,
                     VibrationEffect.DEFAULT_AMPLITUDE));
@@ -203,8 +203,8 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
                 switch (motionEvent.getAction()) {
                     case MotionEvent.ACTION_MOVE:
                         mMoved = true;
-                        view.setX(motionEvent.getRawX() - startX); // TODO compensate shift
-                        view.setY(motionEvent.getRawY() - startY);
+                        view.setX(motionEvent.getRawX() + offsetX);
+                        view.setY(motionEvent.getRawY() + offsetY);
                         break;
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP:
