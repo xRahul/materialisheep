@@ -223,6 +223,10 @@ public class ItemTest {
         }
 
         @Override
+        public void decrementScore() {
+        }
+
+        @Override
         public boolean isVoted() {
             return false;
         }

@@ -214,6 +214,11 @@ public interface Item extends WebItem {
     void incrementScore();
 
     /**
+     * Decrements the item's score.
+     */
+    void decrementScore();
+
+    /**
      * Checks if the item has been voted on via a user action.
      *
      * @return `true` if the item has been voted on, `false` otherwise
