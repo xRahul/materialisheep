@@ -316,7 +316,7 @@ public class WebFragment extends LazyLoadFragment
         reloadUrl(url, null);
     }
 
-    @SuppressLint("AddJavascriptInterface")
+    @SuppressLint({"AddJavascriptInterface", "SetJavaScriptEnabled"}) // We are a browser and need JS; PDF loader is local and trusted
     private void reloadUrl(String url, @Nullable String pdfFilePath) {
         mIsPdf = false;
         if (mPdfAndroidJavascriptBridge != null) {

@@ -16,7 +16,6 @@
 
 package io.github.sheepdestroyer.materialisheep.appwidget;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -46,6 +45,7 @@ import java.util.Map;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 import io.github.sheepdestroyer.materialisheep.AppUtils;
@@ -143,7 +143,7 @@ class WidgetHelper {
         update(appWidgetId);
     }
 
-    @TargetApi(Build.VERSION_CODES.S)
+    @RequiresApi(Build.VERSION_CODES.S)
     void refreshApi31(int appWidgetId, ItemManager itemManager, ItemManager searchManager, Runnable onComplete) {
         WidgetConfig config = WidgetConfig.createWidgetConfig(mContext,
                 getConfig(appWidgetId, R.string.pref_widget_theme),

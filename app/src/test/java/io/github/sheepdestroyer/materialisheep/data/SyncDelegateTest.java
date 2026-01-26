@@ -77,6 +77,7 @@ public class SyncDelegateTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void performSync_defersOnLowBattery() {
         // Set low battery
         Intent intent = new Intent(Intent.ACTION_BATTERY_CHANGED);

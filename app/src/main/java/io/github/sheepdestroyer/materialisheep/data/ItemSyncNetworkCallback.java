@@ -22,11 +22,9 @@ import android.net.Network;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import io.github.sheepdestroyer.materialisheep.AppUtils;
 
-@RequiresApi(api = Build.VERSION_CODES.N)
 public class ItemSyncNetworkCallback extends ConnectivityManager.NetworkCallback {
     private final Context context;
 

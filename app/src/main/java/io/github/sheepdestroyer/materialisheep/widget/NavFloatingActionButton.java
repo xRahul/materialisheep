@@ -86,12 +86,18 @@ public class NavFloatingActionButton extends FloatingActionButton implements Vie
         this(context, attrs, 0);
     }
 
+    @SuppressWarnings("deprecation")
     public NavFloatingActionButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         bindNavigationPad();
         mVibrationEnabled = Preferences.navigationVibrationEnabled(context);
         if (!isInEditMode()) {
-            mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                android.os.VibratorManager vm = (android.os.VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                mVibrator = vm.getDefaultVibrator();
+            } else {
+                mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            }
         } else {
             mVibrator = null;
         }
