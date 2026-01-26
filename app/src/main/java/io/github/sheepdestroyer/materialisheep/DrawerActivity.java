@@ -95,7 +95,7 @@ public abstract class DrawerActivity extends ThemedActivity {
                         intent.putExtras(mPendingNavigationExtras);
                         mPendingNavigationExtras = null;
                     }
-                    // TODO M bug https://code.google.com/p/android/issues/detail?id=193822
+                    // bring existing activity to front to prevent stack bloat
                     intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                     startActivity(intent);
                     mPendingNavigation = null;
