@@ -513,6 +513,13 @@ class HackerNewsItem implements Item {
     }
 
     @Override
+    public void decrementScore() {
+        score--;
+        voted = false;
+        pendingVoted = false;
+    }
+
+    @Override
     public boolean isVoted() {
         return voted;
     }

@@ -582,18 +582,24 @@ public class StoryRecyclerViewAdapter extends
         if (!mUserServices.voteUp(mContext, story.getId(),
                 new VoteCallback(this, story))) {
             AppUtils.showLogin(mContext, mAlertDialogBuilder);
+        } else {
+            story.incrementScore();
+            int position = holder.getBindingAdapterPosition();
+            if (position != NO_POSITION) {
+                notifyItemChanged(position, VOTED);
+            }
         }
     }
 
     @Synthetic
     void onVoted(int position, Boolean successful) {
-        if (successful == null) {
+        if (successful == null || !successful) {
             Toast.makeText(mContext, R.string.vote_failed, Toast.LENGTH_SHORT).show();
-        } else if (successful) {
-            Toast.makeText(mContext, R.string.voted, Toast.LENGTH_SHORT).show();
             if (position != NO_POSITION && position < getItemCount()) {
-                notifyItemChanged(position, VOTED);
+                notifyItemChanged(position);
             }
+        } else {
+            Toast.makeText(mContext, R.string.voted, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -680,9 +686,10 @@ public class StoryRecyclerViewAdapter extends
 
         @Override
         public void onDone(boolean successful) {
-            // TODO update locally only, as API does not update instantly
-            mItem.incrementScore();
             mItem.clearPendingVoted();
+            if (!successful) {
+                mItem.decrementScore();
+            }
             StoryRecyclerViewAdapter adapter = mAdapter.get();
             if (adapter != null && adapter.isAttached()) {
                 adapter.onVoted(adapter.getPosition(mItem), successful);
@@ -691,6 +698,8 @@ public class StoryRecyclerViewAdapter extends
 
         @Override
         public void onError(Throwable throwable) {
+            mItem.clearPendingVoted();
+            mItem.decrementScore();
             StoryRecyclerViewAdapter adapter = mAdapter.get();
             if (adapter != null && adapter.isAttached()) {
                 adapter.onVoted(adapter.getPosition(mItem), null);
