@@ -57,25 +57,6 @@ public class AppUtilsTest {
     }
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.Q)
-    public void testGetDisplayHeightLegacy() {
-        Context context = mock(Context.class);
-        WindowManager windowManager = mock(WindowManager.class);
-        Display display = mock(Display.class);
-        when(context.getSystemService(Context.WINDOW_SERVICE)).thenReturn(windowManager);
-        when(windowManager.getDefaultDisplay()).thenReturn(display);
-
-        // Mock display.getSize(Point)
-        org.mockito.Mockito.doAnswer(invocation -> {
-            Point p = invocation.getArgument(0);
-            p.y = 1920;
-            return null;
-        }).when(display).getSize(org.mockito.ArgumentMatchers.any(Point.class));
-
-        assertEquals(1920, AppUtils.getDisplayHeight(context));
-    }
-
-    @Test
     @Config(sdk = Build.VERSION_CODES.R)
     public void testGetDisplayHeightNew() {
         Context context = mock(Context.class);
@@ -88,23 +69,6 @@ public class AppUtilsTest {
         when(windowMetrics.getBounds()).thenReturn(bounds);
 
         assertEquals(2400, AppUtils.getDisplayHeight(context));
-    }
-
-    @Test
-    @Config(sdk = Build.VERSION_CODES.Q)
-    public void testSystemUiHelperLegacy() {
-        Window window = mock(Window.class);
-        View decorView = mock(View.class);
-        when(window.getDecorView()).thenReturn(decorView);
-        when(decorView.getSystemUiVisibility()).thenReturn(0);
-
-        AppUtils.SystemUiHelper helper = new AppUtils.SystemUiHelper(window);
-
-        helper.setFullscreen(true);
-        verify(decorView).setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
-        helper.setFullscreen(false);
-        verify(decorView).setSystemUiVisibility(0);
     }
 
     @Test

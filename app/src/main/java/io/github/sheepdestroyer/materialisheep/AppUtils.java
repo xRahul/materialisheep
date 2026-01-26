@@ -666,18 +666,9 @@ public class AppUtils {
      * @param context The context to use.
      * @return The display height in pixels.
      */
-    @SuppressWarnings("deprecation")
     public static int getDisplayHeight(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
-                    .getCurrentWindowMetrics().getBounds().height();
-        } else {
-            Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
-                    .getDefaultDisplay();
-            Point point = new Point();
-            display.getSize(point);
-            return point.y;
-        }
+        return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
+                .getCurrentWindowMetrics().getBounds().height();
     }
 
     /**
@@ -862,21 +853,16 @@ public class AppUtils {
         return AndroidUtils.TextUtils.equals(thisUrl, thatUrl);
     }
 
-    @SuppressWarnings("deprecation")
     static class SystemUiHelper {
         private final Window window;
-        private final int originalUiFlags;
         private int originalBehavior;
         private boolean enabled = true;
 
         SystemUiHelper(Window window) {
             this.window = window;
-            this.originalUiFlags = window.getDecorView().getSystemUiVisibility();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowInsetsController controller = window.getInsetsController();
-                if (controller != null) {
-                    originalBehavior = controller.getSystemBarsBehavior();
-                }
+            WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
+                originalBehavior = controller.getSystemBarsBehavior();
             }
         }
 
@@ -885,24 +871,14 @@ public class AppUtils {
             if (!enabled) {
                 return;
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowInsetsController controller = window.getInsetsController();
-                if (controller != null) {
-                    if (fullscreen) {
-                        controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                        controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-                    } else {
-                        controller.show(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                        controller.setSystemBarsBehavior(originalBehavior);
-                    }
-                }
-            } else {
+            WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
                 if (fullscreen) {
-                    window.getDecorView().setSystemUiVisibility(originalUiFlags |
-                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                    controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
                 } else {
-                    window.getDecorView().setSystemUiVisibility(originalUiFlags);
+                    controller.show(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(originalBehavior);
                 }
             }
         }

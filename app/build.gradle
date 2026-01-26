@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "io.github.sheepdestroyer.materialisheep"
-        minSdkVersion 24
+        minSdkVersion 30
         targetSdkVersion 36
         def gitHash = { ->
             try {

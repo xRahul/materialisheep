@@ -48,12 +48,7 @@ class AboutActivity : ThemedActivity() {
     try {
       val packageInfo = packageManager.getPackageInfo(packageName, 0)
       versionName = packageInfo.versionName
-      versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        packageInfo.longVersionCode
-      } else {
-        @Suppress("DEPRECATION")
-        packageInfo.versionCode.toLong()
-      }
+      versionCode = packageInfo.longVersionCode
     } catch (e: PackageManager.NameNotFoundException) {
       // do nothing
     }

@@ -11,7 +11,7 @@ import io.github.sheepdestroyer.materialisheep.R;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {24, 33})
+@Config(sdk = {33})
 public class NavFloatingActionButtonTest {
 
     @Test
