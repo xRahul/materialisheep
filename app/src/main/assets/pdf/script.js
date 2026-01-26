@@ -1,34 +1,52 @@
+import * as pdfjsLib from './vendor/pdf.js/5.4.530/build/pdf.mjs';
+
+// Set global variable for pdf_viewer.mjs
+globalThis.pdfjsLib = pdfjsLib;
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.js/5.4.530/build/pdf.worker.mjs';
+
 // It expects PdfAndroidJavascriptBridge to be injected from the Android side
-(function () {
+(async function () {
+  // Dynamic import to ensure globalThis.pdfjsLib is set before pdf_viewer.mjs runs
+  const {
+    PDFViewer,
+    PDFLinkService,
+    EventBus
+  } = await import('./vendor/pdf.js/5.4.530/web/pdf_viewer.mjs');
+
   var pdfViewer;
 
   function initializePdfViewer() {
-    PDFJS.disableAutoFetch = true;
-    PDFJS.useOnlyCssZoom = true;
-    PDFJS.maxCanvasPixels = 2097152;
     var container = document.getElementById('viewerContainer');
+    var eventBus = new EventBus();
 
     // enable hyperlinks within PDF files.
-    var pdfLinkService = new PDFJS.PDFLinkService();
+    var pdfLinkService = new PDFLinkService({
+      eventBus: eventBus,
+    });
 
     pdfViewer = new CustomPdfViewer({
       container: container,
+      eventBus: eventBus,
       linkService: pdfLinkService,
+      useOnlyCssZoom: true,
     });
     pdfLinkService.setViewer(pdfViewer);
 
     // set proper scale to fit page width
-    container.addEventListener("pagesinit", function (e) {
-      pdfViewer.currentScaleValue = 2;
+    eventBus.on("pagesinit", function (e) {
+      pdfViewer.currentScaleValue = "page-width";
     });
 
     var fileSize = PdfAndroidJavascriptBridge.getSize();
 
-    PDFJS.getDocument({
+    pdfjsLib.getDocument({
       length: fileSize,
       range: new RangeTransport(fileSize),
       rangeChunkSize: 262144,
-    }).then(function (pdfDocument) {
+      disableAutoFetch: true,
+      disableStream: true,
+    }).promise.then(function (pdfDocument) {
       pdfViewer.setDocument(pdfDocument);
       pdfLinkService.setDocument(pdfDocument, null);
       PdfAndroidJavascriptBridge.onLoad();
@@ -40,22 +58,21 @@
 
   // Defines the interface, which PDF.JS uses to fetch chunks of data it needs
   // for rendering a PDF doc.
-  function RangeTransport(size) {
-    this.__proto__ = new PDFJS.PDFDataRangeTransport();
+  class RangeTransport extends pdfjsLib.PDFDataRangeTransport {
+    constructor(size) {
+      super(size, []);
+    }
 
-    var self = this;
-    this.length = size;
-
-    this.requestDataRange = function (begin, end) {
+    requestDataRange(begin, end) {
       var base64string = PdfAndroidJavascriptBridge.getChunk(begin, end);
       var binaryString = atob(base64string);
       var byteArray = stringToBytes(binaryString)
       // Has to be async, otherwise PDF.js will fire an exception
-      setTimeout(function () {
-        self.onDataRange(begin, byteArray);
+      setTimeout(() => {
+        this.onDataRange(begin, byteArray);
       }, 0);
-    };
-  };
+    }
+  }
 
   function stringToBytes(str) {
     var length = str.length;
@@ -70,29 +87,29 @@
   // We can't limit container's height because of how `WebFragment` works in non-fullscreen mode,
   // so we have to subclass existing PDFViewer and provide different logic for figuring out
   // what pages are visible - using `window.innerHeight` instead of `element.clientHeight`.
-  // So, it's mostly the same code copy-pasted from pdf_viewer.js, with little changes when we calculate
-  // the bounds of the viewport
-  function CustomPdfViewer(opts) {
-    this.__proto__ = new PDFJS.PDFViewer(opts); // inheriting from this "class"
-    this.scroll = watchScroll(document, this._scrollUpdate.bind(this));
-    this.renderingQueue.setViewer(this);
+  class CustomPdfViewer extends PDFViewer {
+    constructor(options) {
+      super(options);
+      // We need to override the scroll watching logic
+      // PDFViewer likely initializes this.scroll in its constructor
+      // We'll replace it with our own watcher
+      this.scroll = watchScroll(window, () => {
+        this.update();
+      });
+    }
 
-    this._getVisiblePages = function () {
-      return getVisibleElements(this.container, this._pages, true);
+    _getVisiblePages() {
+      return getVisibleElements(window, this._pages, true);
     }
   }
 
-  // Mostly copy-pasted from https://github.com/mozilla/pdf.js/blob/f3987bba237c814b9ed314b904263bc36f83eb5b/web/ui_utils.js#L319
-  // with some changes in top/bottom variabbles
-  function getVisibleElements(scrollEl, views) {
-    var sortByVisibility = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-    // Changes start here
+  // Adapted from original script.js
+  function getVisibleElements(scrollEl, views, sortByVisibility = false) {
     var top = window.scrollY,
         bottom = top + window.innerHeight;
-    // Changes end here
-    var left = scrollEl.scrollLeft,
-        right = left + scrollEl.clientWidth;
+    var left = window.scrollX,
+        right = left + window.innerWidth;
+
     function isElementBottomBelowViewTop(view) {
       var element = view.div;
       var elementBottom = element.offsetTop + element.clientTop + element.clientHeight;
@@ -149,7 +166,6 @@
     };
   }
 
-  // Copy-pasted from https://github.com/mozilla/pdf.js/blob/f3987bba237c814b9ed314b904263bc36f83eb5b/web/ui_utils.js#L242
   function binarySearchFirstItem(items, condition) {
     var minIndex = 0;
     var maxIndex = items.length - 1;
@@ -171,7 +187,6 @@
     return minIndex;
   }
 
-  // Copy-pasted from https://github.com/mozilla/pdf.js/blob/f3987bba237c814b9ed314b904263bc36f83eb5b/web/ui_utils.js#L188
   function watchScroll(viewAreaElement, callback) {
     var debounceScroll = function debounceScroll(evt) {
       if (rAF) {
@@ -179,7 +194,7 @@
       }
       rAF = window.requestAnimationFrame(function viewAreaElementScrolled() {
         rAF = null;
-        var currentY = viewAreaElement.scrollTop;
+        var currentY = viewAreaElement.scrollY !== undefined ? viewAreaElement.scrollY : viewAreaElement.scrollTop;
         var lastY = state.lastY;
         if (currentY !== lastY) {
           state.down = currentY > lastY;
@@ -190,7 +205,7 @@
     };
     var state = {
       down: true,
-      lastY: viewAreaElement.scrollTop,
+      lastY: viewAreaElement.scrollY !== undefined ? viewAreaElement.scrollY : viewAreaElement.scrollTop,
       _eventHandler: debounceScroll
     };
     var rAF = null;

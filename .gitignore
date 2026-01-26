@@ -59,3 +59,8 @@ apk_list.txt
 crash_dump.txt
 pr_comments*.txt
 
+pdfjs-temp/
+npm-temp/
+pdfjs-temp-5/
+npm-temp/
+app/src/main/assets/pdf/test/node_modules

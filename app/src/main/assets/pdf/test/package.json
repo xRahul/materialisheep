@@ -1,0 +1,13 @@
+{
+  "name": "pdf-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for PDF.js webview script",
+  "type": "module",
+  "scripts": {
+    "test": "node integration.test.js"
+  },
+  "dependencies": {
+    "jsdom": "^22.1.0",
+    "canvas": "^2.11.2"
+  }
+}
