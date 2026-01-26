@@ -1,7 +1,11 @@
 package io.github.sheepdestroyer.materialisheep;
 
+import android.net.Uri;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -11,6 +15,7 @@ import java.util.Set;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(RobolectricTestRunner.class)
 public class AdBlockerTest {
 
     @Before
@@ -49,5 +54,25 @@ public class AdBlockerTest {
 
         // Test non-dot host (should ignore)
         assertFalse("http://localhost should NOT be ad", AdBlocker.isAd("http://localhost"));
+    }
+
+    @Test
+    public void testIsAdUri() throws Exception {
+        // Setup mock hosts
+        AdBlocker.TrieNode root = new AdBlocker.TrieNode();
+        root.add("doubleclick.net");
+        root.add("ad.service.com");
+
+        // Inject hosts
+        Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
+        field.setAccessible(true);
+        field.set(null, root);
+
+        // Test positive cases
+        assertTrue("http://doubleclick.net should be ad", AdBlocker.isAd(Uri.parse("http://doubleclick.net")));
+        assertTrue("http://g.doubleclick.net should be ad", AdBlocker.isAd(Uri.parse("http://g.doubleclick.net")));
+
+        // Test negative cases
+        assertFalse("http://google.com should NOT be ad", AdBlocker.isAd(Uri.parse("http://google.com")));
     }
 }

@@ -46,7 +46,7 @@ public class AdBlockWebViewClient extends WebViewClient {
         boolean ad;
         String url = request.getUrl().toString();
         if (!mLoadedUrls.containsKey(url)) {
-            ad = AdBlocker.isAd(url);
+            ad = AdBlocker.isAd(request.getUrl());
             mLoadedUrls.put(url, ad);
         } else {
             ad = mLoadedUrls.get(url);

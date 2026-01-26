@@ -19,6 +19,7 @@ package io.github.sheepdestroyer.materialisheep;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.WorkerThread;
 import android.text.TextUtils;
@@ -40,6 +41,7 @@ import io.reactivex.rxjava3.core.Scheduler;
  */
 public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
+    private static final byte[] EMPTY_BYTES = new byte[0];
     private static volatile TrieNode AD_HOSTS = new TrieNode();
 
     /**
@@ -68,12 +70,22 @@ public class AdBlocker {
     }
 
     /**
+     * Checks if a given URI is an ad.
+     *
+     * @param uri The URI to check.
+     * @return True if the URI is an ad, false otherwise.
+     */
+    public static boolean isAd(Uri uri) {
+        return isAdHost(uri != null ? uri.getHost() : "");
+    }
+
+    /**
      * Creates an empty WebResourceResponse to block a network request.
      *
      * @return An empty WebResourceResponse.
      */
     public static WebResourceResponse createEmptyResource() {
-        return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("".getBytes()));
+        return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(EMPTY_BYTES));
     }
 
     @WorkerThread
