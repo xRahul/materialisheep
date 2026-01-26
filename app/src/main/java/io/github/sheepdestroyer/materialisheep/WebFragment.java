@@ -324,6 +324,7 @@ public class WebFragment extends LazyLoadFragment
             mWebView.removeJavascriptInterface("PdfAndroidJavascriptBridge");
         }
         if (pdfFilePath != null && TextUtils.equals(PDF_LOADER_URL, url)) {
+            mWebView.getSettings().setJavaScriptEnabled(true);
             setProgress(80);
             mIsPdf = true;
             mPdfAndroidJavascriptBridge = new PdfAndroidJavascriptBridge(pdfFilePath,
@@ -495,7 +496,7 @@ public class WebFragment extends LazyLoadFragment
         mWebView.setBackgroundColor(isRemote ? Color.WHITE : Color.TRANSPARENT);
         mWebView.getSettings().setLoadWithOverviewMode(isRemote);
         mWebView.getSettings().setUseWideViewPort(isRemote);
-        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setJavaScriptEnabled(isRemote);
         getActivity().invalidateOptionsMenu();
     }
 
