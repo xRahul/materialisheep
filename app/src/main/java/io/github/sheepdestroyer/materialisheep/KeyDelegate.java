@@ -304,8 +304,12 @@ public class KeyDelegate {
         }
 
         int getCurrentPosition() {
-            // TODO handle last page item
-            return getLinearLayoutManager().findFirstVisibleItemPosition();
+            int first = getLinearLayoutManager().findFirstVisibleItemPosition();
+            int last = getLinearLayoutManager().findLastCompletelyVisibleItemPosition();
+            if (first > 0 && last == mRecyclerView.getAdapter().getItemCount() - 1) {
+                return last;
+            }
+            return first;
         }
 
         int[] scrollToPosition(int position) {
