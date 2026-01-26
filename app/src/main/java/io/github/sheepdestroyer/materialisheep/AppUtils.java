@@ -26,6 +26,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
@@ -362,6 +363,30 @@ public class AppUtils {
             return (span / DateUtils.HOUR_IN_MILLIS) + ABBR_HOUR;
         }
         return (span / DateUtils.MINUTE_IN_MILLIS) + ABBR_MINUTE;
+    }
+
+    /**
+     * Checks if the device has low battery.
+     *
+     * @param context The context to use.
+     * @return True if battery is low and not charging, false otherwise.
+     */
+    public static boolean isLowBattery(Context context) {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, ifilter);
+        if (batteryStatus == null) {
+            return false;
+        }
+        int status = batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == android.os.BatteryManager.BATTERY_STATUS_FULL;
+        if (isCharging) {
+            return false;
+        }
+        int level = batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float) scale;
+        return batteryPct <= 0.15f;
     }
 
     /**

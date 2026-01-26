@@ -1,6 +1,7 @@
 package io.github.sheepdestroyer.materialisheep;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
@@ -28,6 +29,35 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public class AppUtilsTest {
+    @Test
+    public void testIsLowBattery() {
+        Context context = ApplicationProvider.getApplicationContext();
+        Intent intent = new Intent(Intent.ACTION_BATTERY_CHANGED);
+
+        // Not low battery
+        intent.putExtra(android.os.BatteryManager.EXTRA_LEVEL, 50);
+        intent.putExtra(android.os.BatteryManager.EXTRA_SCALE, 100);
+        intent.putExtra(android.os.BatteryManager.EXTRA_STATUS, android.os.BatteryManager.BATTERY_STATUS_DISCHARGING);
+        context.sendStickyBroadcast(intent);
+        assertFalse(AppUtils.isLowBattery(context));
+
+        // Low battery
+        intent.putExtra(android.os.BatteryManager.EXTRA_LEVEL, 10);
+        intent.putExtra(android.os.BatteryManager.EXTRA_SCALE, 100);
+        context.sendStickyBroadcast(intent);
+        assertTrue(AppUtils.isLowBattery(context));
+
+        // Charging (even if low)
+        intent.putExtra(android.os.BatteryManager.EXTRA_STATUS, android.os.BatteryManager.BATTERY_STATUS_CHARGING);
+        context.sendStickyBroadcast(intent);
+        assertFalse(AppUtils.isLowBattery(context));
+
+        // Full
+        intent.putExtra(android.os.BatteryManager.EXTRA_STATUS, android.os.BatteryManager.BATTERY_STATUS_FULL);
+        context.sendStickyBroadcast(intent);
+        assertFalse(AppUtils.isLowBattery(context));
+    }
+
     @Test
     public void testHasConnection() {
         Context context = ApplicationProvider.getApplicationContext();
