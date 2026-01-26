@@ -19,6 +19,8 @@ package io.github.sheepdestroyer.materialisheep.data.android
 import io.github.sheepdestroyer.materialisheep.DataModule
 import io.github.sheepdestroyer.materialisheep.data.LocalCache
 import io.github.sheepdestroyer.materialisheep.data.MaterialisticDatabase
+import io.github.sheepdestroyer.materialisheep.data.ReadStoriesDao
+import io.github.sheepdestroyer.materialisheep.data.ReadableDao
 import io.github.sheepdestroyer.materialisheep.data.SavedStoriesDao
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
@@ -32,8 +34,8 @@ import javax.inject.Named
 class Cache @Inject constructor(
     private val database: MaterialisticDatabase,
     private val savedStoriesDao: SavedStoriesDao,
-    private val readStoriesDao: MaterialisticDatabase.ReadStoriesDao,
-    private val readableDao: MaterialisticDatabase.ReadableDao,
+    private val readStoriesDao: ReadStoriesDao,
+    private val readableDao: ReadableDao,
     @param:Named(DataModule.MAIN_THREAD) private val mainScheduler: Scheduler) : LocalCache {
 
   override fun getReadability(itemId: String?) = readableDao.selectByItemId(itemId)?.content

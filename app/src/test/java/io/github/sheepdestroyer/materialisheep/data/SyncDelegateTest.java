@@ -32,7 +32,7 @@ public class SyncDelegateTest {
     @Mock
     private ReadabilityClient readabilityClient;
     @Mock
-    private MaterialisticDatabase.SyncQueueDao syncQueueDao;
+    private SyncQueueDao syncQueueDao;
     @Mock
     private HackerNewsClient.RestService restService;
 
@@ -45,7 +45,7 @@ public class SyncDelegateTest {
         restServiceFactory = mock(RestServiceFactory.class);
         itemManager = mock(ItemManager.class);
         readabilityClient = mock(ReadabilityClient.class);
-        syncQueueDao = mock(MaterialisticDatabase.SyncQueueDao.class);
+        syncQueueDao = mock(SyncQueueDao.class);
         restService = mock(HackerNewsClient.RestService.class);
 
         context = ApplicationProvider.getApplicationContext();

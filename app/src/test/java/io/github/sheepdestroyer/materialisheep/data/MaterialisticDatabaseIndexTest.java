@@ -16,7 +16,7 @@ import static org.junit.Assert.assertNull;
 @RunWith(RobolectricTestRunner.class)
 public class MaterialisticDatabaseIndexTest {
     private MaterialisticDatabase db;
-    private MaterialisticDatabase.ReadStoriesDao dao;
+    private ReadStoriesDao dao;
 
     @Before
     public void createDb() {
