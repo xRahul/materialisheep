@@ -78,7 +78,7 @@ public class AdBlocker {
 
     @WorkerThread
     private static TrieNode loadFromAssets(Context context) throws IOException {
-        TrieNode root = new TrieNode();
+        TrieBuilder root = new TrieBuilder();
         try (InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
                 BufferedSource buffer = Okio.buffer(Okio.source(stream))) {
             String line;
@@ -86,7 +86,7 @@ public class AdBlocker {
                 root.add(line);
             }
         }
-        return root;
+        return root.toTrieNode();
     }
 
     /**
@@ -113,9 +113,79 @@ public class AdBlocker {
         return false;
     }
 
+    static class TrieBuilder {
+        private char[] keys;
+        private TrieBuilder[] children;
+        private int size;
+        private boolean isEnd;
+
+        TrieBuilder() {
+            keys = new char[4];
+            children = new TrieBuilder[4];
+            size = 0;
+        }
+
+        void add(String host) {
+            TrieBuilder node = this;
+            for (int i = host.length() - 1; i >= 0; i--) {
+                char c = host.charAt(i);
+                node = node.getOrCreateChild(c);
+            }
+            node.isEnd = true;
+        }
+
+        private TrieBuilder getOrCreateChild(char c) {
+            int idx = java.util.Arrays.binarySearch(keys, 0, size, c);
+            if (idx >= 0) {
+                return children[idx];
+            }
+            int insertPos = -(idx + 1);
+
+            if (size == keys.length) {
+                int newLen = size * 2;
+                char[] newKeys = new char[newLen];
+                TrieBuilder[] newChildren = new TrieBuilder[newLen];
+                System.arraycopy(keys, 0, newKeys, 0, size);
+                System.arraycopy(children, 0, newChildren, 0, size);
+                keys = newKeys;
+                children = newChildren;
+            }
+
+            if (insertPos < size) {
+                System.arraycopy(keys, insertPos, keys, insertPos + 1, size - insertPos);
+                System.arraycopy(children, insertPos, children, insertPos + 1, size - insertPos);
+            }
+
+            keys[insertPos] = c;
+            TrieBuilder newNode = new TrieBuilder();
+            children[insertPos] = newNode;
+            size++;
+            return newNode;
+        }
+
+        TrieNode toTrieNode() {
+            TrieNode node = new TrieNode();
+            node.isEnd = isEnd;
+            if (size > 0) {
+                if (keys.length == size) {
+                    node.keys = keys;
+                } else {
+                    node.keys = new char[size];
+                    System.arraycopy(keys, 0, node.keys, 0, size);
+                }
+
+                node.children = new TrieNode[size];
+                for (int i = 0; i < size; i++) {
+                    node.children[i] = children[i].toTrieNode();
+                }
+            }
+            return node;
+        }
+    }
+
     static class TrieNode {
-        private char[] keys = new char[0];
-        private TrieNode[] children = new TrieNode[0];
+        char[] keys = new char[0];
+        TrieNode[] children = new TrieNode[0];
         boolean isEnd;
 
         void add(String host) {
