@@ -11,7 +11,7 @@ This document serves as a detailed technical reference for the `materialisheep` 
 ## 2. Technical Stack & Environment
 
 - **Language:** Kotlin (primary), Java (legacy/mixed).
-- **Minimum SDK:** 24
+- **Minimum SDK:** 30
 - **Compile/Target SDK:** 36
 - **JDK:** Java 21 is required for building.
 - **Build System:** Gradle 9.2.1, Android Gradle Plugin 8.9.1.
