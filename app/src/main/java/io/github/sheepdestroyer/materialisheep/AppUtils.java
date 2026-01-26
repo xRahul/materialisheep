@@ -75,6 +75,7 @@ import io.github.sheepdestroyer.materialisheep.annotation.PublicApi;
 import io.github.sheepdestroyer.materialisheep.data.HackerNewsClient;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
+import io.github.sheepdestroyer.materialisheep.widget.LinkTouchListener;
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
 
 @SuppressWarnings("WeakerAccess")
@@ -153,48 +154,19 @@ public class AppUtils {
      */
     @SuppressLint("ClickableViewAccessibility")
     public static void setTextWithLinks(TextView textView, CharSequence html) {
-        textView.setText(html);
-        // TODO https://code.google.com/p/android/issues/detail?id=191430
+        textView.setText(html, TextView.BufferType.SPANNABLE);
+        // Workaround for https://code.google.com/p/android/issues/detail?id=191430
         // Use custom touch listener to fix LinkMovementMethod consuming all touch events
         // noinspection Convert2Lambda
-        textView.setOnTouchListener(new View.OnTouchListener() {
-            @SuppressLint("ClickableViewAccessibility")
+        textView.setOnTouchListener(new LinkTouchListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                int action = event.getAction();
-                if (action == MotionEvent.ACTION_UP ||
-                        action == MotionEvent.ACTION_DOWN) {
-                    int x = (int) event.getX();
-                    int y = (int) event.getY();
-
-                    TextView widget = (TextView) v;
-                    x -= widget.getTotalPaddingLeft();
-                    y -= widget.getTotalPaddingTop();
-
-                    x += widget.getScrollX();
-                    y += widget.getScrollY();
-
-                    Layout layout = widget.getLayout();
-                    int line = layout.getLineForVertical(y);
-                    int off = layout.getOffsetForHorizontal(line, x);
-
-                    ClickableSpan[] links = Spannable.Factory.getInstance()
-                            .newSpannable(widget.getText())
-                            .getSpans(off, off, ClickableSpan.class);
-
-                    if (links.length != 0) {
-                        if (action == MotionEvent.ACTION_UP) {
-                            if (links[0] instanceof URLSpan) {
-                                openWebUrlExternal(widget.getContext(), null,
-                                        ((URLSpan) links[0]).getURL(), null);
-                            } else {
-                                links[0].onClick(widget);
-                            }
-                        }
-                        return true;
-                    }
+            public void onLinkClick(TextView widget, ClickableSpan span) {
+                if (span instanceof URLSpan) {
+                    openWebUrlExternal(widget.getContext(), null,
+                            ((URLSpan) span).getURL(), null);
+                } else {
+                    span.onClick(widget);
                 }
-                return false;
             }
         });
     }
