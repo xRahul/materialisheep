@@ -17,6 +17,7 @@
 
 package io.github.sheepdestroyer.materialisheep;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.graphics.Typeface;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -44,6 +45,7 @@ public class MaterialisticApplication extends android.app.Application {
     }
 
     @Override
+    @SuppressLint("DefaultUncaughtExceptionDelegation") // We want to show a custom crash activity and not delegate to system default
     public void onCreate() {
         super.onCreate();
         applicationComponent = DaggerApplicationComponent.builder()

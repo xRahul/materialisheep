@@ -160,6 +160,7 @@ public abstract class ThemedActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("deprecation")
     void setTaskTitle(CharSequence title) {
         if (TextUtils.isEmpty(title)) {
             return;
