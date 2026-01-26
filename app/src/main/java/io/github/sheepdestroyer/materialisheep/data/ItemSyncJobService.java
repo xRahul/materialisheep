@@ -45,7 +45,7 @@ public class ItemSyncJobService extends JobService {
     @Named(DataModule.HN)
     ItemManager mItemManager;
     @Inject
-    MaterialisticDatabase.SyncQueueDao mSyncQueueDao;
+    SyncQueueDao mSyncQueueDao;
     @Inject
     @Named(DataModule.IO_THREAD)
     io.reactivex.rxjava3.core.Scheduler mIoScheduler;

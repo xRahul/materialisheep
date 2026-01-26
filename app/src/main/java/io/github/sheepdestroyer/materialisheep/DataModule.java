@@ -37,6 +37,9 @@ import io.github.sheepdestroyer.materialisheep.data.ReadabilityClient;
 import io.github.sheepdestroyer.materialisheep.data.SyncScheduler;
 import io.github.sheepdestroyer.materialisheep.data.UserManager;
 import io.github.sheepdestroyer.materialisheep.data.SavedStoriesDao;
+import io.github.sheepdestroyer.materialisheep.data.ReadStoriesDao;
+import io.github.sheepdestroyer.materialisheep.data.ReadableDao;
+import io.github.sheepdestroyer.materialisheep.data.SyncQueueDao;
 import io.github.sheepdestroyer.materialisheep.data.android.Cache;
 import okhttp3.Call;
 import io.reactivex.rxjava3.core.Scheduler;
@@ -218,36 +221,36 @@ public class DataModule {
 
     /**
      * Provides a singleton instance of
-     * {@link MaterialisticDatabase.ReadStoriesDao}.
+     * {@link ReadStoriesDao}.
      *
      * @param database The {@link MaterialisticDatabase} instance.
      * @return The singleton instance of
-     *         {@link MaterialisticDatabase.ReadStoriesDao}.
+     *         {@link ReadStoriesDao}.
      */
     @Provides
-    public MaterialisticDatabase.ReadStoriesDao provideReadStoriesDao(MaterialisticDatabase database) {
+    public ReadStoriesDao provideReadStoriesDao(MaterialisticDatabase database) {
         return database.getReadStoriesDao();
     }
 
     /**
-     * Provides a singleton instance of {@link MaterialisticDatabase.ReadableDao}.
+     * Provides a singleton instance of {@link ReadableDao}.
      *
      * @param database The {@link MaterialisticDatabase} instance.
-     * @return The singleton instance of {@link MaterialisticDatabase.ReadableDao}.
+     * @return The singleton instance of {@link ReadableDao}.
      */
     @Provides
-    public MaterialisticDatabase.ReadableDao provideReadableDao(MaterialisticDatabase database) {
+    public ReadableDao provideReadableDao(MaterialisticDatabase database) {
         return database.getReadableDao();
     }
 
     /**
-     * Provides a singleton instance of {@link MaterialisticDatabase.SyncQueueDao}.
+     * Provides a singleton instance of {@link SyncQueueDao}.
      *
      * @param database The {@link MaterialisticDatabase} instance.
-     * @return The singleton instance of {@link MaterialisticDatabase.SyncQueueDao}.
+     * @return The singleton instance of {@link SyncQueueDao}.
      */
     @Provides
-    public MaterialisticDatabase.SyncQueueDao provideSyncQueueDao(MaterialisticDatabase database) {
+    public SyncQueueDao provideSyncQueueDao(MaterialisticDatabase database) {
         return database.getSyncQueueDao();
     }
 

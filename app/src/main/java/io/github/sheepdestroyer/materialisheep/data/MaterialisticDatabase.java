@@ -346,33 +346,6 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     }
 
     /**
-     * A DAO for accessing read stories.
-     */
-    @Dao
-    public interface ReadStoriesDao {
-        @Insert(onConflict = OnConflictStrategy.REPLACE)
-        void insert(ReadStory readStory);
-
-        @Query("SELECT * FROM read WHERE itemid = :itemId LIMIT 1")
-        ReadStory selectByItemId(String itemId);
-
-        @Query("SELECT * FROM read WHERE itemid IN (:itemIds)")
-        List<ReadStory> selectByItemIds(List<String> itemIds);
-    }
-
-    /**
-     * A DAO for accessing readable content.
-     */
-    @Dao
-    public interface ReadableDao {
-        @Insert(onConflict = OnConflictStrategy.REPLACE)
-        void insert(Readable readable);
-
-        @Query("SELECT * FROM readable WHERE itemid = :itemId LIMIT 1")
-        Readable selectByItemId(String itemId);
-    }
-
-    /**
      * A Room entity that represents a sync queue entry.
      */
     @Entity(tableName = "sync_queue")
@@ -402,21 +375,6 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
         public void setItemId(String itemId) {
             this.itemId = itemId;
         }
-    }
-
-    /**
-     * A DAO for accessing the sync queue.
-     */
-    @Dao
-    public interface SyncQueueDao {
-        @Insert(onConflict = OnConflictStrategy.IGNORE)
-        void insert(SyncQueueEntry entry);
-
-        @Query("SELECT itemid FROM sync_queue")
-        List<String> getAll();
-
-        @Query("DELETE FROM sync_queue WHERE itemid = :itemId")
-        void delete(String itemId);
     }
 
     static class DbConstants {

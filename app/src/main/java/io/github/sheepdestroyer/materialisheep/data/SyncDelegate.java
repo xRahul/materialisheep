@@ -60,6 +60,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import io.github.sheepdestroyer.materialisheep.AppUtils;
 import io.github.sheepdestroyer.materialisheep.DataModule;
+import io.github.sheepdestroyer.materialisheep.data.SyncQueueDao;
 import io.github.sheepdestroyer.materialisheep.BuildConfig;
 import io.github.sheepdestroyer.materialisheep.ItemActivity;
 import io.github.sheepdestroyer.materialisheep.Preferences;
@@ -82,7 +83,7 @@ public class SyncDelegate {
     private final HackerNewsClient.RestService mHnRestService;
     private final ItemManager mItemManager;
     private final ReadabilityClient mReadabilityClient;
-    private final MaterialisticDatabase.SyncQueueDao mSyncQueueDao;
+    private final SyncQueueDao mSyncQueueDao;
     private final io.reactivex.rxjava3.core.Scheduler mIoScheduler;
     private final CompositeDisposable mDisposables = new CompositeDisposable();
     private final NotificationManager mNotificationManager;
@@ -104,12 +105,12 @@ public class SyncDelegate {
      *                          REST services
      * @param readabilityClient the {@link ReadabilityClient} to use for fetching
      *                          readable content
-     * @param syncQueueDao      the {@link MaterialisticDatabase.SyncQueueDao} to
+     * @param syncQueueDao      the {@link SyncQueueDao} to
      *                          use for managing the sync queue
      */
     @Inject
     SyncDelegate(Context context, RestServiceFactory factory, @Named(DataModule.HN) ItemManager itemManager,
-            ReadabilityClient readabilityClient, MaterialisticDatabase.SyncQueueDao syncQueueDao,
+            ReadabilityClient readabilityClient, SyncQueueDao syncQueueDao,
             @Named(DataModule.IO_THREAD) io.reactivex.rxjava3.core.Scheduler ioScheduler) {
         mContext = context;
         mSyncQueueDao = syncQueueDao;
