@@ -39,6 +39,7 @@ import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
@@ -476,9 +477,16 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         mKeyDelegate.setAppBarEnabled(!mFullscreen);
     }
 
-    private Scrollable getScrollableList() {
-        // TODO landscape behavior?
-        return (Scrollable) getSupportFragmentManager().findFragmentByTag(LIST_FRAGMENT_TAG);
+    @VisibleForTesting
+    Scrollable getScrollableList() {
+        Scrollable listFragment = (Scrollable) getSupportFragmentManager().findFragmentByTag(LIST_FRAGMENT_TAG);
+        if (mIsMultiPane && mSelectedItem != null) {
+            Fragment current = getFragment(mViewPager.getCurrentItem());
+            if (current instanceof Scrollable) {
+                return (Scrollable) current;
+            }
+        }
+        return listFragment;
     }
 
     private KeyDelegate.BackInterceptor getBackInterceptor() {
