@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.google.devtools.ksp'
 
 android {
@@ -98,14 +99,15 @@ android {
     tasks.withType(JavaCompile).configureEach {
         options.compilerArgs << "-Xlint:deprecation"
     }
-    kotlin {
-        jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
-            vendor.set(JvmVendorSpec.ADOPTIUM)
-        }
-    }
     namespace 'io.github.sheepdestroyer.materialisheep'
 
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
 }
 
 ext {

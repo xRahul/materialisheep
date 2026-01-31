@@ -29,7 +29,7 @@ The project has been upgraded to a modern Android build environment. Strict adhe
 
 - **Gradle Version:** 9.3.0
 - **Android Gradle Plugin (AGP) Version:** 8.9.1
-- **Kotlin Version:** 2.2.10 (Downgraded from 2.3.0 due to CodeQL incompatibility)
+- **Kotlin Version:** 2.2.20
 - The Gradle wrapper (`./gradlew`) is included in the repository and should be used for all build commands. It will automatically download the correct Gradle version.
 
 ### 4. CodeQL Analysis

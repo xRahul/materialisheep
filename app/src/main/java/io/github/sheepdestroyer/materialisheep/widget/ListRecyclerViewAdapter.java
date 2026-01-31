@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -114,8 +115,14 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
             }
             return;
         }
-        // TODO naive launch priority for now
-        mCustomTabsDelegate.mayLaunchUrl(Uri.parse(item.getUrl()), null, null);
+        holder.itemView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                if (mCustomTabsDelegate != null && item.getUrl() != null) {
+                    mCustomTabsDelegate.mayLaunchUrl(Uri.parse(item.getUrl()), null, null);
+                }
+            }
+            return false;
+        });
         holder.bind(item,
                 mHotThreshold,
                 mCardViewEnabled,
@@ -279,6 +286,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
             mStoryView.reset();
             itemView.setOnClickListener(null);
             itemView.setOnLongClickListener(null);
+            itemView.setOnTouchListener(null);
         }
 
         public void flatten() {
