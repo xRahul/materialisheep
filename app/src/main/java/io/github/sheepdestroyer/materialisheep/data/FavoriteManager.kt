@@ -269,7 +269,7 @@ class FavoriteManager @Inject constructor(
         writeByte('\n'.code)
         writeUtf8(item.url)
         writeByte('\n'.code)
-        writeUtf8(HackerNewsClient.WEB_ITEM_PATH.format(item.id))
+        writeUtf8(HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.id)
         if (!cursor.isLast) {
           writeByte('\n'.code)
           writeByte('\n'.code)

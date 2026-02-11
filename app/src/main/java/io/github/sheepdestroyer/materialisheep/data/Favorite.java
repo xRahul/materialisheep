@@ -135,7 +135,7 @@ public class Favorite implements WebItem {
 
     @Override
     public String toString() {
-        return String.format("%s (%s) - %s", title, url, String.format(HackerNewsClient.WEB_ITEM_PATH, itemId));
+        return String.format("%s (%s) - %s", title, url, HackerNewsClient.WEB_ITEM_PATH_PREFIX + itemId);
     }
 
     @Override

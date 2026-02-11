@@ -234,7 +234,7 @@ public class AppUtils {
         if (TextUtils.isEmpty(item.getUrl()) ||
                 item.getUrl().startsWith(HackerNewsClient.BASE_WEB_URL)) {
             openWebUrlExternal(context,
-                    item, String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()),
+                    item, HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.getId(),
                     session);
             return;
         }
@@ -242,7 +242,7 @@ public class AppUtils {
                 .inflate(R.menu.menu_share)
                 .setOnMenuItemClickListener(menuItem -> {
                     openWebUrlExternal(context, item, menuItem.getItemId() == R.id.menu_article ? item.getUrl()
-                            : String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()), session);
+                            : HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.getId(), session);
                     return true;
                 })
                 .show();
@@ -264,7 +264,7 @@ public class AppUtils {
         if (TextUtils.isEmpty(item.getUrl()) ||
                 item.getUrl().startsWith(HackerNewsClient.BASE_WEB_URL)) {
             share(context, item.getDisplayedTitle(),
-                    String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
+                    HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.getId());
             return;
         }
         popupMenu.create(context, anchor, GravityCompat.END)
@@ -272,7 +272,7 @@ public class AppUtils {
                 .setOnMenuItemClickListener(menuItem -> {
                     share(context, item.getDisplayedTitle(),
                             menuItem.getItemId() == R.id.menu_article ? item.getUrl()
-                                    : String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
+                                    : HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.getId());
                     return true;
                 })
                 .show();
@@ -315,7 +315,7 @@ public class AppUtils {
      */
     public static boolean isHackerNewsUrl(WebItem item) {
         return !TextUtils.isEmpty(item.getUrl()) &&
-                item.getUrl().equals(String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
+                item.getUrl().equals(HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.getId());
     }
 
     /**
