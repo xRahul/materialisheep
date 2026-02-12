@@ -376,7 +376,7 @@ class HackerNewsItem implements Item {
     }
 
     private String getItemUrl(String itemId) {
-        return String.format(HackerNewsClient.WEB_ITEM_PATH, itemId);
+        return HackerNewsClient.WEB_ITEM_PATH_PREFIX + itemId;
     }
 
     @Override

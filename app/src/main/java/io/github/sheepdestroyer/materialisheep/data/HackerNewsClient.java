@@ -48,6 +48,10 @@ public class HackerNewsClient implements ItemManager, UserManager {
      * A template for the URL of a Hacker News item.
      */
     public static final String WEB_ITEM_PATH = BASE_WEB_URL + "/item?id=%s";
+    /**
+     * The prefix for the URL of a Hacker News item.
+     */
+    public static final String WEB_ITEM_PATH_PREFIX = BASE_WEB_URL + "/item?id=";
     static final String BASE_API_URL = "https://" + HOST + "/v0/";
     @Inject
     @Named(DataModule.IO_THREAD)
