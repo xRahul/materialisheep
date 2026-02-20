@@ -71,7 +71,19 @@ public class UserServicesClient implements UserServices {
     private static final String DEFAULT_FNOP = "submit-page";
     private static final String DEFAULT_SUBMIT_REDIRECT = "newest";
     private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>");
+    private static final ThreadLocal<Matcher> MATCHER_INPUT = new ThreadLocal<Matcher>() {
+        @Override
+        protected Matcher initialValue() {
+            return PATTERN_INPUT.matcher("");
+        }
+    };
     private static final Pattern PATTERN_VALUE = Pattern.compile("value[^\"]*\"([^\"]*)\"");
+    private static final ThreadLocal<Matcher> MATCHER_VALUE = new ThreadLocal<Matcher>() {
+        @Override
+        protected Matcher initialValue() {
+            return PATTERN_VALUE.matcher("");
+        }
+    };
     private static final Pattern PATTERN_CREATE_ERROR_BODY = Pattern.compile("<body>([^<]*)");
     private static final String HEADER_LOCATION = "location";
     private static final String HEADER_COOKIE = "cookie";
@@ -331,14 +343,24 @@ public class UserServicesClient implements UserServices {
 
     private String getInputValue(String html, String name) {
         // extract <input ... >
-        Matcher matcherInput = PATTERN_INPUT.matcher(html);
-        while (matcherInput.find()) {
-            String input = matcherInput.group();
-            if (input.contains(name)) {
-                // extract value="..."
-                Matcher matcher = PATTERN_VALUE.matcher(input);
-                return matcher.find() ? matcher.group(1) : null; // return first match if any
+        Matcher matcherInput = MATCHER_INPUT.get();
+        matcherInput.reset(html);
+        try {
+            while (matcherInput.find()) {
+                String input = matcherInput.group();
+                if (input.contains(name)) {
+                    // extract value="..."
+                    Matcher matcher = MATCHER_VALUE.get();
+                    matcher.reset(input);
+                    try {
+                        return matcher.find() ? matcher.group(1) : null; // return first match if any
+                    } finally {
+                        matcher.reset(""); // Clear reference
+                    }
+                }
             }
+        } finally {
+            matcherInput.reset(""); // Clear reference
         }
         return null;
     }
