@@ -350,6 +350,22 @@ Readability.prototype = {
   },
 
   /**
+   * Iterate over a NodeList and apply an accumulator to reduce it to a
+   * single value.
+   *
+   * For convenience, the current object context is applied to the provided
+   * reduce function.
+   *
+   * @param  NodeList nodeList The NodeList.
+   * @param  Function fn       The reducer function.
+   * @param  Object   init     The initial accumulator value.
+   * @return Object            The accumulated value.
+   */
+  _reduceNodeList(nodeList, fn, init) {
+    return Array.prototype.reduce.call(nodeList, fn.bind(this), init);
+  },
+
+  /**
    * Iterate over a NodeList, and return the first node that passes
    * the supplied test function
    *
@@ -2146,14 +2162,15 @@ Readability.prototype = {
       return 0;
     }
 
-    var linkLength = 0;
-
-    // XXX implement _reduceNodeList?
-    this._forEachNode(element.getElementsByTagName("a"), function (linkNode) {
-      var href = linkNode.getAttribute("href");
-      var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
-      linkLength += this._getInnerText(linkNode).length * coefficient;
-    });
+    var linkLength = this._reduceNodeList(
+      element.getElementsByTagName("a"),
+      function (buildLength, linkNode) {
+        var href = linkNode.getAttribute("href");
+        var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
+        return buildLength + this._getInnerText(linkNode).length * coefficient;
+      },
+      0
+    );
 
     return linkLength / textLength;
   },
@@ -2442,11 +2459,13 @@ Readability.prototype = {
     if (textLength === 0) {
       return 0;
     }
-    var childrenLength = 0;
     var children = this._getAllNodesWithTag(e, tags);
-    this._forEachNode(
+    var childrenLength = this._reduceNodeList(
       children,
-      child => (childrenLength += this._getInnerText(child, true).length)
+      function (accumulatedLength, child) {
+        return accumulatedLength + this._getInnerText(child, true).length;
+      },
+      0
     );
     return childrenLength / textLength;
   },
@@ -2475,11 +2494,13 @@ Readability.prototype = {
 
       var isList = tag === "ul" || tag === "ol";
       if (!isList) {
-        var listLength = 0;
         var listNodes = this._getAllNodesWithTag(node, ["ul", "ol"]);
-        this._forEachNode(
+        var listLength = this._reduceNodeList(
           listNodes,
-          list => (listLength += this._getInnerText(list).length)
+          function (accumulatedLength, list) {
+            return accumulatedLength + this._getInnerText(list).length;
+          },
+          0
         );
         isList = listLength / this._getInnerText(node).length > 0.9;
       }
