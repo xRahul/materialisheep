@@ -394,6 +394,19 @@ Readability.prototype = {
     return Array.prototype.every.call(nodeList, fn, this);
   },
 
+  /**
+   * Iterate over a NodeList, return the initial value or the previous return
+   * of the provided iterate function.
+   *
+   * @param  NodeList nodeList The NodeList.
+   * @param  Function fn       The iterate function.
+   * @param  Object   init     The initial value.
+   * @return Object
+   */
+  _reduceNodeList(nodeList, fn, init) {
+    return Array.prototype.reduce.call(nodeList, fn, init);
+  },
+
   _getAllNodesWithTag(node, tagNames) {
     if (node.querySelectorAll) {
       return node.querySelectorAll(tagNames.join(","));
@@ -2146,14 +2159,15 @@ Readability.prototype = {
       return 0;
     }
 
-    var linkLength = 0;
-
-    // XXX implement _reduceNodeList?
-    this._forEachNode(element.getElementsByTagName("a"), function (linkNode) {
-      var href = linkNode.getAttribute("href");
-      var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
-      linkLength += this._getInnerText(linkNode).length * coefficient;
-    });
+    var linkLength = this._reduceNodeList(
+      element.getElementsByTagName("a"),
+      function (buildLength, linkNode) {
+        var href = linkNode.getAttribute("href");
+        var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
+        return buildLength + this._getInnerText(linkNode).length * coefficient;
+      }.bind(this),
+      0
+    );
 
     return linkLength / textLength;
   },
@@ -2442,11 +2456,11 @@ Readability.prototype = {
     if (textLength === 0) {
       return 0;
     }
-    var childrenLength = 0;
     var children = this._getAllNodesWithTag(e, tags);
-    this._forEachNode(
+    var childrenLength = this._reduceNodeList(
       children,
-      child => (childrenLength += this._getInnerText(child, true).length)
+      (sum, child) => sum + this._getInnerText(child, true).length,
+      0
     );
     return childrenLength / textLength;
   },
