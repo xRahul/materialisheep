@@ -513,6 +513,29 @@ public class StoryRecyclerViewAdapter extends
     }
 
     @Synthetic
+    void updateItems(Item[] loadedItems) {
+        boolean changed = false;
+        for (Item loaded : loadedItems) {
+            Item existing = mItemMap.get(loaded.getId());
+            if (existing != null) {
+                existing.populate(loaded);
+                changed = true;
+                if (BuildConfig.DEBUG) {
+                    android.util.Log.d("StoryRecyclerViewAdapter", "onItemLoaded: " + existing.getId() + " at position " + getItems().indexOf(existing));
+                }
+            }
+        }
+        if (changed) {
+            // Re-evaluating items is required to reflect populated changes efficiently.
+            // If we use notifyDataSetChanged(), structural changes or complete rebinds
+            // would be required. However, for Item array specifically, calculating DiffUtil
+            // works best or doing a notifyItemRangeChanged(). Here we can notify all visible
+            // or just trigger notifyItemRangeChanged(0, getItemCount()) to avoid structural resets.
+            notifyItemRangeChanged(0, getItemCount());
+        }
+    }
+
+    @Synthetic
     void showMoreOptions(View v, final Item story, final ItemViewHolder holder) {
         mPopupMenu.create(mContext, v, Gravity.NO_GRAVITY)
                 .inflate(R.menu.menu_contextual_story)
@@ -663,9 +686,7 @@ public class StoryRecyclerViewAdapter extends
         public void onResponse(Item[] items) {
             StoryRecyclerViewAdapter adapter = mAdapter.get();
             if (adapter != null && adapter.isAttached() && items != null) {
-                for (Item item : items) {
-                    adapter.updateItem(item);
-                }
+                adapter.updateItems(items);
             }
         }
 

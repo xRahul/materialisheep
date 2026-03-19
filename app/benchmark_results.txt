@@ -1,0 +1,3 @@
+String.format time: 307584181 ns
+Concatenation time: 42537784 ns
+Improvement: 7.230846369430058x
