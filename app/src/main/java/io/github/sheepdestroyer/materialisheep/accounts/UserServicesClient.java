@@ -336,7 +336,10 @@ private String getInputValue(String html, String name) {
 
     private String parseLoginError(Response response) {
         try {
-            String text = Jsoup.parse(response.body().string()).body().text();
+            // HN renders the error as a bare text node right after <body>,
+            // e.g. <body>Bad login.<br><br>... — ownText() reads exactly that,
+            // skipping the nav/footer chrome that body().text() would include.
+            String text = Jsoup.parse(response.body().string()).body().ownText();
             return TextUtils.isEmpty(text) ? null : text;
         } catch (IOException e) {
             return null;
