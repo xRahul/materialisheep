@@ -159,7 +159,7 @@ public class FavoriteFragment extends BaseListFragment
      *         proceed, true to consume it here.
      */
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onMenuItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_clear) {
             clear();
             return true;
@@ -168,7 +168,7 @@ public class FavoriteFragment extends BaseListFragment
             mFavoriteManager.export(getActivity(), mFilter);
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        return super.onMenuItemSelected(item);
     }
 
     /**

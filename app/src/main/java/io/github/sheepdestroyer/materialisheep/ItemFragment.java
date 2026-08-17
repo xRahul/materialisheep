@@ -107,12 +107,9 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
      * @param savedInstanceState If the fragment is being re-created from
      *                           a previous saved state, this is the state.
      */
-    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
-                                     // Activity cooperation
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
         if (savedInstanceState != null) {
             mCacheMode = savedInstanceState.getInt(STATE_CACHE_MODE, ItemManager.MODE_DEFAULT);
             mItem = savedInstanceState.getParcelable(STATE_ITEM);
@@ -196,15 +193,13 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
      * @return boolean Return false to allow normal menu processing to
      *         proceed, true to consume it here.
      */
-    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
-                                     // Activity cooperation
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onMenuItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_comments) {
             showPreferences();
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        return super.onMenuItemSelected(item);
     }
 
     /**

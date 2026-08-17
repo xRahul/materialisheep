@@ -126,15 +126,13 @@ abstract class BaseListFragment extends BaseFragment implements Scrollable {
      * @return boolean Return false to allow normal menu processing to
      *         proceed, true to consume it here.
      */
-    @SuppressWarnings("deprecation") // Using deprecated Fragment menu API; migration to MenuProvider requires
-                                     // Activity cooperation
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onMenuItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_list) {
             showPreferences();
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        return super.onMenuItemSelected(item);
     }
 
     private void showPreferences() {
