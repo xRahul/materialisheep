@@ -91,7 +91,7 @@ Test classes to be aware of: `AppUtilsTest`, `WebFragmentSecurityTest`, `Network
 Workflows in `.github/workflows/`:
 
 - `ci.yml` — build + unit tests on push/PR
-- `release.yml` — tagged release build with signing via env (`KEY_STORE_BASE64`, `KEY_STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), GitHub Release publish
+- `release.yml` — automated one-click release with semantic version bumping (patch/minor/major), signing via env (`KEY_STORE_BASE64`, `KEY_STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), categorized changelog generation, and GitHub Release publish
 - `debug.yml` — debug APK artifact build on manual trigger (workflow_dispatch)
 - `codeql.yml` — CodeQL Advanced Setup (see above)
 - `gemini-review.yml` — AI-assisted PR review (upstream)

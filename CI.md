@@ -23,18 +23,24 @@ The CI workflow is defined in `.github/workflows/ci.yml`. It performs the follow
 
 ### Release Workflow
 
-The Release workflow is defined in `.github/workflows/release.yml`. It performs the following steps:
+The Release workflow is defined in `.github/workflows/release.yml`. It supports one-click releases:
 
-1.  **Sets up the environment:** Provisions Ubuntu with Java 21 and the Android SDK.
-2.  **Caches dependencies:** Caches Gradle packages.
-3.  **Builds signed release APK:** Builds release APK using `./gradlew assembleRelease` signed with repository secrets.
-4.  **Uploads & Releases:** Attaches the APK as a release artifact and creates a GitHub Release for tags.
+1. **Triggering:**
+   - **Manual (`workflow_dispatch`):** Choose the version increment segment (`patch`, `minor`, `major`) or enter an optional `custom_version`.
+   - **Tag Push:** Triggered on pushes matching `v*`.
+2. **Automated Steps:**
+   - Increments `version.properties` and commits the bump with `[skip ci]`.
+   - Generates annotated git tag (e.g. `v3.4.14`) and pushes to the repository.
+   - Compiles and signs the release APK via `./gradlew assembleRelease`.
+   - Generates categorized changelog with Conventional Commits, PR references, commit hashes, authors, and SHA-256 checksums.
+   - Publishes the GitHub Release with attached `materialisheep-vX.Y.Z.apk` and `sha256sum.txt`.
 
 ## Validating the Workflows
 
 To validate the workflows:
 
-*   **CI Workflow:** Create or update a pull request to `master`.
-*   **Debug Workflow:** Trigger manually from the "Actions" tab.
-*   **Release Workflow:** Push a version tag (e.g., `git tag v3.4.0 && git push origin v3.4.0`) or trigger via `workflow_dispatch`.
+* **CI Workflow:** Create or update a pull request to `master`.
+* **Debug Workflow:** Trigger manually from the "Actions" tab.
+* **Release Workflow:** Trigger manually from the Actions tab (select Release workflow -> Run workflow -> select increment type) or push a version tag (e.g., `git tag v3.4.14 && git push origin v3.4.14`).
+
 

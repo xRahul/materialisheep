@@ -1,0 +1,32 @@
+changelog:
+  categories:
+    - title: "🚀 Features & Enhancements"
+      labels:
+        - "feature"
+        - "enhancement"
+        - "feat"
+    - title: "🐛 Bug Fixes"
+      labels:
+        - "bug"
+        - "fix"
+        - "bugfix"
+    - title: "⚡ Performance Improvements"
+      labels:
+        - "performance"
+        - "perf"
+    - title: "🛡️ Security & Code Quality"
+      labels:
+        - "security"
+        - "refactor"
+        - "code-health"
+    - title: "📦 Dependencies & Maintenance"
+      labels:
+        - "dependencies"
+        - "chore"
+        - "build"
+        - "ci"
+    - title: "🧪 Tests & Documentation"
+      labels:
+        - "test"
+        - "documentation"
+        - "docs"
