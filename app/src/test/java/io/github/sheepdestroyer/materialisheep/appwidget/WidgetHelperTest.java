@@ -12,7 +12,6 @@ import static org.robolectric.Shadows.shadowOf;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
-import android.os.Build;
 import android.view.View;
 import android.widget.ListView;
 
@@ -30,7 +29,7 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {Build.VERSION_CODES.S})
+@Config(sdk = {31, 34})
 public class WidgetHelperTest {
 
     private Context context;

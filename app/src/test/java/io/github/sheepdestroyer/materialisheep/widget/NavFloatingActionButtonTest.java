@@ -5,15 +5,15 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 import android.view.MotionEvent;
 import org.junit.Assert;
-import org.robolectric.annotation.Config;
 import io.github.sheepdestroyer.materialisheep.R;
 
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {33})
+@Config(sdk = {31, 34})
 public class NavFloatingActionButtonTest {
 
     @Test

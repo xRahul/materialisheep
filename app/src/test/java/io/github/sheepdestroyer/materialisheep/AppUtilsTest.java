@@ -14,7 +14,6 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.net.ConnectivityManager;
-import android.os.Build;
 import android.text.format.DateUtils;
 import android.view.Display;
 import android.view.View;
@@ -27,12 +26,13 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowConnectivityManager;
 import org.robolectric.shadows.ShadowToast;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(sdk = {31, 34})
 public class AppUtilsTest {
 
   @Test
@@ -148,7 +148,6 @@ public class AppUtilsTest {
   }
 
   @Test
-  @Config(sdk = Build.VERSION_CODES.S)
   public void testGetDisplayHeightNew() {
     Context context = mock(Context.class);
     WindowManager windowManager = mock(WindowManager.class);
@@ -163,7 +162,6 @@ public class AppUtilsTest {
   }
 
   @Test
-  @Config(sdk = Build.VERSION_CODES.S)
   @SuppressWarnings("deprecation")
   public void testSystemUiHelperNew() {
     Window window = mock(Window.class);
