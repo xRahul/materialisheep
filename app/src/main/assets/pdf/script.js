@@ -35,35 +35,41 @@ async function layoutPage(pageNumber) {
   const page = await pdfDoc.getPage(pageNumber);
   const viewport = page.getViewport({ scale: SCALE });
 
+  // Placeholder div sized to the final page dimensions. The canvas is only
+  // created when the page is actually rendered, so the backing stores of
+  // off-screen pages never allocate (same behavior as the old viewer).
   const div = document.createElement('div');
   div.className = 'pdfPage';
   div.style.width = viewport.width + 'px';
   div.style.height = viewport.height + 'px';
-
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  canvas.style.width = viewport.width + 'px';
-  canvas.style.height = viewport.height + 'px';
-  div.appendChild(canvas);
   container.appendChild(div);
 
-  pageEntries.set(pageNumber, { page, div, canvas, viewport, rendered: false });
+  pageEntries.set(pageNumber, { page, div, viewport, rendered: false });
 }
 
 async function renderPage(pageNumber) {
-  const entry = pageEntries.get(pageNumber);
+  let entry = pageEntries.get(pageNumber);
   if (!entry || entry.rendered) {
     return;
   }
-  entry.rendered = true;
+  if (!entry.canvas) {
+    const canvas = document.createElement('canvas');
+    canvas.width = entry.viewport.width;
+    canvas.height = entry.viewport.height;
+    canvas.style.width = entry.viewport.width + 'px';
+    canvas.style.height = entry.viewport.height + 'px';
+    entry.canvas = canvas;
+    entry.div.appendChild(canvas);
+  }
   try {
     await entry.page.render({
       canvasContext: entry.canvas.getContext('2d'),
       viewport: entry.viewport,
     });
+    entry.rendered = true;
   } catch (e) {
     console.error('Page render failed: ' + pageNumber, e);
+    // Leave rendered=false so a later scroll pass retries.
   }
 }
 
