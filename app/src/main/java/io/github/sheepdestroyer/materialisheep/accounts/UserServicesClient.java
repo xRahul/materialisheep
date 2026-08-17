@@ -24,8 +24,6 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -36,6 +34,8 @@ import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -72,21 +72,6 @@ public class UserServicesClient implements UserServices {
     private static final String DEFAULT_FNOP = "submit-page";
     private static final String DEFAULT_SUBMIT_REDIRECT = "newest";
     private Disposable mVoteDisposable;
-private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>");
-    private static final ThreadLocal<Matcher> MATCHER_INPUT = new ThreadLocal<Matcher>() {
-        @Override
-        protected Matcher initialValue() {
-            return PATTERN_INPUT.matcher("");
-        }
-    };
-    private static final Pattern PATTERN_VALUE = Pattern.compile("value[^\"]*\"([^\"]*)\"");
-    private static final ThreadLocal<Matcher> MATCHER_VALUE = new ThreadLocal<Matcher>() {
-        @Override
-        protected Matcher initialValue() {
-            return PATTERN_VALUE.matcher("");
-        }
-    };
-    private static final Pattern PATTERN_CREATE_ERROR_BODY = Pattern.compile("<body>([^<]*)");
     private static final String HEADER_LOCATION = "location";
     private static final String HEADER_COOKIE = "cookie";
     private static final String HEADER_SET_COOKIE = "set-cookie";
@@ -342,34 +327,17 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
         }
     }
 
-    private String getInputValue(String html, String name) {
-        // extract <input ... >
-Matcher matcherInput = MATCHER_INPUT.get();
-        matcherInput.reset(html);
-        try {
-            while (matcherInput.find()) {
-                String input = matcherInput.group();
-                if (input.contains(name)) {
-                    // extract value="..."
-                    Matcher matcher = MATCHER_VALUE.get();
-                    matcher.reset(input);
-                    try {
-                        return matcher.find() ? matcher.group(1) : null; // return first match if any
-                    } finally {
-                        matcher.reset(""); // Clear reference
-                    }
-                }
-            }
-        } finally {
-            matcherInput.reset(""); // Clear reference
-        }
-        return null;
+private String getInputValue(String html, String name) {
+        // Parse the submit page and read the value of the hidden input with the
+        // given name, e.g. <input type="hidden" name="fnid" value="...">.
+        Element element = Jsoup.parse(html).selectFirst("input[name=" + name + "]");
+        return element != null ? element.attr("value") : null;
     }
 
     private String parseLoginError(Response response) {
         try {
-            Matcher matcher = PATTERN_CREATE_ERROR_BODY.matcher(response.body().string());
-return matcher.find() ? matcher.group(1).replaceAll("\\n|\\r|\\t|\\s+", " ").trim() : null;
+            String text = Jsoup.parse(response.body().string()).body().text();
+            return TextUtils.isEmpty(text) ? null : text;
         } catch (IOException e) {
             return null;
         }
