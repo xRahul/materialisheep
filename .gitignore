@@ -60,3 +60,16 @@ crash_dump.txt
 pr_comments*.txt
 
 pdfjs-legacy/
+
+# IDE / local tooling (untracked; kept out of the repo)
+.idea
+*.iml
+.project
+.classpath
+.settings/
+app/.project
+app/.classpath
+app/.settings/
+
+# CodeGraph local index
+.codegraph/
