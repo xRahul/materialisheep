@@ -26,6 +26,7 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.os.BundleCompat;
@@ -159,6 +160,24 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mFullscreen) {
       setFullscreen(true);
     }
+    // KEYCODE_BACK interception (KeyDelegate) stops working on API 33+ once
+    // enableOnBackInvokedCallback is on, so route WebView history navigation
+    // through the OnBackPressedDispatcher.
+    requireActivity()
+        .getOnBackPressedDispatcher()
+        .addCallback(
+            getViewLifecycleOwner(),
+            new OnBackPressedCallback(true) {
+              @Override
+              public void handleOnBackPressed() {
+                if (mWebView.canGoBack()) {
+                  mWebView.goBack();
+                } else {
+                  setEnabled(false);
+                  requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                }
+              }
+            });
   }
 
   @Override
