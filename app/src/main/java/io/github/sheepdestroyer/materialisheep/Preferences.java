@@ -753,7 +753,7 @@ public class Preferences {
     }
 
     public static class Observable {
-        private static Set<String> CONTEXT_KEYS;
+        private static volatile Set<String> CONTEXT_KEYS;
         private final Map<String, Integer> mSubscribedKeys = new HashMap<>();
         private final SharedPreferences.OnSharedPreferenceChangeListener mListener = (sharedPreferences, key) -> {
             if (mSubscribedKeys.containsKey(key)) {
@@ -793,11 +793,17 @@ public class Preferences {
             if (CONTEXT_KEYS != null) {
                 return;
             }
-            CONTEXT_KEYS = new HashSet<>();
-            CONTEXT_KEYS.add(context.getString(R.string.pref_theme));
-            CONTEXT_KEYS.add(context.getString(R.string.pref_text_size));
-            CONTEXT_KEYS.add(context.getString(R.string.pref_font));
-            CONTEXT_KEYS.add(context.getString(R.string.pref_daynight_auto));
+            synchronized (Observable.class) {
+                if (CONTEXT_KEYS != null) {
+                    return;
+                }
+                Set<String> contextKeys = new HashSet<>();
+                contextKeys.add(context.getString(R.string.pref_theme));
+                contextKeys.add(context.getString(R.string.pref_text_size));
+                contextKeys.add(context.getString(R.string.pref_font));
+                contextKeys.add(context.getString(R.string.pref_daynight_auto));
+                CONTEXT_KEYS = contextKeys;
+            }
         }
     }
 

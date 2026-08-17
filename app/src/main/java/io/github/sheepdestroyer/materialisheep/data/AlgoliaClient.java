@@ -44,7 +44,7 @@ public class AlgoliaClient implements ItemManager {
     /**
      * A flag that indicates whether to sort search results by time.
      */
-    public static boolean sSortByTime = true;
+    public static volatile boolean sSortByTime = true;
     /**
      * The host of the Algolia API.
      */

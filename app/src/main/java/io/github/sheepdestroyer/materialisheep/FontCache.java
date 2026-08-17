@@ -18,16 +18,17 @@ package io.github.sheepdestroyer.materialisheep;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import androidx.collection.ArrayMap;
 import android.text.TextUtils;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A simple cache for Typeface objects.
  */
 public class FontCache {
 
-    private static FontCache sInstance;
-    private final ArrayMap<String, Typeface> mTypefaceMap = new ArrayMap<>();
+    private static volatile FontCache sInstance;
+    private final ConcurrentHashMap<String, Typeface> mTypefaceMap = new ConcurrentHashMap<>();
 
     /**
      * Gets the singleton instance of the FontCache.
@@ -36,7 +37,11 @@ public class FontCache {
      */
     public static FontCache getInstance() {
         if (sInstance == null) {
-            sInstance = new FontCache();
+            synchronized (FontCache.class) {
+                if (sInstance == null) {
+                    sInstance = new FontCache();
+                }
+            }
         }
         return sInstance;
     }
@@ -54,9 +59,7 @@ public class FontCache {
         if (TextUtils.isEmpty(typefaceName)) {
             return null;
         }
-        if (!mTypefaceMap.containsKey(typefaceName)) {
-            mTypefaceMap.put(typefaceName, Typeface.createFromAsset(context.getAssets(), typefaceName));
-        }
-        return mTypefaceMap.get(typefaceName);
+        return mTypefaceMap.computeIfAbsent(typefaceName,
+                name -> Typeface.createFromAsset(context.getAssets(), name));
     }
 }
