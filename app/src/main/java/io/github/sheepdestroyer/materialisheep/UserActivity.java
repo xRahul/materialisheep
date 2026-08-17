@@ -157,11 +157,11 @@ public class UserActivity extends ThemedActivity implements Scrollable {
     if (savedInstanceState != null) {
       mUser = BundleCompat.getParcelable(savedInstanceState, STATE_USER, UserManager.User.class);
     }
-    if (mUser == null) {
-      load();
-    } else {
+    if (mUser != null) {
       bind();
     }
+    // mUser == null: load() runs in onResume (single request on cold start,
+    // re-fetches if onStop cleared the in-flight subscription)
     if (!AppUtils.hasConnection(this)) {
       Snackbar.make(findViewById(R.id.content_frame), R.string.offline_notice, Snackbar.LENGTH_LONG)
           .show();
