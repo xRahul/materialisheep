@@ -52,7 +52,7 @@ public class Preferences {
     private static final String DRAFT_PREFIX = "draft_%1$s";
     private static final String PREFERENCES_DRAFT = "_drafts";
     @VisibleForTesting
-    static Boolean sReleaseNotesSeen = null;
+    static volatile Boolean sReleaseNotesSeen = null;
 
     public enum SwipeAction {
         None,
