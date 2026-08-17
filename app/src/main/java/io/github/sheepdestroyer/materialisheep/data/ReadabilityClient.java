@@ -162,7 +162,9 @@ public interface ReadabilityClient {
                             }
                             return;
                         }
-                        String script = mReadabilityJs + "; new Readability(document).parse();";
+                        String script = mReadabilityJs
+                                + "; (function () { try { return new Readability(document.cloneNode(true)).parse(); }"
+                                + " catch (e) { return null; } })();";
                         view.evaluateJavascript(script, value -> {
                             if (isFinished.compareAndSet(false, true)) {
                                 String content = null;

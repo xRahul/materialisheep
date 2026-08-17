@@ -677,3 +677,25 @@ the avoidance of doubt, this paragraph does not form part of the public
 licenses.
 
 Creative Commons may be contacted at creativecommons.org.
+
+=======================================================================
+
+The following components are distributed with this application, in
+addition to the licenses reproduced above.
+
+-----------------------------------------------------------------------
+Mozilla pdf.js
+Copyright (c) 2011 Mozilla Foundation and contributors
+https://mozilla.github.io/pdf.js/
+License: Apache License 2.0 (see the license text above and the copy
+vendored at app/src/main/assets/pdf/vendor/pdfjs/LICENSE)
+Bundled in app/src/main/assets/pdf/vendor/pdfjs (build/pdf.mjs,
+build/pdf.worker.mjs, cmaps, standard_fonts) at version 4.10.38.
+
+-----------------------------------------------------------------------
+Mozilla Readability
+Copyright (c) 2010 Arc90 Inc. and 2013-2024 Mozilla Foundation and
+contributors
+https://github.com/mozilla/readability
+License: Apache License 2.0 (see the license text above)
+Bundled in app/src/main/assets/Readability.js at version 0.5.0.

@@ -12,18 +12,17 @@
       margin: 0;
       padding: 0;
     }
+    .pdfPage {
+      margin: 0 auto 8px;
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
   </style>
-
-  <link rel="stylesheet" href="vendor/pdf.js/1.9.658/pdf_viewer.css">
-  <script src="vendor/pdf.js/1.9.658/pdf.js"></script>
-  <script src="vendor/pdf.js/1.9.658/pdf_viewer.js"></script>
 </head>
 
 <body>
-  <div id="viewerContainer">
-    <div id="viewer" class="pdfViewer"></div>
-  </div>
+  <div id="viewerContainer"></div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

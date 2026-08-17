@@ -1,202 +1,130 @@
+// Modern pdf.js (pdfjs-dist 4.10.38, legacy build) minimal viewer.
 // It expects PdfAndroidJavascriptBridge to be injected from the Android side
-(function () {
-  var pdfViewer;
+// (getSize/getChunk/onLoad/onFailure), keeping the same contract as the
+// previous 1.9.658-based viewer.
+import * as pdfjsLib from './vendor/pdfjs/build/pdf.mjs';
 
-  function initializePdfViewer() {
-    PDFJS.disableAutoFetch = true;
-    PDFJS.useOnlyCssZoom = true;
-    PDFJS.maxCanvasPixels = 2097152;
-    var container = document.getElementById('viewerContainer');
+pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/build/pdf.worker.mjs';
 
-    // enable hyperlinks within PDF files.
-    var pdfLinkService = new PDFJS.PDFLinkService();
+const SCALE = 2;
+const RENDER_BUFFER = 100; // px of pre/post-rendering around the viewport
+const container = document.getElementById('viewerContainer');
 
-    pdfViewer = new CustomPdfViewer({
-      container: container,
-      linkService: pdfLinkService,
+let pdfDoc = null;
+const pageEntries = new Map(); // pageNumber -> { page, div, canvas, viewport, rendered }
+let scrollScheduled = false;
+
+// Defines the interface pdf.js uses to fetch chunks of the PDF file from the
+// Android bridge instead of the network.
+class RangeTransport extends pdfjsLib.PDFDataRangeTransport {
+  requestDataRange(begin, end) {
+    const base64 = PdfAndroidJavascriptBridge.getChunk(begin, end);
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; ++i) {
+      bytes[i] = binary.charCodeAt(i) & 0xff;
+    }
+    // Has to be async, otherwise pdf.js throws.
+    setTimeout(() => {
+      this.onDataRange(begin, bytes);
+    }, 0);
+  }
+}
+
+async function layoutPage(pageNumber) {
+  const page = await pdfDoc.getPage(pageNumber);
+  const viewport = page.getViewport({ scale: SCALE });
+
+  const div = document.createElement('div');
+  div.className = 'pdfPage';
+  div.style.width = viewport.width + 'px';
+  div.style.height = viewport.height + 'px';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  canvas.style.width = viewport.width + 'px';
+  canvas.style.height = viewport.height + 'px';
+  div.appendChild(canvas);
+  container.appendChild(div);
+
+  pageEntries.set(pageNumber, { page, div, canvas, viewport, rendered: false });
+}
+
+async function renderPage(pageNumber) {
+  const entry = pageEntries.get(pageNumber);
+  if (!entry || entry.rendered) {
+    return;
+  }
+  entry.rendered = true;
+  try {
+    await entry.page.render({
+      canvasContext: entry.canvas.getContext('2d'),
+      viewport: entry.viewport,
     });
-    pdfLinkService.setViewer(pdfViewer);
+  } catch (e) {
+    console.error('Page render failed: ' + pageNumber, e);
+  }
+}
 
-    // set proper scale to fit page width
-    container.addEventListener("pagesinit", function (e) {
-      pdfViewer.currentScaleValue = 2;
-    });
+// The container height is unconstrained (WebFragment is not always fullscreen),
+// so the document scroll position, not the container's, decides visibility.
+function renderVisiblePages() {
+  const top = window.scrollY - RENDER_BUFFER;
+  const bottom = window.scrollY + window.innerHeight + RENDER_BUFFER;
 
-    var fileSize = PdfAndroidJavascriptBridge.getSize();
+  for (let n = 1; n <= pdfDoc.numPages; ++n) {
+    const entry = pageEntries.get(n);
+    if (!entry) {
+      continue; // layout pass not finished yet
+    }
+    const pageTop = entry.div.offsetTop;
+    const pageBottom = pageTop + entry.div.offsetHeight;
+    if (pageBottom >= top && pageTop <= bottom) {
+      renderPage(n);
+    }
+  }
+}
 
-    PDFJS.getDocument({
+function onScroll() {
+  if (scrollScheduled) {
+    return;
+  }
+  scrollScheduled = true;
+  window.requestAnimationFrame(() => {
+    scrollScheduled = false;
+    renderVisiblePages();
+  });
+}
+
+async function initializePdfViewer() {
+  const fileSize = PdfAndroidJavascriptBridge.getSize();
+
+  try {
+    pdfDoc = await pdfjsLib.getDocument({
       length: fileSize,
       range: new RangeTransport(fileSize),
+      disableAutoFetch: true,
       rangeChunkSize: 262144,
-    }).then(function (pdfDocument) {
-      pdfViewer.setDocument(pdfDocument);
-      pdfLinkService.setDocument(pdfDocument, null);
-      PdfAndroidJavascriptBridge.onLoad();
-    }).catch(function (e) {
-      console.error(e);
-      PdfAndroidJavascriptBridge.onFailure();
-    });
+      cMapUrl: './vendor/pdfjs/cmaps/',
+      cMapPacked: true,
+      standardFontDataUrl: './vendor/pdfjs/standard_fonts/',
+      canvasMaxAreaInBytes: 8388608, // 2 MP * 4 bytes, same as the old maxCanvasPixels
+    }).promise;
+
+    // Lay out every page as a placeholder div, then render only what is
+    // inside (or near) the viewport.
+    for (let n = 1; n <= pdfDoc.numPages; ++n) {
+      await layoutPage(n);
+    }
+    renderVisiblePages();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    PdfAndroidJavascriptBridge.onLoad();
+  } catch (e) {
+    console.error(e);
+    PdfAndroidJavascriptBridge.onFailure();
   }
+}
 
-  // Defines the interface, which PDF.JS uses to fetch chunks of data it needs
-  // for rendering a PDF doc.
-  function RangeTransport(size) {
-    this.__proto__ = new PDFJS.PDFDataRangeTransport();
-
-    var self = this;
-    this.length = size;
-
-    this.requestDataRange = function (begin, end) {
-      var base64string = PdfAndroidJavascriptBridge.getChunk(begin, end);
-      var binaryString = atob(base64string);
-      var byteArray = stringToBytes(binaryString)
-      // Has to be async, otherwise PDF.js will fire an exception
-      setTimeout(function () {
-        self.onDataRange(begin, byteArray);
-      }, 0);
-    };
-  };
-
-  function stringToBytes(str) {
-    var length = str.length;
-    var bytes = new Uint8Array(length);
-    for (var i = 0; i < length; ++i) {
-      bytes[i] = str.charCodeAt(i) & 0xFF;
-    }
-    return bytes;
-  }
-
-  // Built-in PdfViewer uses `container`'s height to figure out what pages to render
-  // We can't limit container's height because of how `WebFragment` works in non-fullscreen mode,
-  // so we have to subclass existing PDFViewer and provide different logic for figuring out
-  // what pages are visible - using `window.innerHeight` instead of `element.clientHeight`.
-  // So, it's mostly the same code copy-pasted from pdf_viewer.js, with little changes when we calculate
-  // the bounds of the viewport
-  function CustomPdfViewer(opts) {
-    this.__proto__ = new PDFJS.PDFViewer(opts); // inheriting from this "class"
-    this.scroll = watchScroll(document, this._scrollUpdate.bind(this));
-    this.renderingQueue.setViewer(this);
-
-    this._getVisiblePages = function () {
-      return getVisibleElements(this.container, this._pages, true);
-    }
-  }
-
-  // Mostly copy-pasted from https://github.com/mozilla/pdf.js/blob/f3987bba237c814b9ed314b904263bc36f83eb5b/web/ui_utils.js#L319
-  // with some changes in top/bottom variabbles
-  function getVisibleElements(scrollEl, views) {
-    var sortByVisibility = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-    // Changes start here
-    var top = window.scrollY,
-        bottom = top + window.innerHeight;
-    // Changes end here
-    var left = scrollEl.scrollLeft,
-        right = left + scrollEl.clientWidth;
-    function isElementBottomBelowViewTop(view) {
-      var element = view.div;
-      var elementBottom = element.offsetTop + element.clientTop + element.clientHeight;
-      return elementBottom > top;
-    }
-    var visible = [],
-        view = void 0,
-        element = void 0;
-    var currentHeight = void 0,
-        viewHeight = void 0,
-        hiddenHeight = void 0,
-        percentHeight = void 0;
-    var currentWidth = void 0,
-        viewWidth = void 0;
-    var firstVisibleElementInd = views.length === 0 ? 0 : binarySearchFirstItem(views, isElementBottomBelowViewTop);
-    for (var i = firstVisibleElementInd, ii = views.length; i < ii; i++) {
-      view = views[i];
-      element = view.div;
-      currentHeight = element.offsetTop + element.clientTop;
-      viewHeight = element.clientHeight;
-      if (currentHeight > bottom) {
-        break;
-      }
-      currentWidth = element.offsetLeft + element.clientLeft;
-      viewWidth = element.clientWidth;
-      if (currentWidth + viewWidth < left || currentWidth > right) {
-        continue;
-      }
-      hiddenHeight = Math.max(0, top - currentHeight) + Math.max(0, currentHeight + viewHeight - bottom);
-      percentHeight = (viewHeight - hiddenHeight) * 100 / viewHeight | 0;
-      visible.push({
-        id: view.id,
-        x: currentWidth,
-        y: currentHeight,
-        view: view,
-        percent: percentHeight
-      });
-    }
-    var first = visible[0];
-    var last = visible[visible.length - 1];
-    if (sortByVisibility) {
-      visible.sort(function (a, b) {
-        var pc = a.percent - b.percent;
-        if (Math.abs(pc) > 0.001) {
-          return -pc;
-        }
-        return a.id - b.id;
-      });
-    }
-    return {
-      first: first,
-      last: last,
-      views: visible
-    };
-  }
-
-  // Copy-pasted from https://github.com/mozilla/pdf.js/blob/f3987bba237c814b9ed314b904263bc36f83eb5b/web/ui_utils.js#L242
-  function binarySearchFirstItem(items, condition) {
-    var minIndex = 0;
-    var maxIndex = items.length - 1;
-    if (items.length === 0 || !condition(items[maxIndex])) {
-      return items.length;
-    }
-    if (condition(items[minIndex])) {
-      return minIndex;
-    }
-    while (minIndex < maxIndex) {
-      var currentIndex = minIndex + maxIndex >> 1;
-      var currentItem = items[currentIndex];
-      if (condition(currentItem)) {
-        maxIndex = currentIndex;
-      } else {
-        minIndex = currentIndex + 1;
-      }
-    }
-    return minIndex;
-  }
-
-  // Copy-pasted from https://github.com/mozilla/pdf.js/blob/f3987bba237c814b9ed314b904263bc36f83eb5b/web/ui_utils.js#L188
-  function watchScroll(viewAreaElement, callback) {
-    var debounceScroll = function debounceScroll(evt) {
-      if (rAF) {
-        return;
-      }
-      rAF = window.requestAnimationFrame(function viewAreaElementScrolled() {
-        rAF = null;
-        var currentY = viewAreaElement.scrollTop;
-        var lastY = state.lastY;
-        if (currentY !== lastY) {
-          state.down = currentY > lastY;
-        }
-        state.lastY = currentY;
-        callback(state);
-      });
-    };
-    var state = {
-      down: true,
-      lastY: viewAreaElement.scrollTop,
-      _eventHandler: debounceScroll
-    };
-    var rAF = null;
-    viewAreaElement.addEventListener('scroll', debounceScroll, true);
-    return state;
-  }
-
-  initializePdfViewer();
-}());
+initializePdfViewer();
