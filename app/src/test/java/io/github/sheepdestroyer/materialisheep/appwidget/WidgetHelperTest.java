@@ -46,14 +46,18 @@ public class WidgetHelperTest {
         searchManager = mock(ItemManager.class);
         appWidgetManager = AppWidgetManager.getInstance(context);
         widgetHelper = new WidgetHelper(context);
+        widgetHelper.mItemManager = itemManager;
+        widgetHelper.mSearchManager = searchManager;
     }
 
     @Test
-    public void refreshApi31_setsEmptyView() {
+    public void refresh_setsEmptyView() {
         ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
         int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
 
-        widgetHelper.refreshApi31(appWidgetId, itemManager, searchManager, null);
+        when(itemManager.getStories(any(), anyInt())).thenReturn(null);
+
+        widgetHelper.refresh(appWidgetId);
 
         // getViewFor(id) returns the inflated view based on the last update
         View widgetView = shadowManager.getViewFor(appWidgetId);
@@ -72,7 +76,7 @@ public class WidgetHelperTest {
     }
 
     @Test
-    public void refreshApi31_usesParallelFetching() {
+    public void refresh_fetchesStaleItemsIndividually() {
         ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
         int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
 
@@ -85,12 +89,11 @@ public class WidgetHelperTest {
             stories[i] = item;
         }
         when(itemManager.getStories(any(), anyInt())).thenReturn(stories);
-        when(itemManager.getItems(any(String[].class), anyInt())).thenReturn(new Item[10]);
+        when(itemManager.getItem(anyString(), anyInt())).thenReturn(null);
 
-        widgetHelper.refreshApi31(appWidgetId, itemManager, searchManager, null);
+        widgetHelper.refresh(appWidgetId);
 
-        // Verify that getItems was called 1 time and getItem was called 0 times
-        verify(itemManager, org.mockito.Mockito.times(1)).getItems(any(String[].class), anyInt());
-        verify(itemManager, org.mockito.Mockito.never()).getItem(anyString(), anyInt());
+        // Stale items (localRevision <= 0) are fetched individually from the network
+        verify(itemManager, org.mockito.Mockito.times(10)).getItem(anyString(), anyInt());
     }
 }

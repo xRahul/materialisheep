@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.google.devtools.ksp'
 
 android {
@@ -6,8 +7,9 @@ android {
 
     defaultConfig {
         applicationId "io.github.sheepdestroyer.materialisheep"
-        minSdkVersion 30
+        minSdkVersion 31
         targetSdkVersion 36
+        versionCode 79
         def gitHash = { ->
             try {
                 def hash = "git rev-parse --short HEAD".execute().text.trim()
@@ -16,9 +18,7 @@ android {
                 "unknown"
             }
         }()
-        def buildNumber = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "0")
-        versionCode 80 + buildNumber
-        versionName "3.4.${buildNumber}"
+        versionName "3.3-" + gitHash
         buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         buildConfigField "int", "LATEST_RELEASE", "77"
         buildConfigField "String", "GITHUB_TOKEN", "\"\""
@@ -30,26 +30,6 @@ android {
         resConfigs 'en', 'zh-rCN', 'es'
     }
 
-    signingConfigs {
-        release {}
-    }
-
-    def keystoreBase64 = System.getenv("KEY_STORE_BASE64")
-    def keystorePassword = System.getenv("KEY_STORE_PASSWORD")
-    def keyAlias = System.getenv("KEY_ALIAS")
-    def keyPassword = System.getenv("KEY_PASSWORD")
-
-    if (keystoreBase64 != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
-        def keystoreFile = new File(layout.buildDirectory.get().asFile, "release.jks")
-        keystoreFile.parentFile.mkdirs()
-        keystoreFile.bytes = keystoreBase64.decodeBase64()
-
-        signingConfigs.release.storeFile = keystoreFile
-        signingConfigs.release.storePassword = keystorePassword
-        signingConfigs.release.keyAlias = keyAlias
-        signingConfigs.release.keyPassword = keyPassword
-    }
-
     buildTypes {
         debug {
             minifyEnabled false
@@ -57,9 +37,6 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            if (signingConfigs.release.storeFile != null) {
-                signingConfig signingConfigs.release
-            }
         }
     }
     lintOptions {
@@ -121,10 +98,10 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
-    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'com.google.android.material:material:1.14.0'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'androidx.preference:preference-ktx:1.2.1'
-    implementation 'androidx.browser:browser:1.9.0'
+    implementation 'androidx.browser:browser:1.10.0'
     implementation "com.google.dagger:dagger:$daggerVersion"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
@@ -145,7 +122,7 @@ dependencies {
     kspTest "androidx.room:room-compiler:$roomVersion"
     kspTest "com.google.dagger:dagger-compiler:$daggerVersion"
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-core:5.21.0'
+    testImplementation 'org.mockito:mockito-core:5.23.0'
     testImplementation 'org.robolectric:robolectric:4.16.1'
     testImplementation 'androidx.test:core:1.7.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'

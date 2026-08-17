@@ -74,7 +74,9 @@ public class MaterialisticApplication extends android.app.Application {
                 intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
 
-                System.exit(1);
+                if (!"robolectric".equals(android.os.Build.FINGERPRINT)) {
+                    System.exit(1);
+                }
             });
         }
         Preferences.migrate(this);

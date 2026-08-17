@@ -32,10 +32,10 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
-import androidx.fragment.app.Fragment;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.IntentCompat;
 import androidx.core.os.BundleCompat;
+import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.appcompat.app.ActionBar;
 import android.text.TextUtils;
@@ -202,7 +202,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                 R.string.pref_navigation);
         getOnBackPressedDispatcher().addCallback(this, mBackPressedCallback);
         mFullscreenViewModel = new androidx.lifecycle.ViewModelProvider(this).get(FullscreenViewModel.class);
-        mFullscreenViewModel.getIsFullscreen().observe(this, fullscreen -> {
+        mFullscreenViewModel.getFullscreenEvent().observe(this, fullscreen -> {
             mFullscreen = fullscreen;
             setFullscreen();
         });

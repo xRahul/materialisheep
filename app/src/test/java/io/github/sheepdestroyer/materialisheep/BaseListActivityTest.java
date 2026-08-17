@@ -30,7 +30,6 @@ import androidx.appcompat.widget.SearchView;
 import android.view.MenuItem;
 
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
-import io.reactivex.rxjava3.core.Scheduler;
 
 @RunWith(RobolectricTestRunner.class)
 public class BaseListActivityTest {
@@ -64,7 +63,6 @@ public class BaseListActivityTest {
             fragment.mHnItemManager = mock(ItemManager.class);
             fragment.mAlgoliaItemManager = mock(ItemManager.class);
             fragment.mPopularItemManager = mock(ItemManager.class);
-            fragment.mIoThreadScheduler = mock(Scheduler.class);
             return null;
         }).when(applicationComponent).inject(any(ListFragment.class));
 

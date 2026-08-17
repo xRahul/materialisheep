@@ -72,10 +72,10 @@ public class ComposeActivity extends ThemedActivity {
             mAlertDialogBuilder
                     .init(ComposeActivity.this)
                     .setMessage(R.string.confirm_save_draft)
-                    .setNegativeButton(R.string.no, (dialog, which) -> {
+.setNegativeButton(R.string.discard_draft, (dialog, which) -> {
                         getOnBackPressedDispatcher().onBackPressed();
                     })
-                    .setPositiveButton(R.string.yes, (dialog, which) -> {
+                    .setPositiveButton(R.string.save_draft, (dialog, which) -> {
                         Preferences.saveDraft(ComposeActivity.this, mParentId,
                                 mEditText.getText().toString());
                         getOnBackPressedDispatcher().onBackPressed();

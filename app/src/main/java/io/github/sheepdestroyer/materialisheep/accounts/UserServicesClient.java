@@ -70,7 +70,7 @@ public class UserServicesClient implements UserServices {
     private static final String CREATING_TRUE = "t";
     private static final String DEFAULT_FNOP = "submit-page";
     private static final String DEFAULT_SUBMIT_REDIRECT = "newest";
-    private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>");
+private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>");
     private static final ThreadLocal<Matcher> MATCHER_INPUT = new ThreadLocal<Matcher>() {
         @Override
         protected Matcher initialValue() {
@@ -343,7 +343,7 @@ public class UserServicesClient implements UserServices {
 
     private String getInputValue(String html, String name) {
         // extract <input ... >
-        Matcher matcherInput = MATCHER_INPUT.get();
+Matcher matcherInput = MATCHER_INPUT.get();
         matcherInput.reset(html);
         try {
             while (matcherInput.find()) {
@@ -368,7 +368,7 @@ public class UserServicesClient implements UserServices {
     private String parseLoginError(Response response) {
         try {
             Matcher matcher = PATTERN_CREATE_ERROR_BODY.matcher(response.body().string());
-            return matcher.find() ? matcher.group(1).replaceAll("\\n|\\r|\\t|\\s+", " ").trim() : null;
+return matcher.find() ? matcher.group(1).replaceAll("\\n|\\r|\\t|\\s+", " ").trim() : null;
         } catch (IOException e) {
             return null;
         }

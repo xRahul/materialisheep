@@ -5,13 +5,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class FullscreenViewModel extends ViewModel {
-    private final MutableLiveData<Boolean> isFullscreen = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> fullscreenEvent = new MutableLiveData<>();
 
-    public LiveData<Boolean> getIsFullscreen() {
-        return isFullscreen;
+    public LiveData<Boolean> getFullscreenEvent() {
+        return fullscreenEvent;
     }
 
     public void setFullscreen(boolean fullscreen) {
-        isFullscreen.setValue(fullscreen);
+        fullscreenEvent.setValue(fullscreen);
     }
 }

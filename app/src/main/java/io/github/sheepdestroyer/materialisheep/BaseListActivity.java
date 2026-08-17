@@ -156,7 +156,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         mStoryViewMode = Preferences.getDefaultStoryView(this);
         mExternalBrowser = Preferences.externalBrowserEnabled(this);
         mFullscreenViewModel = new androidx.lifecycle.ViewModelProvider(this).get(FullscreenViewModel.class);
-        mFullscreenViewModel.getIsFullscreen().observe(this, fullscreen -> {
+        mFullscreenViewModel.getFullscreenEvent().observe(this, fullscreen -> {
             mFullscreen = fullscreen;
             setFullscreen();
         });
