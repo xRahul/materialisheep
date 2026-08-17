@@ -51,6 +51,18 @@ The project uses **Dagger 2** for dependency injection.
 6.  `ListFragment` observes state change and updates `StoryRecyclerViewAdapter`.
 7.  `StoryRecyclerViewAdapter` batches item IDs and calls `ItemManager.getItems()` (Async) to fetch details.
 
+### Web Content Rendering
+-   `WebFragment` hosts a `MaterialWebView` (extends `WebView`; package `widget/`) for article rendering.
+-   **Security hardening (fork):** `setJavaScriptEnabled(isRemote)` — JavaScript is disabled for local/offline content and only enabled for remote pages and the bundled PDF.js viewer. A `WebFragmentSecurityTest` enforces this contract.
+-   **Ad blocking:** `AdBlockWebViewClient` + lock-free `AdBlocker` intercept and drop known ad/tracker requests.
+-   **Fullscreen:** `FullscreenViewModel` exposes a `LiveData<Boolean>` `fullscreenEvent()`; `WebFragment`/`ItemActivity`/`BaseListActivity` observe it to expand/collapse the reading view.
+
+### Widgets
+-   `WidgetProvider` (app widget) delegates to `WidgetHelper` (`@Inject` HN + Algolia `ItemManager`s).
+-   `WidgetHelper` builds `RemoteViews.RemoteCollectionItems`, fetches stories via `getStories(...)`, and refreshes stale items individually via `getItem(...)`.
+-   `WidgetRefreshJobService` (JobScheduler) drives periodic refreshes based on the configured widget frequency.
+-   App widgets use `appwidget` (default), `appwidget_dark`, or `appwidget_light` layouts.
+
 ### Error Handling & Observability
 -   **Error Handling:**
     -   `HackerNewsClient` and `AlgoliaClient` catch network exceptions in async callbacks and pass them to `ResponseListener.onError`.
@@ -59,6 +71,7 @@ The project uses **Dagger 2** for dependency injection.
 -   **Logging:**
     -   **Debug Builds:** Full `HttpLoggingInterceptor` (Headers/Body).
     -   **Application Logs:** Critical flows (ViewModel fetch, Adapter updates) are logged via `android.util.Log` in Debug builds.
+-   **Crash Reporting (fork):** Debug builds install a default uncaught-exception handler that launches `CrashActivity`; the handler is bypassed under Robolectric (`Build.FINGERPRINT == "robolectric"`) so unit tests do not self-terminate.
 
 ## 4. Known Technical Debt & Risks
 
@@ -69,8 +82,12 @@ The project uses **Dagger 2** for dependency injection.
 ### Refactoring Status
 -   `StoryListViewModel` was hardened to handle errors and state explicitly.
 -   `HackerNewsClient` was patched to prevent swallowed exceptions.
+-   Upstream deprecation migrations (Parcelable, NotificationCompat, LocalBroadcastManager, Vibrator/Display, Preference APIs, etc.) are merged in; deprecated `SystemUiHelper` was replaced with a `WindowInsetsController`-based implementation.
 
 ## 5. Build System
--   **Gradle:** 9.2.1
+-   **Gradle:** 9.5.1
 -   **JDK:** 21 Required.
--   **Min SDK:** 24.
+-   **Android Gradle Plugin:** 9.2.1
+-   **Kotlin:** 2.3.21 (KSP 2.3.8)
+-   **Min SDK:** 31.
+-   **Dependencies:** Dagger 2.59, OkHttp 5.3.2, Retrofit 3.0.0, Room 2.8.4, Material 1.14.0, Browser 1.10.0, Mockito 5.23.0.

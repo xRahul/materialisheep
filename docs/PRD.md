@@ -71,16 +71,24 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   Open links in an internal WebView.
     *   Support for Chrome Custom Tabs for a seamless browsing experience.
     *   Option to always open in an external browser.
+*   **Security:**
+    *   JavaScript is disabled for local (offline/readability) content and only enabled for remote pages and the bundled PDF viewer, mitigating XSS via injected content.
+    *   Backend API endpoints enforce HTTPS.
+    *   Automated CodeQL analysis runs on every push/PR (Advanced Setup; GitHub Default Setup must stay disabled — see `docs/CODEQL_SETUP.md`).
+
+### 4.7 Sync & Background
+*   Background sync of saved/offline content is scheduled via `JobScheduler`, with low-battery deferred sync.
+*   Home-screen widgets update on a configurable schedule via `WidgetRefreshJobService`.
 
 ## 5. Technical Requirements
 *   **Platform:** Android
-*   **Minimum SDK:** API Level 24 (Android 7.0 Nougat)
-*   **Target SDK:** API Level 36 (Android 16)
+*   **Minimum SDK:** API Level 31 (Android 12)
+*   **Target/Compile SDK:** API Level 36 (Android 16)
 *   **Architecture:**
     *   **Pattern:** MVVM (Model-View-ViewModel) with Clean Architecture principles.
     *   **Language:** Kotlin (primary) and Java.
     *   **Dependency Injection:** Dagger 2.
-    *   **Networking:** Retrofit 2 with OkHttp.
+    *   **Networking:** Retrofit 3 with OkHttp 5.
     *   **Persistence:** Room Database.
     *   **Concurrency:** Hybrid: RxJava 3 (Data Layer) and Kotlin Coroutines (ViewModel).
     *   **Observability:** Comprehensive logging of user flows, errors, and UI states (Debug builds).
@@ -89,7 +97,7 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
 *   **Modernization:**
     *   Complete migration of legacy Java code to Kotlin.
     *   Adopt Jetpack Compose for UI development to replace XML layouts.
-    *   Implement "Edge-to-Edge" UI design.
+    *   Full "Edge-to-Edge" UI design.
 *   **Features:**
     *   Enhanced tablet support with multi-pane layouts.
     *   Improved Algolia search caching.
