@@ -77,7 +77,12 @@ public abstract class ThemedActivity extends AppCompatActivity {
             ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
                 Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-                return windowInsets;
+                // Consume: single inset application here. On API 35+ edge-to-edge is
+                // enforced, so unconsumed insets would also reach the material
+                // fitsSystemWindows children (AppBarLayout top, bottom-anchored FABs),
+                // double-padding them. On API <35 decor fitting yields zero insets,
+                // so this is inert there.
+                return WindowInsetsCompat.CONSUMED;
             });
             ViewCompat.requestApplyInsets(root);
         }
