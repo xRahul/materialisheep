@@ -39,15 +39,22 @@ jobs:
 
       - name: Determine & Bump Version
         id: version_info
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          CUSTOM_VERSION: ${{ github.event.inputs.custom_version }}
         run: |
+          set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            BUMP_ARGS="--type ${{ github.event.inputs.bump_type }}"
-            if [ -n "${{ github.event.inputs.custom_version }}" ]; then
-              BUMP_ARGS="$BUMP_ARGS --custom-version ${{ github.event.inputs.custom_version }}"
+            BUMP_ARGS="--type $BUMP_TYPE"
+            if [ -n "$CUSTOM_VERSION" ]; then
+              BUMP_ARGS="$BUMP_ARGS --custom-version $CUSTOM_VERSION"
             fi
             
             # Execute bump and capture outputs
-            BUMP_OUTPUT=$(python3 scripts/release_helper.py bump $BUMP_ARGS)
+            if ! BUMP_OUTPUT=$(python3 scripts/release_helper.py bump $BUMP_ARGS); then
+              echo "::error::Version bump calculation failed"
+              exit 1
+            fi
             echo "$BUMP_OUTPUT"
             
             TAG=$(echo "$BUMP_OUTPUT" | grep "^BUMPED_TAG=" | cut -d'=' -f2)
@@ -61,15 +68,15 @@ jobs:
             git push origin HEAD:${{ github.ref_name }}
             git push origin "${TAG}"
             
-            echo "tag=${TAG}" >> $GITHUB_OUTPUT
-            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           else
             TAG="${{ github.ref_name }}"
             VERSION="${TAG#v}"
-            # Sync version.properties for build
+            # Sync version.properties for build without unnecessary code bump
             python3 scripts/release_helper.py bump --custom-version "$VERSION" || true
-            echo "tag=${TAG}" >> $GITHUB_OUTPUT
-            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up JDK 21

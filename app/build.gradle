@@ -4,7 +4,7 @@ apply plugin: 'com.google.devtools.ksp'
 def versionPropsFile = rootProject.file("version.properties")
 def versionProps = new Properties()
 if (versionPropsFile.canRead()) {
-    versionProps.load(new FileInputStream(versionPropsFile))
+    versionPropsFile.withInputStream { is -> versionProps.load(is) }
 }
 def verMajor = versionProps['VERSION_MAJOR'] ?: "3"
 def verMinor = versionProps['VERSION_MINOR'] ?: "4"
@@ -50,7 +50,7 @@ android {
     def keyAlias = System.getenv("KEY_ALIAS")
     def keyPassword = System.getenv("KEY_PASSWORD")
 
-    if (keystoreBase64 != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+    if (keystoreBase64?.trim() && keystorePassword?.trim() && keyAlias?.trim() && keyPassword?.trim()) {
         def keystoreFile = new File(layout.buildDirectory.get().asFile, "release.jks")
         keystoreFile.parentFile.mkdirs()
         keystoreFile.bytes = keystoreBase64.decodeBase64()

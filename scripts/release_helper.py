@@ -80,12 +80,27 @@ def calculate_bump(
         else:
             raise ValueError(f"Unknown bump type: {bump_type}. Choose 'patch', 'minor', or 'major'.")
 
-    new_code = custom_code if custom_code is not None else current_code + 1
+    if custom_code is not None:
+        new_code = custom_code
+    elif custom_version and (new_major, new_minor, new_patch) == (current_major, current_minor, current_patch):
+        # Do not increment versionCode if syncing identical version
+        new_code = current_code
+    else:
+        new_code = current_code + 1
+
     return new_major, new_minor, new_patch, new_code
 
 
 def run_git(cmd: List[str]) -> str:
-    result = subprocess.run(["git"] + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+    result = subprocess.run(
+        ["git"] + cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=True,
+    )
     return result.stdout.strip()
 
 
@@ -95,8 +110,10 @@ def get_previous_tag(current_tag: Optional[str] = None) -> Optional[str]:
         tags = [t.strip() for t in tags_output.splitlines() if t.strip() and re.match(r"^v?\d+\.\d+", t.strip())]
         if not tags:
             return None
-        if current_tag and current_tag in tags:
-            idx = tags.index(current_tag)
+        clean_curr = current_tag.lstrip("v").strip() if current_tag else None
+        normalized = [t.lstrip("v").strip() for t in tags]
+        if clean_curr and clean_curr in normalized:
+            idx = normalized.index(clean_curr)
             if idx + 1 < len(tags):
                 return tags[idx + 1]
             return None
@@ -107,17 +124,17 @@ def get_previous_tag(current_tag: Optional[str] = None) -> Optional[str]:
 
 def categorize_commit(subject: str) -> str:
     sub = subject.strip().lower()
-    if any(sub.startswith(p) for p in ["feat:", "feat(", "feature:", "feature("]) or "✨" in sub:
+    if re.match(r"^(feat|feature)(\(.*\))?!?:", sub) or "✨" in sub:
         return "features"
-    if any(sub.startswith(p) for p in ["fix:", "fix(", "bug:", "bugfix:"]) or "🐛" in sub or "hotfix" in sub:
+    if re.match(r"^(fix|bug|bugfix)(\(.*\))?!?:", sub) or "🐛" in sub or "hotfix" in sub:
         return "fixes"
-    if any(sub.startswith(p) for p in ["perf:", "perf(", "optimize:", "⚡"]):
+    if re.match(r"^(perf|optimize)(\(.*\))?!?:", sub) or "⚡" in sub:
         return "performance"
-    if any(sub.startswith(p) for p in ["security:", "sec:", "refactor:", "refactor(", "🧹", "🛡️"]):
+    if re.match(r"^(security|sec|refactor)(\(.*\))?!?:", sub) or "🧹" in sub or "🛡️" in sub:
         return "quality"
-    if any(sub.startswith(p) for p in ["deps:", "dependencies:", "build:", "build(", "ci:", "ci(", "chore:", "chore("]):
+    if re.match(r"^(deps|dependencies|build|ci|chore)(\(.*\))?!?:", sub):
         return "maintenance"
-    if any(sub.startswith(p) for p in ["test:", "test(", "docs:", "doc:"]) or "🧪" in sub:
+    if re.match(r"^(test|docs|doc)(\(.*\))?!?:", sub) or "🧪" in sub:
         return "tests_docs"
     return "other"
 
@@ -147,7 +164,15 @@ def generate_changelog(
     repo: Optional[str] = "xRahul/materialisheep",
     apk_dir: Optional[str] = None,
 ) -> str:
-    range_spec = f"{prev_tag}..HEAD" if prev_tag else "HEAD"
+    # Check if current_tag exists in git to scope range
+    target = "HEAD"
+    try:
+        run_git(["rev-parse", "--verify", f"refs/tags/{current_tag}"])
+        target = current_tag
+    except Exception:
+        pass
+
+    range_spec = f"{prev_tag}..{target}" if prev_tag else target
     try:
         log_raw = run_git(["log", range_spec, '--pretty=format:%H%x09%s%x09%an'])
     except Exception:
@@ -165,15 +190,21 @@ def generate_changelog(
 
     if log_raw:
         for line in log_raw.splitlines():
-            parts = line.split("\t")
-            if len(parts) >= 3:
-                c_hash, c_subject, c_author = parts[0], parts[1], parts[2]
-                # Filter out release commits
-                if re.match(r"^chore\(release\):", c_subject, re.IGNORECASE):
-                    continue
-                cat_key = categorize_commit(c_subject)
-                formatted_line = format_commit_line(c_hash, c_subject, c_author, repo)
-                categories[cat_key][1].append(formatted_line)
+            if not line.strip() or len(line) < 42:
+                continue
+            c_hash = line[:40]
+            remainder = line[41:] if line[40] == "\t" else line[40:]
+            if "\t" in remainder:
+                c_subject, c_author = remainder.rsplit("\t", 1)
+            else:
+                c_subject, c_author = remainder, "unknown"
+
+            # Filter out release commits
+            if re.match(r"^chore\(release\):", c_subject, re.IGNORECASE):
+                continue
+            cat_key = categorize_commit(c_subject)
+            formatted_line = format_commit_line(c_hash, c_subject, c_author, repo)
+            categories[cat_key][1].append(formatted_line)
 
     lines = []
     lines.append(f"## Release {current_tag}")
@@ -225,15 +256,19 @@ def run_tests() -> None:
     assert calculate_bump(3, 4, 13, 93, "minor") == (3, 5, 0, 94)
     # Test 3: Major bump
     assert calculate_bump(3, 4, 13, 93, "major") == (4, 0, 0, 94)
-    # Test 4: Custom version
+    # Test 4: Custom version bump
     assert calculate_bump(3, 4, 13, 93, "patch", custom_version="4.1.2") == (4, 1, 2, 94)
-    # Test 5: Categorize commit
+    # Test 5: Custom version sync (no bump if same)
+    assert calculate_bump(3, 4, 13, 93, "patch", custom_version="3.4.13") == (3, 4, 13, 93)
+    # Test 6: Categorize commits including breaking change syntax
     assert categorize_commit("feat(ui): add dark mode switch") == "features"
+    assert categorize_commit("feat!: breaking api change") == "features"
+    assert categorize_commit("fix(auth)!: critical auth fix") == "fixes"
     assert categorize_commit("fix: resolve crash on startup") == "fixes"
     assert categorize_commit("perf: pre-compile regex") == "performance"
     assert categorize_commit("deps: bump dagger") == "maintenance"
-    # Test 6: PR formatting
-    line = format_commit_line("1234567890", "feat: add feature (#42)", "author", "xRahul/materialisheep")
+    # Test 7: PR formatting
+    line = format_commit_line("1234567890123456789012345678901234567890", "feat: add feature (#42)", "author", "xRahul/materialisheep")
     assert "[#42](https://github.com/xRahul/materialisheep/pull/42)" in line
     print("All release_helper tests passed successfully!")
 
