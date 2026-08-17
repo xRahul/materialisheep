@@ -171,7 +171,6 @@
         <activity
             android:name=".SettingsActivity"
             android:label="@string/action_settings"
-            android:permission="android.permission.WRITE_SECURE_SETTINGS"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
