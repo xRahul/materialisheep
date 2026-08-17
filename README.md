@@ -49,7 +49,7 @@ The codebase is organized into the following packages:
 
 1.  Clone the repository:
     ```
-    git clone https://github.com/sheepdestroyer/materialisheep.git
+    git clone https://github.com/xRahul/materialisheep.git
     ```
 2.  Build the project:
     ```

@@ -38,7 +38,7 @@ To eliminate "black box" behavior, the following logging was implemented (active
 
 ## 4. Remaining Risks / Technical Debt
 
--   **Uncancellable Requests:** The `ItemManager` interface does not return a `Disposable` or `Cancellable` token. If a user exits a screen while a network request is pending, the request continues to completion (though the callback is safely ignored via `WeakReference`). This wastes battery/data but does not cause crashes. Fixing this requires a breaking change to the core `ItemManager` interface.
+-   **Lifecycle-Managed Requests:** The `ItemManager` interface returns active `Disposable` references across `getStories()`, `getItem()`, and `getItems()`, enabling callers (`WebFragment`, `ItemActivity`, `FavoriteFragment`, `SinglePageItemRecyclerViewAdapter`) to cancel in-flight network requests during lifecycle teardown.
 -   **Manual Dependency Injection:** Some UI components (like `ListFragment`) instantiate ViewModels manually using a custom Factory instead of fully utilizing Dagger map multibinding or Hilt.
 
 ## 5. Conclusion

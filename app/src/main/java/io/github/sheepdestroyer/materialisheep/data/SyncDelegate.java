@@ -149,17 +149,20 @@ public class SyncDelegate {
             return;
         }
         if (!TextUtils.isEmpty(job.id)) {
-            JobInfo.Builder builder = new JobInfo.Builder(Long.valueOf(job.id).intValue(),
-                    new ComponentName(context.getPackageName(),
-                            ItemSyncJobService.class.getName()))
-                    .setRequiredNetworkType(Preferences.Offline.isWifiOnly(context) ? JobInfo.NETWORK_TYPE_UNMETERED
-                            : JobInfo.NETWORK_TYPE_ANY)
-                    .setExtras(job.toPersistableBundle());
-            if (Preferences.Offline.currentConnectionEnabled(context)) {
-                builder.setOverrideDeadline(0);
+            try {
+                JobInfo.Builder builder = new JobInfo.Builder(Long.valueOf(job.id).intValue(),
+                        new ComponentName(context.getPackageName(),
+                                ItemSyncJobService.class.getName()))
+                        .setRequiredNetworkType(Preferences.Offline.isWifiOnly(context) ? JobInfo.NETWORK_TYPE_UNMETERED
+                                : JobInfo.NETWORK_TYPE_ANY)
+                        .setExtras(job.toPersistableBundle());
+                if (Preferences.Offline.currentConnectionEnabled(context)) {
+                    builder.setOverrideDeadline(0);
+                }
+                ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE))
+                        .schedule(builder.build());
+            } catch (NumberFormatException ignored) {
             }
-            ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE))
-                    .schedule(builder.build());
         } else {
             Bundle extras = new Bundle(job.toBundle());
             extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
@@ -185,7 +188,10 @@ public class SyncDelegate {
         mJob = job;
         if (!TextUtils.isEmpty(mJob.id)) {
             Message message = Message.obtain(mHandler, this::stopSync);
-            message.what = Integer.valueOf(mJob.id);
+            try {
+                message.what = Long.valueOf(mJob.id).intValue();
+            } catch (NumberFormatException ignored) {
+            }
             mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
             mSyncProgress = new SyncProgress(mJob);
             mDisposables.add(syncRx(mJob.id)
@@ -394,7 +400,12 @@ public class SyncDelegate {
     }
 
     private void showProgress() {
-        mNotificationManager.notify(Integer.valueOf(mJob.id), mNotificationBuilder
+        int id = 0;
+        try {
+            id = Long.valueOf(mJob.id).intValue();
+        } catch (NumberFormatException ignored) {
+        }
+        mNotificationManager.notify(id, mNotificationBuilder
                 .setContentTitle(mSyncProgress.title)
                 .setContentText(mContext.getString(R.string.download_in_progress))
                 .setContentIntent(getItemActivity(mJob.id))
@@ -418,10 +429,17 @@ public class SyncDelegate {
 
     void stopSync() {
         mDisposables.clear();
-        mJob.connectionEnabled = false;
-        int id = Integer.valueOf(mJob.id);
-        mNotificationManager.cancel(id);
-        mHandler.removeMessages(id);
+        if (mJob != null) {
+            mJob.connectionEnabled = false;
+            if (!TextUtils.isEmpty(mJob.id)) {
+                try {
+                    int id = Long.valueOf(mJob.id).intValue();
+                    mNotificationManager.cancel(id);
+                    mHandler.removeMessages(id);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
         if (mWebView != null) {
             mHandler.post(() -> {
                 if (mWebView != null) {

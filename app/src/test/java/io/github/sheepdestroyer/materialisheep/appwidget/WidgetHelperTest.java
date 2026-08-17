@@ -1,7 +1,9 @@
 package io.github.sheepdestroyer.materialisheep.appwidget;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,8 +12,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.widget.ListView;
 
@@ -94,5 +98,28 @@ public class WidgetHelperTest {
 
         // Stale items (localRevision <= 0) are fetched individually from the network
         verify(itemManager, org.mockito.Mockito.times(10)).getItem(anyString(), anyInt());
+    }
+
+    @Test
+    public void refresh_setsPendingIntentTemplateWithMutableFlag() {
+        ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
+        int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
+
+        when(itemManager.getStories(any(), anyInt())).thenReturn(null);
+
+        widgetHelper.refresh(appWidgetId);
+
+        PendingIntent pendingIntent =
+            PendingIntent.getActivity(
+                context,
+                0,
+                new Intent(Intent.ACTION_VIEW),
+                PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_MUTABLE);
+        assertNotNull("PendingIntent template should be registered", pendingIntent);
+        assertFalse("PendingIntent should be mutable to allow fill-in intents", pendingIntent.isImmutable());
+
+        int flags = shadowOf(pendingIntent).getFlags();
+        assertTrue("PendingIntent should have FLAG_MUTABLE", (flags & PendingIntent.FLAG_MUTABLE) != 0);
+        assertTrue("PendingIntent should have FLAG_UPDATE_CURRENT", (flags & PendingIntent.FLAG_UPDATE_CURRENT) != 0);
     }
 }

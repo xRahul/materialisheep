@@ -16,13 +16,11 @@
 
 package io.github.sheepdestroyer.materialisheep.appwidget;
 
-import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
 import static io.github.sheepdestroyer.materialisheep.DataModule.ALGOLIA;
 import static io.github.sheepdestroyer.materialisheep.DataModule.HN;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.app.job.JobInfo;
@@ -61,7 +59,6 @@ public class WidgetHelper {
   private static final int DEFAULT_FREQUENCY_HOUR = 6;
   private final Context mContext;
   private final AppWidgetManager mAppWidgetManager;
-  private final AlarmManager mAlarmManager;
   private static final String SCORE = "%1$dp";
   private static final String COMMENT = "%1$dc";
   private static final String SUBTITLE_SEPARATOR = " - ";
@@ -84,7 +81,6 @@ public class WidgetHelper {
     mContext = context;
     ((MaterialisticApplication) context.getApplicationContext()).applicationComponent.inject(this);
     mAppWidgetManager = AppWidgetManager.getInstance(context);
-    mAlarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
   }
 
   /**
@@ -270,7 +266,10 @@ public class WidgetHelper {
     remoteViews.setPendingIntentTemplate(
         android.R.id.list,
         PendingIntent.getActivity(
-            mContext, 0, new Intent(Intent.ACTION_VIEW), PendingIntent.FLAG_IMMUTABLE));
+            mContext,
+            0,
+            new Intent(Intent.ACTION_VIEW),
+            PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
   }
 
   private SpannableString getSpan(int value, String format, int hotThreshold) {

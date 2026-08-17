@@ -616,6 +616,13 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         return mAdapter != null ? mAdapter.findFragment(getSupportFragmentManager(), position) : null;
     }
 
+    public boolean isCurrentPage(Fragment fragment) {
+        if (mViewPager == null) {
+            return false;
+        }
+        return getFragment(mViewPager.getCurrentItem()) == fragment;
+    }
+
     @Synthetic
     void toggleFabs(boolean isComments,
             FloatingActionButton navigationFab,

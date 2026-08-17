@@ -75,9 +75,9 @@ The project uses **Dagger 2** for dependency injection.
 
 ## 4. Known Technical Debt & Risks
 
-### Fragility
--   **RxJava Subscriptions:** `ItemManager` methods do not return `Disposable`. Async requests are "fire and forget". `WeakReference` in listeners prevents UI leaks, but background work cannot be cancelled, leading to potential resource waste.
--   **Blocking Calls:** `StoryListViewModel` relies on blocking calls (`execute()`) which bypasses some RxJava composition benefits.
+### Concurrency & Lifecycle
+-   **RxJava Subscriptions:** `ItemManager` methods return active `Disposable` instances. ViewModels and Fragments bind disposables to lifecycle scopes (`CompositeDisposable`, `viewModelScope`) to cancel pending requests when views detach.
+-   **Blocking Calls:** `StoryListViewModel` relies on blocking calls (`execute()`) within `Dispatchers.IO` coroutines.
 
 ### Refactoring Status
 -   `StoryListViewModel` was hardened to handle errors and state explicitly.

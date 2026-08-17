@@ -2,6 +2,7 @@ package io.github.sheepdestroyer.materialisheep.data;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import androidx.test.core.app.ApplicationProvider;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.TestScheduler;
@@ -13,6 +14,7 @@ import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 import retrofit2.Call;
 import java.io.IOException;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -99,5 +101,31 @@ public class SyncDelegateTest {
 
         verify(syncQueueDao).insert(any(MaterialisticDatabase.SyncQueueEntry.class));
         verify(restService, never()).networkItemRx(jobId);
+    }
+
+    @Test
+    public void performSync_batchSyncWithNullJobId_finishesWithoutException() {
+        SyncDelegate.Job job = new SyncDelegate.Job(new Bundle());
+        job.connectionEnabled = true;
+
+        when(syncQueueDao.getAll()).thenReturn(Collections.singletonList("456"));
+        when(restService.cachedItemRx("456")).thenReturn(Observable.just(new HackerNewsItem(456)));
+        when(restService.networkItemRx("456")).thenReturn(Observable.just(new HackerNewsItem(456)));
+
+        syncDelegate.performSync(job);
+
+        testScheduler.triggerActions();
+
+        verify(syncQueueDao).getAll();
+        verify(restService).cachedItemRx("456");
+    }
+
+    @Test
+    public void stopSync_withNullJobId_doesNotThrow() {
+        SyncDelegate.Job job = new SyncDelegate.Job(new Bundle());
+        job.connectionEnabled = true;
+        syncDelegate.performSync(job);
+
+        syncDelegate.stopSync();
     }
 }

@@ -19,18 +19,16 @@
     - [x] Update `Vibrator` usage to `VibrationEffect`
     - [x] Adopt `WindowMetrics` and `WindowInsetsController`
     - [x] Implement Edge-to-Edge and Predictive Back support
-- [ ] **Phase 3: Widget & View Cleanup** <!-- id: 19 -->
-    - Update `RemoteViews` adapter API
-    - Fix `setLayoutFrozen` (RecyclerView) and `BottomSheetCallback`
-    - Update Preferences to AndroidX Preferences
+- [x] **Phase 3: Widget & View Cleanup** <!-- id: 19 -->
+    - [x] Update `RemoteViews` adapter API (`RemoteCollectionItems` + mutable template)
+    - [x] Fix `setLayoutFrozen` (RecyclerView) and `BottomSheetCallback`
+    - [x] Update Preferences to AndroidX Preferences
 - [x] **Phase 4: Architecture Components** <!-- id: 20 -->
     - [x] Remove unused `LocalBroadcastManager`
     - [x] Replace regex HTML scraping with Jsoup DOM parser
     - [x] Fix static mutable thread-safety risks
 
 ## Future Work
-- [ ] Consider upgrading `minSdk` to 28 for architectural benefits <!-- id: 14 -->
-    - Pros: native BiometricPrompt, Display Cutout support, fewer SDK checks
-    - Cons: reduces reach by ~5%
+- [ ] Implement Jetpack Compose UI migration roadmap <!-- id: 14 -->
 - [ ] Implement Algolia ETag persistence with LruCache <!-- id: 15 -->
 - [ ] Adjust NetworkModule caching strategy <!-- id: 16 -->

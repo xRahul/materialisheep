@@ -121,9 +121,8 @@ class FavoriteManager @Inject constructor(
   }
 
   override fun detach() {
-    if (cursor != null) {
-      cursor = null
-    }
+    cursor?.close()
+    cursor = null
     loader = null
   }
 
@@ -378,8 +377,8 @@ class FavoriteManager @Inject constructor(
       get() = Favorite(
           getString(idxId),
           getString(idxUrl),
-          getString(idxTitle),
-          getString(idxTime).toLong())
+          if (idxTitle >= 0 && !isNull(idxTitle)) getString(idxTitle) else null,
+          if (idxTime >= 0 && !isNull(idxTime)) getString(idxTime)?.toLongOrNull() ?: 0L else 0L)
   }
 
   inner class FavoriteRoomLoader(private val filter: String?,
@@ -392,7 +391,9 @@ class FavoriteManager @Inject constructor(
           .subscribeOn(ioScheduler)
           .observeOn(AndroidSchedulers.mainThread())
           .subscribe {
+            val oldCursor = cursor
             cursor = Cursor(it)
+            oldCursor?.close()
             observer.onChanged()
           }
     }

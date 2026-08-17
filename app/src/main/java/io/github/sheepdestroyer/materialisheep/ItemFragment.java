@@ -37,6 +37,7 @@ import javax.inject.Named;
 import static io.github.sheepdestroyer.materialisheep.DataModule.HN;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
@@ -114,12 +115,12 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             mCacheMode = savedInstanceState.getInt(STATE_CACHE_MODE, ItemManager.MODE_DEFAULT);
-            mItem = savedInstanceState.getParcelable(STATE_ITEM);
+            mItem = BundleCompat.getParcelable(savedInstanceState, STATE_ITEM, Item.class);
             mItemId = savedInstanceState.getString(STATE_ITEM_ID);
-            mAdapterItems = savedInstanceState.getParcelable(STATE_ADAPTER_ITEMS);
+            mAdapterItems = BundleCompat.getParcelable(savedInstanceState, STATE_ADAPTER_ITEMS, SinglePageItemRecyclerViewAdapter.SavedState.class);
         } else {
             mCacheMode = getArguments().getInt(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT);
-            WebItem item = getArguments().getParcelable(EXTRA_ITEM);
+            WebItem item = BundleCompat.getParcelable(getArguments(), EXTRA_ITEM, WebItem.class);
             if (item instanceof Item) {
                 mItem = (Item) item;
             }

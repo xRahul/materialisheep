@@ -75,6 +75,64 @@ class FavoriteManagerTest {
         verify(database, times(3)).setLiveValue(Mockito.any(Uri::class.java))
     }
 
+    @Test
+    fun testFavoriteRoomLoader_closesPreviousCursorOnReload() {
+        val cursor1 = Mockito.mock(android.database.Cursor::class.java)
+        val cursor2 = Mockito.mock(android.database.Cursor::class.java)
+        `when`(savedStoriesDao.selectAllToCursor()).thenReturn(cursor1, cursor2)
+
+        val observer = Mockito.mock(LocalItemManager.Observer::class.java)
+        favoriteManager.attach(observer, null)
+
+        verify(observer, times(1)).onChanged()
+        verify(cursor1, never()).close()
+
+        // Reload
+        val loader = favoriteManager.FavoriteRoomLoader(null, observer)
+        loader.load()
+
+        verify(cursor1, times(1)).close()
+        verify(cursor2, never()).close()
+    }
+
+    @Test
+    fun testDetach_closesCursor() {
+        val cursor = Mockito.mock(android.database.Cursor::class.java)
+        `when`(savedStoriesDao.selectAllToCursor()).thenReturn(cursor)
+
+        val observer = Mockito.mock(LocalItemManager.Observer::class.java)
+        favoriteManager.attach(observer, null)
+
+        favoriteManager.detach()
+
+        verify(cursor, times(1)).close()
+    }
+
+    @Test
+    fun testCursor_handlesMissingOrNullTitleAndTime() {
+        val cursor = Mockito.mock(android.database.Cursor::class.java)
+        `when`(cursor.count).thenReturn(1)
+        `when`(cursor.moveToPosition(0)).thenReturn(true)
+        `when`(cursor.getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_ITEM_ID)).thenReturn(0)
+        `when`(cursor.getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_URL)).thenReturn(1)
+        `when`(cursor.getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TITLE)).thenReturn(-1)
+        `when`(cursor.getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TIME)).thenReturn(-1)
+        `when`(cursor.getString(0)).thenReturn("item1")
+        `when`(cursor.getString(1)).thenReturn("http://example.com")
+
+        `when`(savedStoriesDao.selectAllToCursor()).thenReturn(cursor)
+
+        val observer = Mockito.mock(LocalItemManager.Observer::class.java)
+        favoriteManager.attach(observer, null)
+
+        val item = favoriteManager.getItem(0)
+        org.junit.Assert.assertNotNull(item)
+        org.junit.Assert.assertEquals("item1", item?.id)
+        org.junit.Assert.assertEquals("http://example.com", item?.url)
+        org.junit.Assert.assertNull(item?.displayedTitle)
+        org.junit.Assert.assertEquals(0L, item?.time)
+    }
+
     private fun setDatabaseInstance(instance: MaterialisticDatabase?) {
         try {
             val field: Field = MaterialisticDatabase::class.java.getDeclaredField("sInstance")

@@ -102,10 +102,14 @@ public class UserServicesClient implements UserServices {
     public Disposable login(String username, String password, boolean createAccount, Callback callback) {
         return execute(postLogin(username, password, createAccount))
                 .flatMap(response -> {
-                    if (response.code() == HttpURLConnection.HTTP_OK) {
-                        return Observable.error(new UserServices.Exception(parseLoginError(response)));
+                    try {
+                        if (response.code() == HttpURLConnection.HTTP_OK) {
+                            return Observable.error(new UserServices.Exception(parseLoginError(response)));
+                        }
+                        return Observable.just(response.code() == HttpURLConnection.HTTP_MOVED_TEMP);
+                    } finally {
+                        response.close();
                     }
-                    return Observable.just(response.code() == HttpURLConnection.HTTP_MOVED_TEMP);
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(callback::onDone, callback::onError);
@@ -130,7 +134,13 @@ public class UserServicesClient implements UserServices {
             mVoteDisposable.dispose();
         }
         mVoteDisposable = execute(postVote(credentials.first, credentials.second, itemId))
-                .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
+                .map(response -> {
+                    try {
+                        return response.code() == HttpURLConnection.HTTP_MOVED_TEMP;
+                    } finally {
+                        response.close();
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(callback::onDone, callback::onError);
         return true;
@@ -152,7 +162,13 @@ public class UserServicesClient implements UserServices {
             return Disposable.empty();
         }
         return execute(postReply(parentId, text, credentials.first, credentials.second))
-                .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
+                .map(response -> {
+                    try {
+                        return response.code() == HttpURLConnection.HTTP_MOVED_TEMP;
+                    } finally {
+                        response.close();
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(callback::onDone, callback::onError);
     }
@@ -184,9 +200,11 @@ public class UserServicesClient implements UserServices {
          */
         // fetch submit page with given credentials
         return execute(postSubmitForm(credentials.first, credentials.second))
-                .flatMap(response -> response.code() != HttpURLConnection.HTTP_MOVED_TEMP ? Observable.just(response)
-                        : Observable.error(new IOException("Login failed, received redirect")))
                 .flatMap(response -> {
+                    if (response.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                        response.close();
+                        return Observable.error(new IOException("Login failed, received redirect"));
+                    }
                     try {
                         return Observable.just(new String[] {
                                 response.header(HEADER_SET_COOKIE),

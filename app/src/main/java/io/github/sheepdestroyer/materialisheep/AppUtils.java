@@ -730,13 +730,9 @@ public class AppUtils {
    * @return The display height in pixels.
    */
   public static int getDisplayHeight(Context context) {
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-      WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-      WindowMetrics metrics = wm.getCurrentWindowMetrics();
-      return metrics.getBounds().height();
-    } else {
-      return context.getResources().getDisplayMetrics().heightPixels;
-    }
+    WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+    WindowMetrics metrics = wm.getCurrentWindowMetrics();
+    return metrics.getBounds().height();
   }
 
   /**

@@ -1,19 +1,19 @@
 # Materialisheep Comprehensive Issues & Audit Report
 
-This document records the exhaustive, multi-role review and adversarial **Gauntlet-Loop** audit of the `materialisheep` repository (codebase, architecture, UI/UX, security, build systems, CI/CD pipelines, test coverage, and documentation), along with completed remediations and resolutions.
+This document records the exhaustive, multi-role review and adversarial **Gauntlet-Loop** audit of the `materialisheep` repository (codebase, architecture, UI/UX, security, build systems, CI/CD pipelines, test coverage, and documentation), along with completed remediations and newly verified findings.
 
 ---
 
 ## Executive Summary & Taxonomy
 
-### Issues by Category & Severity (All Remediated)
-| Category | Total Issues | Status | Key Remediations |
-|---|---|---|---|
-| **Critical** | 5 | **Resolved** | Options menu dispatch restored, `WRITE_SECURE_SETTINGS` removed, Readability 0.5.0 + pdf.js 4.10.38 upgraded, RxJava subscriptions managed via Disposables, GitHub Release tag fixed |
-| **High** | 7 | **Resolved** | Thread-safe singletons (`FontCache`, `Preferences`, `AlgoliaClient`), Edge-to-Edge insets consumed, Android 14+ Predictive Back enabled, Jsoup HTML DOM parser adopted, Robolectric multi-SDK matrix restored, Android UI instrumentation tests added |
-| **Medium** | 5 | **Resolved** | Removed dead `localbroadcastmanager`, AGP 9.2 built-in Kotlin migrated, Room `exportSchema = true` configured via KSP, Background web cache service call replaced with safe main Handler dispatch and WebView cleanup, Comment indentation clamped |
-| **Low / Tech Debt** | 2 | **Resolved** | Material You Dynamic Theming added via `DynamicColors` on Android 12+, Comment indentation squeeze eliminated |
-| **Doc Sync Errors** | 4 | **Resolved** | `PROJECT_KNOWLEDGE.md`, `CI.md`, `AGENTS.md`, and `TODO.md` fully synchronized with current stack |
+### Issues by Category & Severity
+| Category | Historical Resolved | Newly Audited & Verified | Total Issues | Key Focus Areas |
+|---|---|---|---|---|
+| **Critical** | 8 | 0 | 8 | Options menu, Security permissions, Disposables, Widget click navigation, Sync queue crash, CodeQL SARIF upload |
+| **High** | 8 | 0 | 8 | Singleton safety, Insets, Predictive back, Jsoup parsing, Back button dispatch, OkHttp response leaks |
+| **Medium** | 7 | 0 | 7 | Dead dependencies, Room schema, Background web cache, Comment squeeze, Cursor leak, PDF stream read safety |
+| **Low / Tech Debt** | 3 | 0 | 3 | Dynamic theming, Obsolete SDK version checks (API 30 on minSdk 31), Deprecated Bundle Parcelable APIs |
+| **Doc Sync Errors** | 7 | 0 | 7 | Min/target SDK sync, `ItemManager` `Disposable` status, `TODO.md` pruning, Clone repo URLs |
 
 ---
 
@@ -61,6 +61,32 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
 
 ---
 
+### [CRIT-06] Home Screen Widget Uses `FLAG_IMMUTABLE` with `setPendingIntentTemplate`, Breaking Item Clicks (Android 12+)
+- **Severity:** `Critical`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`WidgetHelper.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/appwidget/WidgetHelper.java#L268-L273)
+  - [`WidgetHelperTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/appwidget/WidgetHelperTest.java)
+- **Problem Statement:**
+  In [`WidgetHelper.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/appwidget/WidgetHelper.java), `remoteViews.setPendingIntentTemplate` was initialized with `PendingIntent.FLAG_IMMUTABLE`. On Android 12+ (`minSdk = 31`), immutable PendingIntents prevent the Android framework from applying fill-in data (`setOnClickFillInIntent`), breaking story click navigation from the home screen widget.
+- **Resolution:**
+  Updated the template PendingIntent flag to `PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT`, removed unused `mAlarmManager` field, and added Robolectric multi-SDK unit tests verifying mutable template flag behavior.
+
+---
+
+### [CRIT-07] `SyncDelegate.stopSync()` Throws `NumberFormatException` on Null `job.id` During Batch Sync
+- **Severity:** `Critical`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`SyncDelegate.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/SyncDelegate.java#L420-L435)
+  - [`SyncDelegateFinishTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/data/SyncDelegateFinishTest.java)
+- **Problem Statement:**
+  When `SyncDelegate` executes a batch queue sync via `mSyncQueueDao.getAll()`, `mJob.id` is null. When all items finished, `finish()` called `stopSync()`, which unconditionally executed `int id = Integer.valueOf(mJob.id);`, crashing the background sync with `NumberFormatException: null`.
+- **Resolution:**
+  Guarded the parsing logic with `if (mJob != null && !TextUtils.isEmpty(mJob.id))` and `try-catch (NumberFormatException)`, and added automated unit tests verifying null-ID batch sync completion.
+
+---
+
 ### [HIGH-01] Non-Thread-Safe Global State & Singletons
 - **Severity:** `High`
 - **Status:** `Fixed`
@@ -84,6 +110,32 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
   Regex pattern matchers were used to parse HTML forms from HN login and submit pages.
 - **Resolution:**
   Replaced regex scraping with robust DOM parsing via `org.jsoup.Jsoup` (`selectFirst`, `body().ownText()`).
+
+---
+
+### [HIGH-07] `WebFragment` `OnBackPressedCallback` Intercepts Back Press on Comments Tab in `ItemActivity`
+- **Severity:** `High`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java#L177-L184)
+  - [`ItemActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemActivity.java#L642-L647)
+  - [`WebFragmentTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/WebFragmentTest.java)
+- **Problem Statement:**
+  [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java) only checked `isCurrentPage` when hosted in `BaseListActivity`. In `ItemActivity`, pressing Back while viewing comments on position 0 hijacked navigation into the hidden WebView history.
+- **Resolution:**
+  Added `isCurrentPage(Fragment)` to `ItemActivity.java`, added `isCurrentPage` validation inside `WebFragment.java`'s back callback, and added automated unit tests verifying Back behavior when active vs off-screen.
+
+---
+
+### [HIGH-08] Unclosed OkHttp `Response` Instances Leak Sockets & Connections in `UserServicesClient`
+- **Severity:** `High`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`UserServicesClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/UserServicesClient.java#L103-L160)
+- **Problem Statement:**
+  In `UserServicesClient.login`, `voteUp`, and `reply`, OkHttp `Response` objects returned from `execute(request)` were mapped or redirected without calling `response.close()` in `try-finally` blocks, leaking socket descriptors and connection pool slots.
+- **Resolution:**
+  Wrapped response handling across `login()`, `voteUp()`, `reply()`, and `submit()` with `try-finally { response.close(); }`.
 
 ---
 
@@ -153,6 +205,31 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
 
 ---
 
+### [MED-06] `FavoriteManager.FavoriteRoomLoader` Leaks `SQLiteCursor` on Multiple Loads
+- **Severity:** `Medium`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`FavoriteManager.kt`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/FavoriteManager.kt#L123-L126,L394-L398)
+  - [`FavoriteManagerTest.kt`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/data/FavoriteManagerTest.kt)
+- **Problem Statement:**
+  Inside `FavoriteRoomLoader.load()`, `cursor = Cursor(it)` reassigned the `cursor` field on every reload without invoking `cursor?.close()` on the previous instance, leaking SQLite native cursors.
+- **Resolution:**
+  Cached and closed previous cursor on reloads (`oldCursor?.close()`), added explicit `cursor?.close()` in `detach()`, and hardened column lookups against null/missing values.
+
+---
+
+### [MED-07] `PdfAndroidJavascriptBridge.getChunk` Susceptible to Incomplete Buffer Reads
+- **Severity:** `Medium`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java#L709-L733)
+- **Problem Statement:**
+  `mRandomAccessFile.read(data)` did not guarantee reading all requested bytes into the array in a single call, causing corrupted Base64 chunks sent to PDF.js.
+- **Resolution:**
+  Added sanity checks for chunk bounds and size limits, and switched to `mRandomAccessFile.readFully(data)` with `EOFException` guarding.
+
+---
+
 ## 3. Build System & CI/CD Pipeline Deficiencies
 
 ### [CRIT-05] GitHub Actions Release Tag Overwrite in `release.yml`
@@ -164,6 +241,18 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
   Release workflow hardcoded `v3.4.<run_number>` tag, ignoring developer-pushed tags.
 - **Resolution:**
   Configured `tag_name: ${{ github.ref_name }}` and `name: Release ${{ github.ref_name }}`.
+
+---
+
+### [CRIT-08] CodeQL Analysis Disables SARIF Upload via `upload: false`
+- **Severity:** `Critical`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`.github/workflows/codeql.yml`](file:///home/rahul/projects/materialisheep/.github/workflows/codeql.yml#L114)
+- **Problem Statement:**
+  `codeql.yml` explicitly set `upload: false` in `github/codeql-action/analyze@v4`, silently suppressing SARIF analysis upload to GitHub Security.
+- **Resolution:**
+  Removed `upload: false` from `.github/workflows/codeql.yml`.
 
 ---
 
@@ -189,6 +278,30 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
   Unused `localbroadcastmanager` dependency included in APK.
 - **Resolution:**
   Removed `androidx.localbroadcastmanager` from `app/build.gradle`.
+
+---
+
+### [LOW-02] Obsolete SDK Checks in `AppUtils.java`
+- **Severity:** `Low`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`AppUtils.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/AppUtils.java#L733)
+- **Problem Statement:**
+  `if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R)` was redundant because the application's `minSdk` is 31 (Android S, API 31 > API 30).
+- **Resolution:**
+  Removed dead legacy branch and simplified `getDisplayWidth` to direct `WindowMetrics` calculation.
+
+---
+
+### [LOW-03] Deprecated `Bundle.getParcelable` in `ItemFragment.java`
+- **Severity:** `Low`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`ItemFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemFragment.java#L117,L119,L122)
+- **Problem Statement:**
+  [`ItemFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemFragment.java) used deprecated `Bundle.getParcelable(String)` without class parameters, producing compiler deprecation warnings.
+- **Resolution:**
+  Migrated to `BundleCompat.getParcelable(bundle, key, Item.class)` / `BundleCompat.getParcelable(bundle, key, WebItem.class)` consistent with `WebFragment` and `ItemActivity`.
 
 ---
 
@@ -253,7 +366,7 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
 
 ## 6. Documentation Synchronization Discrepancies
 
-### [DOC-01..04] Documentation Synchronization
+### [DOC-01..04] Baseline Documentation Synchronization
 - **Severity:** `Doc Sync`
 - **Status:** `Fixed`
 - **Impacted Files:**
@@ -263,3 +376,41 @@ This document records the exhaustive, multi-role review and adversarial **Gauntl
   - [`TODO.md`](file:///home/rahul/projects/materialisheep/TODO.md)
 - **Resolution:**
   Synchronized Min SDK (31), Target SDK (36), Gradle (9.5.1), AGP (9.2.1), Retrofit (3.0.0), `debug.yml` trigger (`workflow_dispatch`), and task completion status across all documentation.
+
+---
+
+### [DOC-05] `docs/SUMMARY_REPORT.md` & `docs/TD.md` State `ItemManager` Lacks `Disposable`
+- **Severity:** `Doc Sync`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`docs/SUMMARY_REPORT.md`](file:///home/rahul/projects/materialisheep/docs/SUMMARY_REPORT.md#L41)
+  - [`docs/TD.md`](file:///home/rahul/projects/materialisheep/docs/TD.md#L79)
+- **Problem Statement:**
+  Both documents stated `ItemManager` methods do not return `Disposable` and requests are fire-and-forget. In reality, `ItemManager` methods (`getStories`, `getItem`, `getItems`) were refactored to return `Disposable`.
+- **Resolution:**
+  Synchronized `SUMMARY_REPORT.md` and `TD.md` to reflect active `Disposable` subscription support.
+
+---
+
+### [DOC-06] `TODO.md` Contains Obsolete `minSdk` 28 Upgrade Goal
+- **Severity:** `Doc Sync`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`TODO.md`](file:///home/rahul/projects/materialisheep/TODO.md#L32-L34)
+- **Problem Statement:**
+  `TODO.md` listed "Consider upgrading minSdk to 28 for architectural benefits". The project `minSdk` is already 31.
+- **Resolution:**
+  Removed obsolete item from `TODO.md`.
+
+---
+
+### [DOC-07] Clone Repository URL and CI Trigger Inaccuracies in `README.md` & `CI.md`
+- **Severity:** `Doc Sync`
+- **Status:** `Fixed`
+- **Impacted Files:**
+  - [`README.md`](file:///home/rahul/projects/materialisheep/README.md#L52)
+  - [`CI.md`](file:///home/rahul/projects/materialisheep/CI.md#L9)
+- **Problem Statement:**
+  `README.md` instructed users to clone upstream `sheepdestroyer/materialisheep.git` rather than `xRahul/materialisheep.git`. `CI.md` omitted references to `debug.yml`, `codeql.yml`, and `gemini-review.yml`.
+- **Resolution:**
+  Synchronized repository URLs and documented full CI/CD workflow coverage.

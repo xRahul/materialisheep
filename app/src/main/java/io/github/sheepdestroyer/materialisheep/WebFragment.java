@@ -43,6 +43,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.github.sheepdestroyer.materialisheep.widget.CacheableWebView;
 import io.github.sheepdestroyer.materialisheep.widget.MaterialWebView;
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -176,6 +177,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
                 // setBackInterceptor(getCurrent(...)) per-press re-pick.
                 if (requireActivity() instanceof BaseListActivity
                     && !((BaseListActivity) requireActivity()).isCurrentPage(WebFragment.this)) {
+                  return;
+                }
+                if (requireActivity() instanceof ItemActivity
+                    && !((ItemActivity) requireActivity()).isCurrentPage(WebFragment.this)) {
                   return;
                 }
                 if (mWebView.canGoBack()) {
@@ -708,6 +713,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
     @JavascriptInterface
     public String getChunk(long begin, long end) {
+      if (begin < 0 || end < begin || (end - begin) > 10 * 1024 * 1024) {
+        return "";
+      }
       try {
         if (mRandomAccessFile == null) {
           mRandomAccessFile = new RandomAccessFile(mFile, "r");
@@ -716,11 +724,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
           final int bufferSize = (int) (end - begin);
           byte[] data = new byte[bufferSize];
           mRandomAccessFile.seek(begin);
-          mRandomAccessFile.read(data);
+          mRandomAccessFile.readFully(data);
           return Base64.encodeToString(data, Base64.DEFAULT);
         } else {
           return "";
         }
+      } catch (EOFException e) {
+        Log.e("Exception", e.toString());
+        return "";
       } catch (IOException e) {
         Log.e("Exception", e.toString());
         return "";

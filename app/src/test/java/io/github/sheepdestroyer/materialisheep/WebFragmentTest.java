@@ -1,11 +1,18 @@
 package io.github.sheepdestroyer.materialisheep;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.os.Bundle;
+import android.util.Base64;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -77,5 +84,41 @@ public class WebFragmentTest {
         // At this point onAttach -> setFullscreen(false) has likely been called.
         // If it hasn't crashed yet, we can try calling it again manually to force the issue.
         fragment.setFullscreen(false);
+    }
+
+    @Test
+    public void testPdfAndroidJavascriptBridge_getChunk() throws IOException {
+        File tempFile = File.createTempFile("test_pdf", ".pdf");
+        tempFile.deleteOnExit();
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write("Hello World PDF Content".getBytes());
+        }
+
+        WebFragment.PdfAndroidJavascriptBridge bridge =
+                new WebFragment.PdfAndroidJavascriptBridge(tempFile.getAbsolutePath(), null);
+
+        // Valid chunk read
+        String expectedBase64 = Base64.encodeToString("Hello".getBytes(), Base64.DEFAULT);
+        assertEquals(expectedBase64, bridge.getChunk(0, 5));
+
+        // Invalid begin < 0
+        assertEquals("", bridge.getChunk(-1, 5));
+
+        // Invalid end < begin
+        assertEquals("", bridge.getChunk(5, 2));
+
+        // Exceeds max 10MB chunk size
+        assertEquals("", bridge.getChunk(0, 11 * 1024 * 1024));
+
+        // Reading past EOF triggers EOFException internally and returns empty string
+        assertEquals("", bridge.getChunk(0, 1000));
+    }
+
+    @Test
+    public void testItemActivityIsCurrentPage() {
+        ItemActivity activity = new ItemActivity();
+        Fragment fragment = mock(Fragment.class);
+        assertFalse(activity.isCurrentPage(fragment));
+        assertFalse(activity.isCurrentPage(null));
     }
 }

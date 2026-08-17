@@ -4,36 +4,37 @@ This document explains the CI/CD workflows for this project, which are managed u
 
 ## Workflows
 
-There are two main workflows:
+The repository includes the following automated workflows:
 
-1.  **CI (Continuous Integration):** This workflow runs on every pull request to the `master` branch.
-2.  **Release:** This workflow runs whenever a new tag is pushed to the repository.
+1.  **CI (Continuous Integration) (`ci.yml`):** Runs unit tests (`./gradlew test`) on pull requests targeting `master`.
+2.  **Release (`release.yml`):** Builds signed release APKs and publishes GitHub Releases on tag pushes (`v*`) and manual triggers.
+3.  **Debug Build (`debug.yml`):** Compiles and uploads debug APK artifacts on manual trigger (`workflow_dispatch`).
+4.  **CodeQL Advanced (`codeql.yml`):** Runs automated static security code analysis on push, PR, and weekly schedule.
+5.  **Gemini Review (`gemini-review.yml`):** Provides AI-assisted PR reviews.
+6.  **Java CI with Gradle (`gradle.yml`):** Validates Gradle builds and D8 packaging.
 
 ### CI Workflow
 
-The CI workflow is defined in the file `.github/workflows/ci.yml`. It performs the following steps:
+The CI workflow is defined in `.github/workflows/ci.yml`. It performs the following steps:
 
-1.  **Sets up the environment:** It sets up an Ubuntu environment with Java 21 and the Android SDK (API level 36).
-2.  **Caches dependencies:** It caches the Gradle dependencies to speed up future builds.
-3.  **Runs tests:** It runs the unit tests using the command `./gradlew test`.
-
-This workflow ensures that all pull requests are tested before they are merged into the `master` branch.
+1.  **Sets up the environment:** Provisions Ubuntu with Java 21 and the Android SDK (API level 36).
+2.  **Caches dependencies:** Caches Gradle dependencies to speed up future runs.
+3.  **Runs tests:** Executes Robolectric unit tests via `./gradlew test`.
 
 ### Release Workflow
 
-The Release workflow is defined in the file `.github/workflows/release.yml`. It performs the following steps:
+The Release workflow is defined in `.github/workflows/release.yml`. It performs the following steps:
 
-1.  **Sets up the environment:** It sets up an Ubuntu environment with Java 21 and the Android SDK (API level 36).
-2.  **Caches dependencies:** It caches the Gradle dependencies to speed up future builds.
-3.  **Builds a release APK:** It builds a release APK using the command `./gradlew assembleRelease`.
-4.  **Uploads the APK:** It uploads the generated APK as a release artifact.
-
-This workflow automates the process of building a release APK whenever a new version is tagged.
+1.  **Sets up the environment:** Provisions Ubuntu with Java 21 and the Android SDK.
+2.  **Caches dependencies:** Caches Gradle packages.
+3.  **Builds signed release APK:** Builds release APK using `./gradlew assembleRelease` signed with repository secrets.
+4.  **Uploads & Releases:** Attaches the APK as a release artifact and creates a GitHub Release for tags.
 
 ## Validating the Workflows
 
-To validate the workflows, you can do the following:
+To validate the workflows:
 
-*   **CI Workflow:** Create a new pull request to the `master` branch. The CI workflow will be automatically triggered, and you can see the results in the "Actions" tab of the repository.
-*   **Release Workflow:** Push a new tag to the repository (e.g., `git tag v1.0.0 && git push origin v1.0.0`). The Release workflow will be automatically triggered, and you can find the generated APK in the "Releases" section of the repository.
+*   **CI Workflow:** Create or update a pull request to `master`.
+*   **Debug Workflow:** Trigger manually from the "Actions" tab.
+*   **Release Workflow:** Push a version tag (e.g., `git tag v3.4.0 && git push origin v3.4.0`) or trigger via `workflow_dispatch`.
 
