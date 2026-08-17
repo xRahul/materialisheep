@@ -38,6 +38,7 @@ import io.github.sheepdestroyer.materialisheep.data.ReadabilityClient;
 import io.github.sheepdestroyer.materialisheep.data.ResponseListener;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
 import io.github.sheepdestroyer.materialisheep.widget.AdBlockWebViewClient;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.github.sheepdestroyer.materialisheep.widget.CacheableWebView;
 import io.github.sheepdestroyer.materialisheep.widget.MaterialWebView;
 import io.github.sheepdestroyer.materialisheep.widget.PopupMenu;
@@ -73,6 +74,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Inject PopupMenu mPopupMenu;
   private KeyDelegate.NestedScrollViewHelper mScrollableHelper;
+  private final CompositeDisposable mDisposables = new CompositeDisposable();
   private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
   private ViewGroup mFullscreenView;
   private ViewGroup mScrollViewContent;
@@ -215,6 +217,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   @Override
   public void onDestroy() {
     super.onDestroy();
+    mDisposables.clear();
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();
     }
@@ -340,7 +343,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mContent = ((Item) mItem).getText();
       loadContent();
     } else {
-      mItemManager.getItem(mItem.getId(), ItemManager.MODE_DEFAULT, new ItemResponseListener(this));
+      AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItem.getId(), ItemManager.MODE_DEFAULT, new ItemResponseListener(this)));
     }
   }
 

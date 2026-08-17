@@ -38,6 +38,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 
 /**
@@ -70,6 +72,7 @@ public class UserServicesClient implements UserServices {
     private static final String CREATING_TRUE = "t";
     private static final String DEFAULT_FNOP = "submit-page";
     private static final String DEFAULT_SUBMIT_REDIRECT = "newest";
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
 private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>");
     private static final ThreadLocal<Matcher> MATCHER_INPUT = new ThreadLocal<Matcher>() {
         @Override
@@ -112,9 +115,8 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
      * @param callback      The callback to be invoked when the call is complete.
      */
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void login(String username, String password, boolean createAccount, Callback callback) {
-        execute(postLogin(username, password, createAccount))
+    public Disposable login(String username, String password, boolean createAccount, Callback callback) {
+        return execute(postLogin(username, password, createAccount))
                 .flatMap(response -> {
                     if (response.code() == HttpURLConnection.HTTP_OK) {
                         return Observable.error(new UserServices.Exception(parseLoginError(response)));
@@ -134,17 +136,16 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
      * @return True if the vote was successful, false otherwise.
      */
     @Override
-    @android.annotation.SuppressLint("CheckResult")
     public boolean voteUp(Context context, String itemId, Callback callback) {
         Pair<String, String> credentials = AppUtils.getCredentials(context);
         if (credentials == null) {
             return false;
         }
         Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show();
-        execute(postVote(credentials.first, credentials.second, itemId))
+        mDisposables.add(execute(postVote(credentials.first, credentials.second, itemId))
                 .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError);
+                .subscribe(callback::onDone, callback::onError));
         return true;
     }
 
@@ -157,14 +158,13 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
      * @param callback The callback to be invoked when the call is complete.
      */
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void reply(Context context, String parentId, String text, Callback callback) {
+    public Disposable reply(Context context, String parentId, String text, Callback callback) {
         Pair<String, String> credentials = AppUtils.getCredentials(context);
         if (credentials == null) {
             callback.onDone(false);
-            return;
+            return Disposable.empty();
         }
-        execute(postReply(parentId, text, credentials.first, credentials.second))
+        return execute(postReply(parentId, text, credentials.first, credentials.second))
                 .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(callback::onDone, callback::onError);
@@ -180,12 +180,11 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
      * @param callback The callback to be invoked when the call is complete.
      */
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void submit(Context context, String title, String content, boolean isUrl, Callback callback) {
+    public Disposable submit(Context context, String title, String content, boolean isUrl, Callback callback) {
         Pair<String, String> credentials = AppUtils.getCredentials(context);
         if (credentials == null) {
             callback.onDone(false);
-            return;
+            return Disposable.empty();
         }
         /*
          * The flow:
@@ -197,7 +196,7 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
          * if 200 or anything else, considered error
          */
         // fetch submit page with given credentials
-        execute(postSubmitForm(credentials.first, credentials.second))
+        return execute(postSubmitForm(credentials.first, credentials.second))
                 .flatMap(response -> response.code() != HttpURLConnection.HTTP_MOVED_TEMP ? Observable.just(response)
                         : Observable.error(new IOException("Login failed, received redirect")))
                 .flatMap(response -> {

@@ -34,6 +34,7 @@ import retrofit2.http.Header;
 import retrofit2.http.Query;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * An {@link ItemManager} that uses the Algolia REST API forHN Search.
@@ -71,13 +72,12 @@ public class AlgoliaClient implements ItemManager {
      * @param listener  the {@link ResponseListener} to notify of the results
      */
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void getStories(String filter, @CacheMode int cacheMode,
+    public Disposable getStories(String filter, @CacheMode int cacheMode,
             final ResponseListener<Item[]> listener) {
         if (listener == null) {
-            return;
+            return Disposable.empty();
         }
-        searchRx(filter)
+        return searchRx(filter)
                 .map(this::toItems)
                 .observeOn(mMainThreadScheduler)
                 .subscribe(listener::onResponse,
@@ -88,13 +88,13 @@ public class AlgoliaClient implements ItemManager {
     }
 
     @Override
-    public void getItem(String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener) {
-        mHackerNewsClient.getItem(itemId, cacheMode, listener);
+    public Disposable getItem(String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener) {
+        return mHackerNewsClient.getItem(itemId, cacheMode, listener);
     }
 
     @Override
-    public void getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener) {
-        mHackerNewsClient.getItems(itemIds, cacheMode, listener);
+    public Disposable getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener) {
+        return mHackerNewsClient.getItems(itemIds, cacheMode, listener);
     }
 
     /**

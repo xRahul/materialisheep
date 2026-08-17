@@ -23,6 +23,8 @@ import androidx.annotation.WorkerThread;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import io.reactivex.rxjava3.disposables.Disposable;
+
 /**
  * An interface for managing {@link Item} data.
  */
@@ -77,8 +79,9 @@ public interface ItemManager {
      * @param filter    the filter to apply to the stories
      * @param cacheMode the cache mode to use
      * @param listener  the listener to be notified of the response
+     * @return a {@link Disposable} that cancels the fetch when disposed
      */
-    void getStories(String filter, @CacheMode int cacheMode, final ResponseListener<Item[]> listener);
+    Disposable getStories(String filter, @CacheMode int cacheMode, final ResponseListener<Item[]> listener);
 
     /**
      * Gets an individual item by its ID.
@@ -86,8 +89,9 @@ public interface ItemManager {
      * @param itemId    the ID of the item to get
      * @param cacheMode the cache mode to use
      * @param listener  the listener to be notified of the response
+     * @return a {@link Disposable} that cancels the fetch when disposed
      */
-    void getItem(String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener);
+    Disposable getItem(String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener);
 
     /**
      * Gets an array of items by their IDs.
@@ -95,8 +99,9 @@ public interface ItemManager {
      * @param itemIds   the IDs of the items to get
      * @param cacheMode the cache mode to use
      * @param listener  the listener to be notified of the response
+     * @return a {@link Disposable} that cancels the fetch when disposed
      */
-    void getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener);
+    Disposable getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener);
 
     /**
      * Gets an array of stories.

@@ -22,6 +22,8 @@ import androidx.annotation.StringRes;
 
 import java.io.IOException;
 
+import io.reactivex.rxjava3.disposables.Disposable;
+
 /**
  * An interface for user-related services.
  */
@@ -69,8 +71,9 @@ public interface UserServices {
      * @param password      The password.
      * @param createAccount True to create a new account, false to log in.
      * @param callback      The callback to be invoked when the call is complete.
+     * @return a {@link Disposable} that cancels the request when disposed
      */
-    void login(String username, String password, boolean createAccount, Callback callback);
+    Disposable login(String username, String password, boolean createAccount, Callback callback);
 
     /**
      * Votes up an item.
@@ -89,8 +92,9 @@ public interface UserServices {
      * @param parentId The ID of the parent item.
      * @param text     The reply text.
      * @param callback The callback to be invoked when the call is complete.
+     * @return a {@link Disposable} that cancels the request when disposed
      */
-    void reply(Context context, String parentId, String text, Callback callback);
+    Disposable reply(Context context, String parentId, String text, Callback callback);
 
     /**
      * Submits a new story.
@@ -100,6 +104,7 @@ public interface UserServices {
      * @param content The content of the story.
      * @param isUrl   True if the content is a URL, false otherwise.
      * @param callback The callback to be invoked when the call is complete.
+     * @return a {@link Disposable} that cancels the request when disposed
      */
-    void submit(Context context, String title, String content, boolean isUrl, Callback callback);
+    Disposable submit(Context context, String title, String content, boolean isUrl, Callback callback);
 }

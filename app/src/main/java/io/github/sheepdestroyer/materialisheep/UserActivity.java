@@ -46,6 +46,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import javax.inject.Inject;
 import javax.inject.Named;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 /** An activity that displays a user's profile. */
 public class UserActivity extends ThemedActivity implements Scrollable {
@@ -54,6 +55,7 @@ public class UserActivity extends ThemedActivity implements Scrollable {
   private static final String PARAM_ID = "id";
   private static final String KARMA = " (%1$s)";
   @Inject UserManager mUserManager;
+  private final CompositeDisposable mDisposables = new CompositeDisposable();
 
   @Inject
   @Named(HN)
@@ -189,6 +191,7 @@ public class UserActivity extends ThemedActivity implements Scrollable {
   @Override
   protected void onStop() {
     super.onStop();
+    mDisposables.clear();
     mKeyDelegate.detach(this);
   }
 
@@ -270,7 +273,7 @@ public class UserActivity extends ThemedActivity implements Scrollable {
   }
 
   private void load() {
-    mUserManager.getUser(mUsername, new UserResponseListener(this));
+    AppUtils.addDisposable(mDisposables, mUserManager.getUser(mUsername, new UserResponseListener(this)));
   }
 
   @Synthetic

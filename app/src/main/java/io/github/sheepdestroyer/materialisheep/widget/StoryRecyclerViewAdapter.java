@@ -64,6 +64,7 @@ import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.FavoriteManager;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.github.sheepdestroyer.materialisheep.data.MaterialisticDatabase;
 import io.github.sheepdestroyer.materialisheep.data.ResponseListener;
 import io.github.sheepdestroyer.materialisheep.data.SessionManager;
@@ -106,6 +107,7 @@ public class StoryRecyclerViewAdapter extends
     @Inject
     @Named(HN)
     ItemManager mItemManager;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     @Inject
     SessionManager mSessionManager;
     @Synthetic
@@ -126,7 +128,7 @@ public class StoryRecyclerViewAdapter extends
             }
             String[] ids = mPendingIds.toArray(new String[0]);
             mPendingIds.clear();
-            mItemManager.getItems(ids, getItemCacheMode(), new ItemsResponseListener(StoryRecyclerViewAdapter.this));
+            AppUtils.addDisposable(mDisposables, mItemManager.getItems(ids, getItemCacheMode(), new ItemsResponseListener(StoryRecyclerViewAdapter.this)));
         }
     };
     @Synthetic
@@ -270,6 +272,7 @@ public class StoryRecyclerViewAdapter extends
     @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
+        mDisposables.clear();
         MaterialisticDatabase.getInstance(recyclerView.getContext()).getLiveData().removeObserver(mObserver);
         mItemTouchHelper.attachToRecyclerView(null);
         mPrefObservable.unsubscribe(recyclerView.getContext());

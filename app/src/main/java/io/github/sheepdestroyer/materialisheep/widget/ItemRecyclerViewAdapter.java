@@ -48,6 +48,7 @@ import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.github.sheepdestroyer.materialisheep.data.ResponseListener;
 
 public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter.ItemViewHolder>
@@ -56,6 +57,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     private static final int DURATION_PER_LINE_MILLIS = 20;
     LayoutInflater mLayoutInflater;
     private ItemManager mItemManager;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     @Inject
     UserServices mUserServices;
     @Inject
@@ -187,8 +189,14 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
 
     private void load(int adapterPosition, Item item) {
         item.setLocalRevision(0);
-        mItemManager.getItem(item.getId(), mCacheMode,
-                new ItemResponseListener(this, adapterPosition, item));
+        AppUtils.addDisposable(mDisposables, mItemManager.getItem(item.getId(), mCacheMode,
+                new ItemResponseListener(this, adapterPosition, item)));
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        mDisposables.clear();
     }
 
     protected void onItemLoaded(int position, Item item) {

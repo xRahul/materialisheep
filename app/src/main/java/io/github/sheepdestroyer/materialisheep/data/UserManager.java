@@ -20,6 +20,8 @@ import android.content.Context;
 import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
+import io.reactivex.rxjava3.disposables.Disposable;
+
 /**
  * An interface for managing users.
  */
@@ -29,8 +31,9 @@ public interface UserManager {
      *
      * @param username the username of the user to get
      * @param listener the listener to be notified of the response
+     * @return a {@link Disposable} that cancels the fetch when disposed
      */
-    void getUser(String username, final ResponseListener<User> listener);
+    Disposable getUser(String username, final ResponseListener<User> listener);
 
     /**
      * An interface that represents a user.

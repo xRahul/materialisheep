@@ -54,6 +54,7 @@ import java.lang.ref.WeakReference;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 import static io.github.sheepdestroyer.materialisheep.DataModule.HN;
 import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
@@ -92,6 +93,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @Inject
     @Named(HN)
     ItemManager mItemManager;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     @Inject
     FavoriteManager mFavoriteManager;
     @Inject
@@ -223,9 +225,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         if (mItem != null) {
             bindData(mItem);
         } else if (!TextUtils.isEmpty(mItemId)) {
-            mItemManager.getItem(mItemId,
+            AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItemId,
                     getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT),
-                    new ItemResponseListener(this));
+                    new ItemResponseListener(this)));
         }
         if (!AppUtils.hasConnection(this)) {
             Snackbar.make(mCoordinatorLayout, R.string.offline_notice, Snackbar.LENGTH_LONG).show();
@@ -327,6 +329,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mDisposables.clear();
         mPreferenceObservable.unsubscribe(this);
         if (mTabLayoutMediator != null) {
             mTabLayoutMediator.detach();

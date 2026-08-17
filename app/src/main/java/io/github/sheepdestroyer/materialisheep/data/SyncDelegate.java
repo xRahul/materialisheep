@@ -51,6 +51,7 @@ import javax.inject.Named;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -302,7 +303,7 @@ public class SyncDelegate {
                     }
                 }
             } else {
-                mItemManager.getItems(ids, ItemManager.MODE_CACHE, new ResponseListener<Item[]>() {
+                Disposable disposable = mItemManager.getItems(ids, ItemManager.MODE_CACHE, new ResponseListener<Item[]>() {
                     @Override
                     public void onResponse(@Nullable Item[] response) {
                         mIoScheduler.scheduleDirect(() -> {
@@ -332,6 +333,9 @@ public class SyncDelegate {
                         });
                     }
                 });
+                if (disposable != null) {
+                    mDisposables.add(disposable);
+                }
             }
         }
     }

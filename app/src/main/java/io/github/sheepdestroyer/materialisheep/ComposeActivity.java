@@ -37,6 +37,7 @@ import java.lang.ref.WeakReference;
 import javax.inject.Inject;
 
 import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 
 /**
@@ -51,6 +52,7 @@ public class ComposeActivity extends ThemedActivity {
     private static final String PARAGRAPH_BREAK_REGEX = "[\\n]{2,}";
     @Inject
     UserServices mUserServices;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     @Inject
     AlertDialogBuilder mAlertDialogBuilder;
     private EditText mEditText;
@@ -222,7 +224,13 @@ public class ComposeActivity extends ThemedActivity {
         Preferences.saveDraft(this, mParentId, content);
         toggleControls(true);
         Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
-        mUserServices.reply(this, mParentId, content, new ComposeCallback(this, mParentId));
+        AppUtils.addDisposable(mDisposables, mUserServices.reply(this, mParentId, content, new ComposeCallback(this, mParentId)));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mDisposables.clear();
     }
 
     @Synthetic

@@ -31,6 +31,7 @@ import retrofit2.http.Headers;
 import retrofit2.http.Path;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * A client that retrieves content from the Hacker News API.
@@ -83,13 +84,12 @@ public class HackerNewsClient implements ItemManager, UserManager {
     }
 
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void getStories(@FetchMode String filter, @CacheMode int cacheMode,
+    public Disposable getStories(@FetchMode String filter, @CacheMode int cacheMode,
             final ResponseListener<Item[]> listener) {
         if (listener == null) {
-            return;
+            return Disposable.empty();
         }
-        Observable.defer(() -> getStoriesObservable(filter, cacheMode))
+        return Observable.defer(() -> getStoriesObservable(filter, cacheMode))
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
                 .subscribe(listener::onResponse,
@@ -100,10 +100,9 @@ public class HackerNewsClient implements ItemManager, UserManager {
     }
 
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void getItem(final String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener) {
+    public Disposable getItem(final String itemId, @CacheMode int cacheMode, ResponseListener<Item> listener) {
         if (listener == null) {
-            return;
+            return Disposable.empty();
         }
         Observable<HackerNewsItem> itemObservable;
         switch (cacheMode) {
@@ -119,7 +118,7 @@ public class HackerNewsClient implements ItemManager, UserManager {
                         .onErrorResumeNext(t -> mRestService.itemRx(itemId));
                 break;
         }
-        Observable.defer(() -> Observable.zip(
+        return Observable.defer(() -> Observable.zip(
                 mSessionManager.isViewed(itemId),
                 mFavoriteManager.check(itemId),
                 itemObservable.map(Optional::ofNullable),
@@ -138,22 +137,20 @@ public class HackerNewsClient implements ItemManager, UserManager {
                             android.util.Log.e("HackerNewsClient", "Error fetching item " + itemId, t);
                             listener.onError(t != null ? t.getMessage() : "Unknown error");
                         });
-
     }
 
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener) {
+    public Disposable getItems(String[] itemIds, @CacheMode int cacheMode, ResponseListener<Item[]> listener) {
         if (listener == null) {
-            return;
+            return Disposable.empty();
         }
         if (itemIds == null || itemIds.length == 0) {
             listener.onResponse(new Item[0]);
-            return;
+            return Disposable.empty();
         }
 
         java.util.List<String> idList = java.util.Arrays.asList(itemIds);
-        Observable.zip(
+        return Observable.zip(
                 mSessionManager.isViewed(idList),
                 mFavoriteManager.check(idList),
                 (viewed, favorite) -> new android.util.Pair<>(viewed, favorite))
@@ -199,7 +196,7 @@ public class HackerNewsClient implements ItemManager, UserManager {
                 })
                 .subscribeOn(mIoScheduler)
                 .observeOn(mMainThreadScheduler)
-                .subscribe(listener::onResponse, t -> {
+                 .subscribe(listener::onResponse, t -> {
                     android.util.Log.e("HackerNewsClient", "Error fetching items", t);
                     listener.onError(t != null ? t.getMessage() : "Unknown error");
                 });
@@ -263,12 +260,11 @@ public class HackerNewsClient implements ItemManager, UserManager {
     }
 
     @Override
-    @android.annotation.SuppressLint("CheckResult")
-    public void getUser(String username, final ResponseListener<User> listener) {
+    public Disposable getUser(String username, final ResponseListener<User> listener) {
         if (listener == null) {
-            return;
+            return Disposable.empty();
         }
-        mRestService.userRx(username)
+        return mRestService.userRx(username)
                 .map(userItem -> {
                     if (userItem != null) {
                         userItem.setSubmittedItems(toItems(userItem.getSubmitted()));

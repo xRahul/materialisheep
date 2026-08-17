@@ -33,6 +33,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import com.google.android.material.textfield.TextInputLayout;
 import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
@@ -51,6 +52,7 @@ public class SubmitActivity extends ThemedActivity {
   private static final String REGEX_FUZZY_URL = "(.*)((http|https)://[^\\s]*)$";
   private static final Pattern PATTERN_FUZZY_URL = Pattern.compile(REGEX_FUZZY_URL);
   @Inject UserServices mUserServices;
+  private final CompositeDisposable mDisposables = new CompositeDisposable();
   @Inject AlertDialogBuilder mAlertDialogBuilder;
   @Synthetic TextView mTitleEditText;
   private TextView mContentEditText;
@@ -224,12 +226,18 @@ public class SubmitActivity extends ThemedActivity {
   private void submit(boolean isUrl) {
     toggleControls(true);
     Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
-    mUserServices.submit(
+    AppUtils.addDisposable(mDisposables, mUserServices.submit(
         this,
         mTitleEditText.getText().toString(),
         mContentEditText.getText().toString(),
         isUrl,
-        new SubmitCallback(this));
+        new SubmitCallback(this)));
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    mDisposables.clear();
   }
 
   @Synthetic

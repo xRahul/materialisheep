@@ -51,6 +51,7 @@ import io.github.sheepdestroyer.materialisheep.widget.ItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.MultiPageItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.SinglePageItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.SnappyLinearLayoutManager;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 /**
  * A fragment that displays the comments of a single item.
@@ -63,6 +64,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
     private static final String STATE_ITEM_ID = "state:itemId";
     private static final String STATE_ADAPTER_ITEMS = "state:adapterItems";
     private static final String STATE_CACHE_MODE = "state:cacheMode";
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     private RecyclerView mRecyclerView;
     private View mEmptyView;
     private Item mItem;
@@ -224,6 +226,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mDisposables.clear();
         if (mAdapter != null) {
             mAdapter.detach(getActivity(), mRecyclerView);
         }
@@ -305,7 +308,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
     }
 
     private void loadKidData() {
-        mItemManager.getItem(mItemId, mCacheMode, new ItemResponseListener(this));
+        AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItemId, mCacheMode, new ItemResponseListener(this)));
     }
 
     void onItemLoaded(@Nullable Item item) {

@@ -30,6 +30,7 @@ import java.lang.ref.WeakReference;
 import javax.inject.Inject;
 
 import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 /**
  * An activity that allows users to log in or create a new account.
@@ -37,6 +38,7 @@ import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
 public class LoginActivity extends AccountAuthenticatorActivity {
     public static final String EXTRA_ADD_ACCOUNT = LoginActivity.class.getName() + ".EXTRA_ADD_ACCOUNT";
     @Inject UserServices mUserServices;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
     @Inject AccountManager mAccountManager;
     private View mLoginButton;
     private View mRegisterButton;
@@ -120,7 +122,13 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     private void login(String username, String password, boolean createAccount) {
         mUsername = username;
         mPassword = password;
-        mUserServices.login(username, password, createAccount, new LoginCallback(this));
+        AppUtils.addDisposable(mDisposables, mUserServices.login(username, password, createAccount, new LoginCallback(this)));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mDisposables.clear();
     }
 
     void onLoggedIn(boolean successful, String errorMessage) {

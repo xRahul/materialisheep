@@ -34,6 +34,7 @@ import okio.BufferedSource;
 import okio.Okio;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * A simple ad blocker that blocks network requests to hosts listed in the ad
@@ -43,6 +44,7 @@ public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static volatile TrieNode AD_HOSTS = new TrieNode();
+    private static Disposable sLoadDisposable;
 
     /**
      * Initializes the ad blocker by loading the ad hosts from the assets file.
@@ -50,9 +52,11 @@ public class AdBlocker {
      * @param context   The application context.
      * @param scheduler The RxJava scheduler to perform the operation on.
      */
-    @SuppressLint("CheckResult")
     public static void init(Context context, Scheduler scheduler) {
-        Observable.fromCallable(() -> loadFromAssets(context))
+        if (sLoadDisposable != null && !sLoadDisposable.isDisposed()) {
+            return;
+        }
+        sLoadDisposable = Observable.fromCallable(() -> loadFromAssets(context))
                 .subscribeOn(scheduler)
                 .subscribe(result -> AD_HOSTS = result,
                         t -> android.util.Log.e(AdBlocker.class.getSimpleName(), "Error loading ad hosts", t));

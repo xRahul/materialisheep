@@ -48,6 +48,8 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowInsetsController;
 import android.view.WindowMetrics;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import android.webkit.WebSettings;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -483,6 +485,13 @@ public class AppUtils {
       context.startActivity(new Intent(context, LoginActivity.class));
     } else { // logged out, choose from existing accounts to log in
       showAccountChooser(context, alertDialogBuilder, accounts);
+    }
+  }
+
+  /** Adds a disposable to the container, ignoring null (Mockito mocks return null). */
+  public static void addDisposable(CompositeDisposable container, Disposable disposable) {
+    if (disposable != null) {
+      container.add(disposable);
     }
   }
 
