@@ -27,7 +27,9 @@ def read_version_properties(filepath: str) -> Dict[str, str]:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 key, val = line.split("=", 1)
-                props[key.strip()] = val.strip()
+                # Strip comments and surrounding quotes
+                clean_val = val.split("#")[0].strip().strip("\"'")
+                props[key.strip()] = clean_val
     return props
 
 
@@ -47,22 +49,18 @@ def calculate_bump(
     bump_type: str,
     custom_version: Optional[str] = None,
     custom_code: Optional[int] = None,
-) -> Tuple[int, int, int, int]:
+) -> Tuple[int, int, int, int, str]:
+    """Returns (new_major, new_minor, new_patch, new_code, full_version_string)"""
     if custom_version:
-        # Strip optional leading 'v'
         clean_v = custom_version.lstrip("v").strip()
-        parts = clean_v.split(".")
-        if len(parts) >= 3:
-            new_major = int(parts[0])
-            new_minor = int(parts[1])
-            patch_match = re.match(r"^(\d+)", parts[2])
-            new_patch = int(patch_match.group(1)) if patch_match else 0
-        elif len(parts) == 2:
-            new_major = int(parts[0])
-            new_minor = int(parts[1])
-            new_patch = 0
-        else:
-            raise ValueError(f"Invalid custom version format: {custom_version}")
+        match = re.match(r"^(\d+)\.(\d+)(?:\.(\d+))?(?:-([0-9A-Za-z.-]+))?$", clean_v)
+        if not match:
+            raise ValueError(f"Invalid custom version format: {custom_version}. Expected e.g. 3.5.0 or 4.0.0-beta.1")
+        new_major = int(match.group(1))
+        new_minor = int(match.group(2))
+        new_patch = int(match.group(3) or 0)
+        prerelease = match.group(4) or ""
+        full_version = f"{new_major}.{new_minor}.{new_patch}" + (f"-{prerelease}" if prerelease else "")
     else:
         b_type = bump_type.lower()
         if b_type == "major":
@@ -79,16 +77,16 @@ def calculate_bump(
             new_patch = current_patch + 1
         else:
             raise ValueError(f"Unknown bump type: {bump_type}. Choose 'patch', 'minor', or 'major'.")
+        full_version = f"{new_major}.{new_minor}.{new_patch}"
 
     if custom_code is not None:
         new_code = custom_code
     elif custom_version and (new_major, new_minor, new_patch) == (current_major, current_minor, current_patch):
-        # Do not increment versionCode if syncing identical version
         new_code = current_code
     else:
         new_code = current_code + 1
 
-    return new_major, new_minor, new_patch, new_code
+    return new_major, new_minor, new_patch, new_code, full_version
 
 
 def run_git(cmd: List[str]) -> str:
@@ -142,10 +140,13 @@ def categorize_commit(subject: str) -> str:
 def format_commit_line(commit_hash: str, subject: str, author: str, repo: Optional[str] = None) -> str:
     clean_sub = subject.strip()
     
-    # Format PR links: #123 -> [#123](https://github.com/repo/pull/123) avoiding duplicate links
+    # Escape unlinked XML/HTML angle brackets to prevent markdown breakage
+    clean_sub = re.sub(r'<([a-zA-Z0-9_]+)>', r'`<\1>`', clean_sub)
+
+    # Format PR links: #123 -> [#123](https://github.com/repo/pull/123) without breaking existing markdown links
     if repo:
         clean_sub = re.sub(
-            r"(?<!\[)#(\d+)(?!\])",
+            r'(?<!\[)#(\d+)\b(?![^\[]*\])',
             rf"[#\1](https://github.com/{repo}/pull/\1)",
             clean_sub,
         )
@@ -172,9 +173,20 @@ def generate_changelog(
     except Exception:
         pass
 
-    range_spec = f"{prev_tag}..{target}" if prev_tag else target
+    if prev_tag:
+        range_spec = f"{prev_tag}..{target}"
+    else:
+        # Fallback to recent 50 commits if previous tag unavailable
+        range_spec = f"{target} -n 50"
+
     try:
-        log_raw = run_git(["log", range_spec, '--pretty=format:%H%x09%s%x09%an'])
+        cmd = ["log", '--pretty=format:%H%x09%s%x09%an']
+        if " -n " in range_spec:
+            parts = range_spec.split(" -n ")
+            cmd.extend([parts[0], "-n", parts[1]])
+        else:
+            cmd.append(range_spec)
+        log_raw = run_git(cmd)
     except Exception:
         log_raw = ""
 
@@ -251,15 +263,15 @@ def generate_changelog(
 def run_tests() -> None:
     print("Running release_helper tests...")
     # Test 1: Patch bump
-    assert calculate_bump(3, 4, 13, 93, "patch") == (3, 4, 14, 94)
+    assert calculate_bump(3, 4, 13, 93, "patch") == (3, 4, 14, 94, "3.4.14")
     # Test 2: Minor bump
-    assert calculate_bump(3, 4, 13, 93, "minor") == (3, 5, 0, 94)
+    assert calculate_bump(3, 4, 13, 93, "minor") == (3, 5, 0, 94, "3.5.0")
     # Test 3: Major bump
-    assert calculate_bump(3, 4, 13, 93, "major") == (4, 0, 0, 94)
-    # Test 4: Custom version bump
-    assert calculate_bump(3, 4, 13, 93, "patch", custom_version="4.1.2") == (4, 1, 2, 94)
+    assert calculate_bump(3, 4, 13, 93, "major") == (4, 0, 0, 94, "4.0.0")
+    # Test 4: Custom version bump with pre-release tag
+    assert calculate_bump(3, 4, 13, 93, "patch", custom_version="4.0.0-beta.1") == (4, 0, 0, 94, "4.0.0-beta.1")
     # Test 5: Custom version sync (no bump if same)
-    assert calculate_bump(3, 4, 13, 93, "patch", custom_version="3.4.13") == (3, 4, 13, 93)
+    assert calculate_bump(3, 4, 13, 93, "patch", custom_version="3.4.13") == (3, 4, 13, 93, "3.4.13")
     # Test 6: Categorize commits including breaking change syntax
     assert categorize_commit("feat(ui): add dark mode switch") == "features"
     assert categorize_commit("feat!: breaking api change") == "features"
@@ -268,8 +280,9 @@ def run_tests() -> None:
     assert categorize_commit("perf: pre-compile regex") == "performance"
     assert categorize_commit("deps: bump dagger") == "maintenance"
     # Test 7: PR formatting
-    line = format_commit_line("1234567890123456789012345678901234567890", "feat: add feature (#42)", "author", "xRahul/materialisheep")
+    line = format_commit_line("1234567890123456789012345678901234567890", "feat: add <View> feature (#42)", "author", "xRahul/materialisheep")
     assert "[#42](https://github.com/xRahul/materialisheep/pull/42)" in line
+    assert "`<View>`" in line
     print("All release_helper tests passed successfully!")
 
 
@@ -281,7 +294,7 @@ def main():
     bump_parser = subparsers.add_parser("bump", help="Bump version in version.properties")
     bump_parser.add_argument("--properties-file", default="version.properties", help="Path to version.properties")
     bump_parser.add_argument("--type", choices=["patch", "minor", "major"], default="patch", help="Bump type")
-    bump_parser.add_argument("--custom-version", default=None, help="Explicit x.y.z version")
+    bump_parser.add_argument("--custom-version", default=None, help="Explicit x.y.z version (e.g. 3.5.0 or 4.0.0-beta.1)")
     bump_parser.add_argument("--custom-code", type=int, default=None, help="Explicit versionCode")
     bump_parser.add_argument("--dry-run", action="store_true", help="Print changes without writing file")
 
@@ -309,7 +322,7 @@ def main():
         cur_patch = int(props.get("VERSION_PATCH", "13"))
         cur_code = int(props.get("VERSION_CODE", "93"))
 
-        new_maj, new_min, new_patch, new_code = calculate_bump(
+        new_maj, new_min, new_patch, new_code, full_version_str = calculate_bump(
             cur_maj,
             cur_min,
             cur_patch,
@@ -319,8 +332,7 @@ def main():
             custom_code=args.custom_code,
         )
 
-        new_version_str = f"{new_maj}.{new_min}.{new_patch}"
-        new_tag_str = f"v{new_version_str}"
+        new_tag_str = f"v{full_version_str}"
 
         updated_props = {
             "VERSION_MAJOR": str(new_maj),
@@ -332,17 +344,9 @@ def main():
         if not args.dry_run:
             write_version_properties(args.properties_file, updated_props)
 
-        print(f"BUMPED_VERSION={new_version_str}")
+        print(f"BUMPED_VERSION={full_version_str}")
         print(f"BUMPED_TAG={new_tag_str}")
         print(f"BUMPED_CODE={new_code}")
-
-        # Set GitHub Actions output if in CI environment
-        github_output = os.getenv("GITHUB_OUTPUT")
-        if github_output and os.path.exists(github_output):
-            with open(github_output, "a", encoding="utf-8") as gh_out:
-                gh_out.write(f"version={new_version_str}\n")
-                gh_out.write(f"tag={new_tag_str}\n")
-                gh_out.write(f"version_code={new_code}\n")
 
     elif args.command == "changelog":
         prev_tag = args.prev_tag or get_previous_tag(args.curr_tag)

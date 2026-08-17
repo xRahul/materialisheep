@@ -51,7 +51,7 @@ android {
     def keyPassword = System.getenv("KEY_PASSWORD")
 
     if (keystoreBase64?.trim() && keystorePassword?.trim() && keyAlias?.trim() && keyPassword?.trim()) {
-        def keystoreFile = new File(layout.buildDirectory.get().asFile, "release.jks")
+        def keystoreFile = rootProject.file(".gradle/release.jks")
         keystoreFile.parentFile.mkdirs()
         keystoreFile.bytes = keystoreBase64.decodeBase64()
 

@@ -13,13 +13,17 @@ on:
           - minor
           - major
       custom_version:
-        description: 'Custom version override (e.g. 3.5.0 - optional, overrides bump_type if specified)'
+        description: 'Custom version override (e.g. 3.5.0 or 4.0.0-beta.1 - optional, overrides bump_type)'
         required: false
         default: ''
         type: string
   push:
     tags:
       - 'v*'
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -37,7 +41,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Determine & Bump Version
+      - name: Calculate Version Bump
         id: version_info
         env:
           BUMP_TYPE: ${{ github.event.inputs.bump_type }}
@@ -60,20 +64,12 @@ jobs:
             TAG=$(echo "$BUMP_OUTPUT" | grep "^BUMPED_TAG=" | cut -d'=' -f2)
             VERSION=$(echo "$BUMP_OUTPUT" | grep "^BUMPED_VERSION=" | cut -d'=' -f2)
             
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add version.properties
-            git commit -m "chore(release): release ${TAG} [skip ci]"
-            git tag -a "${TAG}" -m "Release ${TAG}"
-            git push origin HEAD:${{ github.ref_name }}
-            git push origin "${TAG}"
-            
             echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           else
             TAG="${{ github.ref_name }}"
             VERSION="${TAG#v}"
-            # Sync version.properties for build without unnecessary code bump
+            # Sync version.properties for build without incrementing versionCode
             python3 scripts/release_helper.py bump --custom-version "$VERSION" || true
             echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
@@ -109,21 +105,47 @@ jobs:
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Package & Prepare Release Assets
+      - name: Package & Verify Release Assets
         id: package_assets
         run: |
+          set -euo pipefail
           TAG="${{ steps.version_info.outputs.tag }}"
           APK_DIR="app/build/outputs/apk/release"
           
-          # Rename/copy release APK to standard release naming
+          # Detect and rename release APK
           if [ -f "${APK_DIR}/app-release.apk" ]; then
             cp "${APK_DIR}/app-release.apk" "${APK_DIR}/materialisheep-${TAG}.apk"
+            echo "Found signed APK: ${APK_DIR}/materialisheep-${TAG}.apk"
           elif [ -f "${APK_DIR}/app-release-unsigned.apk" ]; then
-            cp "${APK_DIR}/app-release-unsigned.apk" "${APK_DIR}/materialisheep-${TAG}.apk"
+            cp "${APK_DIR}/app-release-unsigned.apk" "${APK_DIR}/materialisheep-${TAG}-unsigned.apk"
+            echo "::warning::Signing secrets not configured; produced unsigned APK: materialisheep-${TAG}-unsigned.apk"
+          else
+            echo "::error::No release APK found in ${APK_DIR} after assembleRelease."
+            exit 1
           fi
           
           # Generate SHA-256 checksums file
-          (cd "${APK_DIR}" && sha256sum materialisheep-${TAG}.apk > sha256sum.txt)
+          cd "${APK_DIR}"
+          sha256sum materialisheep-${TAG}*.apk > sha256sum.txt
+          cat sha256sum.txt
+          cd -
+
+      - name: Commit & Push Version Bump and Tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG: ${{ steps.version_info.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.properties
+          git commit -m "chore(release): release ${TAG} [skip ci]"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          
+          if [ "${{ github.ref_type }}" = "branch" ]; then
+            git push origin HEAD:"${{ github.ref_name }}"
+          fi
+          git push origin "${TAG}"
 
       - name: Generate Release Notes & Changelog
         run: |
@@ -137,7 +159,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: materialisheep-${{ steps.version_info.outputs.tag }}-apks
-          path: app/build/outputs/apk/release/*.apk
+          path: |
+            app/build/outputs/apk/release/materialisheep-*.apk
+            app/build/outputs/apk/release/sha256sum.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
