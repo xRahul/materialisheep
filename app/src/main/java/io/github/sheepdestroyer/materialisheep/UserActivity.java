@@ -195,6 +195,14 @@ public class UserActivity extends ThemedActivity implements Scrollable {
     mKeyDelegate.detach(this);
   }
 
+  @Override
+  protected void onResume() {
+    super.onResume();
+    if (mUser == null) {
+      load();
+    }
+  }
+
   /**
    * Called when a key was pressed down and not handled by any of the views inside of the activity.
    *

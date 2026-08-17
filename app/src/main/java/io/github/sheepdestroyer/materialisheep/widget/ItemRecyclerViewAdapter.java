@@ -49,6 +49,7 @@ import io.github.sheepdestroyer.materialisheep.annotation.Synthetic;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.github.sheepdestroyer.materialisheep.data.ResponseListener;
 
 public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter.ItemViewHolder>
@@ -189,8 +190,10 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
 
     private void load(int adapterPosition, Item item) {
         item.setLocalRevision(0);
-        AppUtils.addDisposable(mDisposables, mItemManager.getItem(item.getId(), mCacheMode,
-                new ItemResponseListener(this, adapterPosition, item)));
+        ItemResponseListener listener = new ItemResponseListener(this, adapterPosition, item);
+        Disposable disposable = mItemManager.getItem(item.getId(), mCacheMode, listener);
+        listener.mDisposable = disposable;
+        AppUtils.addDisposable(mDisposables, disposable);
     }
 
     @Override
@@ -314,6 +317,8 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         private final WeakReference<ItemRecyclerViewAdapter> mAdapter;
         private final int mPosition;
         private final Item mPartialItem;
+        @Nullable
+        Disposable mDisposable;
 
         @Synthetic
         ItemResponseListener(ItemRecyclerViewAdapter adapter, int position,
@@ -323,8 +328,20 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
             mPartialItem = partialItem;
         }
 
+        private void onTerminal() {
+            Disposable disposable = mDisposable;
+            if (disposable != null) {
+                mDisposable = null;
+                ItemRecyclerViewAdapter adapter = mAdapter.get();
+                if (adapter != null) {
+                    adapter.mDisposables.remove(disposable);
+                }
+            }
+        }
+
         @Override
         public void onResponse(@Nullable Item response) {
+            onTerminal();
             if (mAdapter.get() != null && mAdapter.get().isAttached() && response != null) {
                 mPartialItem.populate(response);
                 mAdapter.get().onItemLoaded(mPosition, mPartialItem);
@@ -333,7 +350,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
 
         @Override
         public void onError(String errorMessage) {
-            // do nothing
+            onTerminal();
         }
     }
 

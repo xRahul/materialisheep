@@ -38,7 +38,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 
@@ -72,7 +71,7 @@ public class UserServicesClient implements UserServices {
     private static final String CREATING_TRUE = "t";
     private static final String DEFAULT_FNOP = "submit-page";
     private static final String DEFAULT_SUBMIT_REDIRECT = "newest";
-    private final CompositeDisposable mDisposables = new CompositeDisposable();
+    private Disposable mVoteDisposable;
 private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>");
     private static final ThreadLocal<Matcher> MATCHER_INPUT = new ThreadLocal<Matcher>() {
         @Override
@@ -142,10 +141,13 @@ private static final Pattern PATTERN_INPUT = Pattern.compile("<\\s*input[^>]*>")
             return false;
         }
         Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show();
-        mDisposables.add(execute(postVote(credentials.first, credentials.second, itemId))
+        if (mVoteDisposable != null) {
+            mVoteDisposable.dispose();
+        }
+        mVoteDisposable = execute(postVote(credentials.first, credentials.second, itemId))
                 .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError));
+                .subscribe(callback::onDone, callback::onError);
         return true;
     }
 

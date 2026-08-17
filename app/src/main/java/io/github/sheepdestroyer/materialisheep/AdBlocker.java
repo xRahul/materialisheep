@@ -44,7 +44,7 @@ public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static volatile TrieNode AD_HOSTS = new TrieNode();
-    private static Disposable sLoadDisposable;
+    private static volatile Disposable sLoadDisposable;
 
     /**
      * Initializes the ad blocker by loading the ad hosts from the assets file.

@@ -65,6 +65,7 @@ import io.github.sheepdestroyer.materialisheep.data.FavoriteManager;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.github.sheepdestroyer.materialisheep.data.MaterialisticDatabase;
 import io.github.sheepdestroyer.materialisheep.data.ResponseListener;
 import io.github.sheepdestroyer.materialisheep.data.SessionManager;
@@ -128,7 +129,10 @@ public class StoryRecyclerViewAdapter extends
             }
             String[] ids = mPendingIds.toArray(new String[0]);
             mPendingIds.clear();
-            AppUtils.addDisposable(mDisposables, mItemManager.getItems(ids, getItemCacheMode(), new ItemsResponseListener(StoryRecyclerViewAdapter.this)));
+            ItemsResponseListener listener = new ItemsResponseListener(StoryRecyclerViewAdapter.this);
+            Disposable disposable = mItemManager.getItems(ids, getItemCacheMode(), listener);
+            listener.mDisposable = disposable;
+            AppUtils.addDisposable(mDisposables, disposable);
         }
     };
     @Synthetic
@@ -680,13 +684,27 @@ public class StoryRecyclerViewAdapter extends
 
     static class ItemsResponseListener implements ResponseListener<Item[]> {
         private final WeakReference<StoryRecyclerViewAdapter> mAdapter;
+        @Nullable
+        Disposable mDisposable;
 
         ItemsResponseListener(StoryRecyclerViewAdapter adapter) {
             mAdapter = new WeakReference<>(adapter);
         }
 
+        private void onTerminal() {
+            Disposable disposable = mDisposable;
+            if (disposable != null) {
+                mDisposable = null;
+                StoryRecyclerViewAdapter adapter = mAdapter.get();
+                if (adapter != null) {
+                    adapter.mDisposables.remove(disposable);
+                }
+            }
+        }
+
         @Override
         public void onResponse(Item[] items) {
+            onTerminal();
             StoryRecyclerViewAdapter adapter = mAdapter.get();
             if (adapter != null && adapter.isAttached() && items != null) {
                 adapter.updateItems(items);
@@ -695,6 +713,7 @@ public class StoryRecyclerViewAdapter extends
 
         @Override
         public void onError(String error) {
+            onTerminal();
         }
     }
 
