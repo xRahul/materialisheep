@@ -45,24 +45,31 @@ jobs:
             if [ -n "${{ github.event.inputs.custom_version }}" ]; then
               BUMP_ARGS="$BUMP_ARGS --custom-version ${{ github.event.inputs.custom_version }}"
             fi
-            python3 scripts/release_helper.py bump $BUMP_ARGS
             
-            # Read updated values
-            TAG=$(grep "BUMPED_TAG" <<< "$(python3 scripts/release_helper.py bump $BUMP_ARGS --dry-run)" | cut -d'=' -f2)
+            # Execute bump and capture outputs
+            BUMP_OUTPUT=$(python3 scripts/release_helper.py bump $BUMP_ARGS)
+            echo "$BUMP_OUTPUT"
+            
+            TAG=$(echo "$BUMP_OUTPUT" | grep "^BUMPED_TAG=" | cut -d'=' -f2)
+            VERSION=$(echo "$BUMP_OUTPUT" | grep "^BUMPED_VERSION=" | cut -d'=' -f2)
             
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add version.properties
             git commit -m "chore(release): release ${TAG} [skip ci]"
             git tag -a "${TAG}" -m "Release ${TAG}"
-            git push origin HEAD:${{ github.ref_name }} --tags
+            git push origin HEAD:${{ github.ref_name }}
+            git push origin "${TAG}"
             
             echo "tag=${TAG}" >> $GITHUB_OUTPUT
-            echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
           else
             TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
+            # Sync version.properties for build
+            python3 scripts/release_helper.py bump --custom-version "$VERSION" || true
             echo "tag=${TAG}" >> $GITHUB_OUTPUT
-            echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up JDK 21
@@ -101,17 +108,15 @@ jobs:
           TAG="${{ steps.version_info.outputs.tag }}"
           APK_DIR="app/build/outputs/apk/release"
           
-          # Rename/link primary release APK
+          # Rename/copy release APK to standard release naming
           if [ -f "${APK_DIR}/app-release.apk" ]; then
             cp "${APK_DIR}/app-release.apk" "${APK_DIR}/materialisheep-${TAG}.apk"
           elif [ -f "${APK_DIR}/app-release-unsigned.apk" ]; then
             cp "${APK_DIR}/app-release-unsigned.apk" "${APK_DIR}/materialisheep-${TAG}.apk"
           fi
           
-          # Generate SHA-256 checksums
-          cd "${APK_DIR}"
-          sha256sum *.apk > sha256sum.txt
-          cd -
+          # Generate SHA-256 checksums file
+          (cd "${APK_DIR}" && sha256sum materialisheep-${TAG}.apk > sha256sum.txt)
 
       - name: Generate Release Notes & Changelog
         run: |

@@ -55,7 +55,6 @@ def calculate_bump(
         if len(parts) >= 3:
             new_major = int(parts[0])
             new_minor = int(parts[1])
-            # Handle potential suffix like 1-rc1 -> 1
             patch_match = re.match(r"^(\d+)", parts[2])
             new_patch = int(patch_match.group(1)) if patch_match else 0
         elif len(parts) == 2:
@@ -93,7 +92,7 @@ def run_git(cmd: List[str]) -> str:
 def get_previous_tag(current_tag: Optional[str] = None) -> Optional[str]:
     try:
         tags_output = run_git(["tag", "--sort=-v:refname"])
-        tags = [t.strip() for t in tags_output.splitlines() if t.strip()]
+        tags = [t.strip() for t in tags_output.splitlines() if t.strip() and re.match(r"^v?\d+\.\d+", t.strip())]
         if not tags:
             return None
         if current_tag and current_tag in tags:
@@ -124,13 +123,12 @@ def categorize_commit(subject: str) -> str:
 
 
 def format_commit_line(commit_hash: str, subject: str, author: str, repo: Optional[str] = None) -> str:
-    # Clean up subject
     clean_sub = subject.strip()
     
-    # Format PR links: (#123) -> ([#123](https://github.com/repo/pull/123))
+    # Format PR links: #123 -> [#123](https://github.com/repo/pull/123) avoiding duplicate links
     if repo:
         clean_sub = re.sub(
-            r"#(\d+)",
+            r"(?<!\[)#(\d+)(?!\])",
             rf"[#\1](https://github.com/{repo}/pull/\1)",
             clean_sub,
         )
@@ -199,7 +197,9 @@ def generate_changelog(
 
     # Add APK Details & Checksums if APK directory exists
     if apk_dir and os.path.isdir(apk_dir):
-        apk_files = [f for f in os.listdir(apk_dir) if f.endswith(".apk")]
+        all_apks = [f for f in os.listdir(apk_dir) if f.endswith(".apk")]
+        named_apks = [f for f in all_apks if f.startswith("materialisheep-")]
+        apk_files = named_apks if named_apks else all_apks
         if apk_files:
             lines.append("### 📦 Assets & Verification")
             lines.append("| File | Size | SHA-256 Checksum |")
@@ -232,6 +232,9 @@ def run_tests() -> None:
     assert categorize_commit("fix: resolve crash on startup") == "fixes"
     assert categorize_commit("perf: pre-compile regex") == "performance"
     assert categorize_commit("deps: bump dagger") == "maintenance"
+    # Test 6: PR formatting
+    line = format_commit_line("1234567890", "feat: add feature (#42)", "author", "xRahul/materialisheep")
+    assert "[#42](https://github.com/xRahul/materialisheep/pull/42)" in line
     print("All release_helper tests passed successfully!")
 
 
