@@ -170,11 +170,20 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             new OnBackPressedCallback(true) {
               @Override
               public void handleOnBackPressed() {
+                // In pager hosts (ItemActivity / multi-pane BaseListActivity)
+                // off-screen fragments keep their callbacks armed; only the
+                // current page may consume back, matching the old
+                // setBackInterceptor(getCurrent(...)) per-press re-pick.
+                if (requireActivity() instanceof BaseListActivity
+                    && !((BaseListActivity) requireActivity()).isCurrentPage(WebFragment.this)) {
+                  return;
+                }
                 if (mWebView.canGoBack()) {
                   mWebView.goBack();
                 } else {
                   setEnabled(false);
                   requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                  setEnabled(true);
                 }
               }
             });

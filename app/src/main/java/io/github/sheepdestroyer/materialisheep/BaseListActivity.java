@@ -633,6 +633,13 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         return mAdapter != null ? mAdapter.findFragment(getSupportFragmentManager(), position) : null;
     }
 
+    /**
+     * Returns whether the given fragment is the currently displayed pager page.
+     */
+    public boolean isCurrentPage(Fragment fragment) {
+        return fragment == getFragment(mViewPager.getCurrentItem());
+    }
+
     private void onPreferenceChanged(int key, boolean contextChanged) {
         if (key == R.string.pref_external) {
             mExternalBrowser = Preferences.externalBrowserEnabled(this);
