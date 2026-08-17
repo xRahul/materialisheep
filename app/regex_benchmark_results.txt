@@ -1,3 +1,3 @@
-Uncompiled time: 182744838 ns
-Compiled time: 129848207 ns
-Improvement: 1.4073728257179554x
+Uncompiled time: 203387884 ns
+Compiled time: 108501068 ns
+Improvement: 1.8745242581390995x

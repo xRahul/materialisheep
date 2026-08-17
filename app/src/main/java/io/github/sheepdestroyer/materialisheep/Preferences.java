@@ -653,6 +653,10 @@ public class Preferences {
             }
         }
 
+        public static boolean isDynamicColor(Context context) {
+            return get(context, R.string.pref_dynamic_color, true);
+        }
+
         static @Nullable String getTypeface(Context context) {
             return get(context, R.string.pref_font, null);
         }

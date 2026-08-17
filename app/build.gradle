@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 apply plugin: 'com.google.devtools.ksp'
 
 android {
@@ -7,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "io.github.sheepdestroyer.materialisheep"
-        minSdkVersion 31
-        targetSdkVersion 36
+        minSdk = 31
+        targetSdk = 36
         versionCode 79
         def gitHash = { ->
             try {
@@ -28,6 +27,7 @@ android {
                 'proguard-support.pro',
                 'proguard-rx.pro'
         resConfigs 'en', 'zh-rCN', 'es'
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -39,7 +39,7 @@ android {
             shrinkResources true
         }
     }
-    lintOptions {
+    lint {
         htmlReport false
         xmlReport false
         textReport true
@@ -47,7 +47,7 @@ android {
         abortOnError true
         explainIssues false
         absolutePaths false
-        disable 'NullSafeMutableLiveData'
+        disable += 'NullSafeMutableLiveData'
     }
     packaging {
         resources {
@@ -83,6 +83,10 @@ android {
     }
     namespace 'io.github.sheepdestroyer.materialisheep'
 
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 ext {
@@ -125,5 +129,8 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.23.0'
     testImplementation 'org.robolectric:robolectric:4.16.1'
     testImplementation 'androidx.test:core:1.7.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }

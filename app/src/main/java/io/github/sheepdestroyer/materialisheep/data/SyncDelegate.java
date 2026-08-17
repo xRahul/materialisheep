@@ -259,25 +259,37 @@ public class SyncDelegate {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 loadArticle(item);
             } else {
-                mContext.startService(new Intent(mContext, WebCacheService.class)
-                        .putExtra(WebCacheService.EXTRA_URL, item.getUrl()));
-                notifyArticle(100);
+                mHandler.post(() -> {
+                    try {
+                        loadArticle(item);
+                    } catch (Exception e) {
+                        notifyArticle(100);
+                    }
+                });
             }
         }
     }
 
     private void loadArticle(@NonNull final HackerNewsItem item) {
-        mWebView = new CacheableWebView(mContext);
-        mWebView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(mContext)));
-        mWebView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                notifyArticle(newProgress);
-            }
-        });
-        notifyArticle(0);
-        mWebView.loadUrl(item.getUrl());
+        try {
+            mWebView = new CacheableWebView(mContext);
+            mWebView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(mContext)));
+            mWebView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    super.onProgressChanged(view, newProgress);
+                    notifyArticle(newProgress);
+                    if (newProgress == 100 && mWebView != null) {
+                        mWebView.destroy();
+                        mWebView = null;
+                    }
+                }
+            });
+            notifyArticle(0);
+            mWebView.loadUrl(item.getUrl());
+        } catch (Exception e) {
+            notifyArticle(100);
+        }
     }
 
     private void syncChildren(@NonNull HackerNewsItem item) {
@@ -410,6 +422,14 @@ public class SyncDelegate {
         int id = Integer.valueOf(mJob.id);
         mNotificationManager.cancel(id);
         mHandler.removeMessages(id);
+        if (mWebView != null) {
+            mHandler.post(() -> {
+                if (mWebView != null) {
+                    mWebView.destroy();
+                    mWebView = null;
+                }
+            });
+        }
     }
 
     private PendingIntent getItemActivity(String itemId) {

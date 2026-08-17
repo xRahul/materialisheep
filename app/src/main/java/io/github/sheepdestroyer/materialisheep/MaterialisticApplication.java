@@ -52,6 +52,12 @@ public class MaterialisticApplication extends android.app.Application {
                 .applicationModule(new ApplicationModule(this))
                 .build();
         AppCompatDelegate.setDefaultNightMode(Preferences.Theme.getAutoDayNightMode(this));
+        if (com.google.android.material.color.DynamicColors.isDynamicColorAvailable()) {
+            com.google.android.material.color.DynamicColors.applyToActivitiesIfAvailable(this,
+                    new com.google.android.material.color.DynamicColorsOptions.Builder()
+                            .setPrecondition((activity, theme) -> Preferences.Theme.isDynamicColor(activity))
+                            .build());
+        }
         AlgoliaClient.sSortByTime = Preferences.isSortByRecent(this);
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()

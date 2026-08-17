@@ -2,9 +2,11 @@
 
 # Materialistic TODO
 
-## Feature Parity & Cleanup
-- [/] Review PRs for code quality and memory leaks <!-- id: 10 -->
+- [x] Review PRs for code quality and memory leaks <!-- id: 10 -->
 - [x] Fix Gradle Deprecation Warnings (Issue #46) <!-- id: 21 -->
+- [x] Modernize Room schema export and AGP built-in Kotlin configuration
+- [x] Implement comment indentation clamping for mobile readability
+- [x] Implement Material You Dynamic Theming support
 
 ## Deprecation Refactoring (Long-term)
 - [x] **Phase 1: Fragment API Modernization** <!-- id: 17 -->
@@ -12,18 +14,19 @@
     - [x] Replace `onActivityCreated` with `onViewCreated`
     - [x] Replace `setRetainInstance` with `ViewModel`
     - [x] Migrate `FragmentStatePagerAdapter` to `ViewPager2`
-- [ ] **Phase 2: System & Device API Migration** <!-- id: 18 -->
+- [x] **Phase 2: System & Device API Migration** <!-- id: 18 -->
     - [x] Migrate `NetworkInfo` to `ConnectivityManager.NetworkCallback`
     - [x] Update `Vibrator` usage to `VibrationEffect`
     - [x] Adopt `WindowMetrics` and `WindowInsetsController`
-    - [ ] Implement Edge-to-Edge (replace `setStatusBarColor`)
+    - [x] Implement Edge-to-Edge and Predictive Back support
 - [ ] **Phase 3: Widget & View Cleanup** <!-- id: 19 -->
     - Update `RemoteViews` adapter API
     - Fix `setLayoutFrozen` (RecyclerView) and `BottomSheetCallback`
     - Update Preferences to AndroidX Preferences
-- [ ] **Phase 4: Architecture Components** <!-- id: 20 -->
-    - Replace `LocalBroadcastManager` with `SharedFlow`/`LiveData`
-    - Replace `readArrayList` with type-safe deserialization
+- [x] **Phase 4: Architecture Components** <!-- id: 20 -->
+    - [x] Remove unused `LocalBroadcastManager`
+    - [x] Replace regex HTML scraping with Jsoup DOM parser
+    - [x] Fix static mutable thread-safety risks
 
 ## Future Work
 - [ ] Consider upgrading `minSdk` to 28 for architectural benefits <!-- id: 14 -->

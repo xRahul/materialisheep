@@ -28,6 +28,13 @@
 
     <androidx.preference.SwitchPreferenceCompat
         app:iconSpaceReserved="false"
+        android:key="@string/pref_dynamic_color"
+        android:title="@string/pref_dynamic_color_title"
+        android:summary="@string/pref_dynamic_color_summary"
+        android:defaultValue="true" />
+
+    <androidx.preference.SwitchPreferenceCompat
+        app:iconSpaceReserved="false"
         android:dependency="@string/pref_theme"
         android:key="@string/pref_daynight_auto"
         android:title="@string/pref_daynight_title"

@@ -30,7 +30,7 @@ import java.util.List;
         MaterialisticDatabase.ReadStory.class,
         MaterialisticDatabase.Readable.class,
         MaterialisticDatabase.SyncQueueEntry.class
-}, version = 6, exportSchema = false)
+}, version = 6, exportSchema = true)
 /**
  * A Room database for storing saved stories, read stories, and readable
  * content.

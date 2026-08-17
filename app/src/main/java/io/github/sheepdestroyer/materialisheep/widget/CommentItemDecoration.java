@@ -61,7 +61,8 @@ public class CommentItemDecoration extends RecyclerView.ItemDecoration {
         for (int i = 0; i < parent.getChildCount(); i++) {
             View child = parent.getChildAt(i);
             int level = parent.getChildViewHolder(child).getItemViewType();
-            for (int j = 0; j < level; j++) {
+            int effectiveLevel = Math.min(Math.max(0, level), SinglePageItemRecyclerViewAdapter.MAX_INDENT_LEVEL);
+            for (int j = 0; j < effectiveLevel; j++) {
                 int left = mHorizontalMargin + j * mLevelIndicatorWidth + mLevelIndicatorWidth / 2;
                 if (mColorCodeEnabled) {
                     mPaint.setColor(mColors.getColor(j % mColors.length(), 0));

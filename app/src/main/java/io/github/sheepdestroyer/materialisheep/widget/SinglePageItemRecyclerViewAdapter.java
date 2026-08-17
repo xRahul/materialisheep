@@ -58,6 +58,7 @@ public class SinglePageItemRecyclerViewAdapter
             }
         }
     };
+    public static final int MAX_INDENT_LEVEL = 4;
     @Inject
     ResourcesProvider mResourcesProvider;
     private int mLevelIndicatorWidth = 0;
@@ -152,7 +153,8 @@ public class SinglePageItemRecyclerViewAdapter
         final ToggleItemViewHolder holder = new ToggleItemViewHolder(
                 mLayoutInflater.inflate(R.layout.item_comment, parent, false));
         final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
-        params.leftMargin = mLevelIndicatorWidth * viewType;
+        int effectiveLevel = Math.min(Math.max(0, viewType), MAX_INDENT_LEVEL);
+        params.leftMargin = mLevelIndicatorWidth * effectiveLevel;
         holder.itemView.setLayoutParams(params);
         return holder;
     }

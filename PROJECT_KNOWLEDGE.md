@@ -11,14 +11,14 @@ This document serves as a detailed technical reference for the `materialisheep` 
 ## 2. Technical Stack & Environment
 
 - **Language:** Kotlin (primary), Java (legacy/mixed).
-- **Minimum SDK:** 30
+- **Minimum SDK:** 31
 - **Compile/Target SDK:** 36
 - **JDK:** Java 21 is required for building.
-- **Build System:** Gradle 9.2.1, Android Gradle Plugin 8.9.1.
+- **Build System:** Gradle 9.5.1, Android Gradle Plugin 9.2.1.
 
 ### Key Libraries
 - **Dependency Injection:** Dagger 2
-- **Networking:** Retrofit 2, OkHttp 5, Gson.
+- **Networking:** Retrofit 3, OkHttp 5, Gson.
 - **Async/Concurrency:** RxJava 3, RxAndroid.
 - **Database:** Android Room (SQLite abstraction).
 - **Search:** Algolia API.
@@ -59,7 +59,7 @@ Handles all data retrieval and persistence.
     - `SavedStoriesDao.kt`: DAO for saved stories.
     - `LocalCache.kt`: Caching logic.
 - **Services:**
-    - `ItemSyncService.java`: Background service for syncing data.
+    - `ItemSyncJobService.java`: Background JobService for syncing data.
     - `WebCacheService.java`: Service for caching web content.
 
 ### `ui` / Activities

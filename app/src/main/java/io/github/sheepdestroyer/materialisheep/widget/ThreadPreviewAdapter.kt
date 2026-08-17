@@ -77,8 +77,9 @@ class ThreadPreviewAdapter(
         // In the original code, viewType was position, and margin was width * viewType.
         // So indentation corresponds to position in the list.
         val position = holder.bindingAdapterPosition
+        val effectiveLevel = if (position >= 0) position.coerceAtMost(SinglePageItemRecyclerViewAdapter.MAX_INDENT_LEVEL) else 0
         val params = holder.itemView.layoutParams as RecyclerView.LayoutParams
-        params.leftMargin = levelIndicatorWidth * position
+        params.leftMargin = levelIndicatorWidth * effectiveLevel
         holder.itemView.layoutParams = params
 
         // Bind Data
