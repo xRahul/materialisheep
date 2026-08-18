@@ -12,7 +12,7 @@ Separates **Existing System Improvements** from **New Product Features**.
 - [x] **Task 1.1:** Fix `WebFragment` / `MaterialWebView` native memory leak in `onDestroyView()` (`[ARCH-09]`)
 - [x] **Task 1.2:** Replace lossy & thread-unsafe `MaterialisticDatabase` LiveData event bus with `SharedFlow` (`[ARCH-10]`)
 - [x] **Task 1.3:** Guard `FontCache.java` asset loading against uncaught exceptions and migrate to `res/font/` (`[ARCH-15]`)
-- [ ] **Task 1.4:** Eliminate unscoped fire-and-forget RxJava subscriptions in `SessionManager.kt` (`[ARCH-16]`)
+- [x] **Task 1.4:** Eliminate unscoped fire-and-forget RxJava subscriptions in `SessionManager.kt` (`[ARCH-16]`)
 - [ ] **Task 1.5:** Centralize all dependencies into Gradle Version Catalog `gradle/libs.versions.toml` (`[DEP-01]`)
 
 ---
