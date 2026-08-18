@@ -1,0 +1,72 @@
+[versions]
+agp = "9.2.1"
+kotlin = "2.3.21"
+ksp = "2.3.8"
+desugarJdkLibs = "2.1.5"
+appcompat = "1.7.1"
+recyclerview = "1.4.0"
+cardview = "1.0.0"
+swiperefreshlayout = "1.2.0"
+material = "1.14.0"
+preferenceKtx = "1.2.1"
+browser = "1.10.0"
+jsoup = "1.18.1"
+dagger = "2.59"
+retrofit = "3.0.0"
+okhttp = "5.3.2"
+rxandroid = "3.0.2"
+rxjava = "3.1.12"
+room = "2.8.4"
+lifecycle = "2.10.0"
+junit = "4.13.2"
+mockito = "5.23.0"
+robolectric = "4.16.1"
+androidxTestCore = "1.7.0"
+androidxTestExtJunit = "1.2.1"
+androidxTestRules = "1.6.1"
+espresso = "3.6.1"
+
+[libraries]
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
+androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+androidx-preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtx" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
+dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+retrofit-adapter-rxjava3 = { module = "com.squareup.retrofit2:adapter-rxjava3", version.ref = "retrofit" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroid" }
+rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
+junit = { module = "junit:junit", version.ref = "junit" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTestCore" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTestRules" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+[bundles]
+retrofit = ["retrofit", "retrofit-converter-gson", "retrofit-adapter-rxjava3"]
+room = ["androidx-room-runtime"]
+lifecycle = ["androidx-lifecycle-viewmodel-ktx", "androidx-lifecycle-livedata-ktx"]
+testing-unit = ["junit", "mockito-core", "robolectric", "androidx-test-core"]
+testing-android = ["androidx-test-ext-junit", "androidx-test-rules", "androidx-test-espresso-core"]
