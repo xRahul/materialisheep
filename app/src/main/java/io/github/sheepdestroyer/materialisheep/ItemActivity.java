@@ -545,6 +545,11 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                 if (fragment instanceof LazyLoadFragment) {
                     ((LazyLoadFragment) fragment).loadNow();
                 }
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
+                    if (f instanceof WebFragment) {
+                        ((WebFragment) f).updateBackPressedCallback();
+                    }
+                }
             }
         };
         mViewPager.registerOnPageChangeCallback(mPageChangeCallback);

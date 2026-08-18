@@ -64,6 +64,24 @@ public abstract class DrawerActivity extends ThemedActivity {
             setUsername();
         }
     };
+    @Synthetic
+    final OnBackPressedCallback mDrawerBackPressedCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            if (mDrawerLayout.isDrawerOpen(mDrawer)) {
+                closeDrawers();
+            } else if (isTaskRoot() && Preferences.isLaunchScreenLast(DrawerActivity.this)) {
+                moveTaskToBack(true);
+            }
+        }
+    };
+
+    @Synthetic
+    void updateDrawerBackCallback() {
+        boolean drawerOpen = mDrawerLayout != null && (mDrawerLayout.isDrawerOpen(mDrawer) || mDrawerLayout.isDrawerVisible(mDrawer));
+        boolean rootLaunchLast = isTaskRoot() && Preferences.isLaunchScreenLast(this);
+        mDrawerBackPressedCallback.setEnabled(drawerOpen || rootLaunchLast);
+    }
 
     /**
      * Called when the activity is first created.
@@ -87,8 +105,15 @@ public abstract class DrawerActivity extends ThemedActivity {
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.open_drawer,
                 R.string.close_drawer) {
             @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                updateDrawerBackCallback();
+            }
+
+            @Override
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
+                updateDrawerBackCallback();
                 if (drawerView.equals(mDrawer) && mPendingNavigation != null) {
                     final Intent intent = new Intent(DrawerActivity.this, mPendingNavigation);
                     if (mPendingNavigationExtras != null) {
@@ -101,26 +126,34 @@ public abstract class DrawerActivity extends ThemedActivity {
                     mPendingNavigation = null;
                 }
             }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, slideOffset);
+                if (slideOffset > 0 && !mDrawerBackPressedCallback.isEnabled()) {
+                    mDrawerBackPressedCallback.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+                super.onDrawerStateChanged(newState);
+                updateDrawerBackCallback();
+            }
         };
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(mLoginListener);
         setUpDrawer();
         setUsername();
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                if (mDrawerLayout.isDrawerOpen(mDrawer)) {
-                    closeDrawers();
-                } else if (isTaskRoot() && Preferences.isLaunchScreenLast(DrawerActivity.this)) {
-                    moveTaskToBack(true);
-                } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
+        getOnBackPressedDispatcher().addCallback(this, mDrawerBackPressedCallback);
+        updateDrawerBackCallback();
+    }
 
-                }
-            }
-        });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateDrawerBackCallback();
     }
 
     /**
@@ -275,5 +308,6 @@ public abstract class DrawerActivity extends ThemedActivity {
 
     private void closeDrawers() {
         mDrawerLayout.closeDrawers();
+        updateDrawerBackCallback();
     }
 }

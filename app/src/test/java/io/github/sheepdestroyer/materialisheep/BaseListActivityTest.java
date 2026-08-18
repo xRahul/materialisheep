@@ -140,4 +140,16 @@ public class BaseListActivityTest {
             });
         }
     }
+
+    @Test
+    public void testDrawerBackPressedCallbackBehavior() {
+        try (ActivityScenario<ListActivity> scenario = ActivityScenario.launch(ListActivity.class)) {
+            scenario.onActivity(activity -> {
+                // When drawer is closed, callback must be disabled so system predictive back works
+                org.junit.Assert.assertNotNull(activity.mDrawerBackPressedCallback);
+                org.junit.Assert.assertFalse(activity.mDrawerBackPressedCallback.isEnabled());
+            });
+        }
+    }
 }
+

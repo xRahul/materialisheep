@@ -553,6 +553,11 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 updateFabState(position);
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
+                    if (f instanceof WebFragment) {
+                        ((WebFragment) f).updateBackPressedCallback();
+                    }
+                }
             }
         };
         mViewPager.registerOnPageChangeCallback(mPageChangeCallback);

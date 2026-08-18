@@ -60,32 +60,44 @@ public class ComposeActivity extends ThemedActivity {
     private String mQuoteText;
     private String mParentId;
     private boolean mSending;
-    private final OnBackPressedCallback mOnBackPressedCallback = new OnBackPressedCallback(true) {
+    @Synthetic
+    final OnBackPressedCallback mOnBackPressedCallback = new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
-            if (mEditText.length() == 0 || mSending ||
-                    TextUtils.equals(Preferences.getDraft(ComposeActivity.this, mParentId),
-                            mEditText.getText().toString())) {
-                setEnabled(false);
-                getOnBackPressedDispatcher().onBackPressed();
-                return;
-            }
-            setEnabled(false);
             mAlertDialogBuilder
                     .init(ComposeActivity.this)
                     .setMessage(R.string.confirm_save_draft)
-.setNegativeButton(R.string.discard_draft, (dialog, which) -> {
-                        getOnBackPressedDispatcher().onBackPressed();
+                    .setNegativeButton(R.string.discard_draft, (dialog, which) -> {
+                        mOnBackPressedCallback.setEnabled(false);
+                        finish();
                     })
                     .setPositiveButton(R.string.save_draft, (dialog, which) -> {
                         Preferences.saveDraft(ComposeActivity.this, mParentId,
                                 mEditText.getText().toString());
-                        getOnBackPressedDispatcher().onBackPressed();
+                        mOnBackPressedCallback.setEnabled(false);
+                        finish();
                     })
-                    .setOnCancelListener(dialog -> setEnabled(true))
+                    .setOnCancelListener(dialog -> updateBackPressedCallback())
                     .show();
         }
     };
+
+    @Synthetic
+    boolean hasUnsavedChanges() {
+        if (mEditText == null || mSending) {
+            return false;
+        }
+        if (mEditText.length() == 0) {
+            return false;
+        }
+        String savedDraft = Preferences.getDraft(this, mParentId);
+        return !TextUtils.equals(savedDraft, mEditText.getText().toString());
+    }
+
+    @Synthetic
+    void updateBackPressedCallback() {
+        mOnBackPressedCallback.setEnabled(hasUnsavedChanges());
+    }
 
     /**
      * Called when the activity is first created.
@@ -121,6 +133,18 @@ public class ComposeActivity extends ThemedActivity {
             mEditText.requestFocus();
             return mEditText.performLongClick();
         });
+        mEditText.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                updateBackPressedCallback();
+            }
+        });
         mParentText = getIntent().getStringExtra(EXTRA_PARENT_TEXT);
         if (!TextUtils.isEmpty(mParentText)) {
             findViewById(R.id.quote).setVisibility(View.VISIBLE);
@@ -141,6 +165,13 @@ public class ComposeActivity extends ThemedActivity {
             });
         }
         getOnBackPressedDispatcher().addCallback(this, mOnBackPressedCallback);
+        updateBackPressedCallback();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateBackPressedCallback();
     }
 
     /**
@@ -200,10 +231,12 @@ public class ComposeActivity extends ThemedActivity {
         }
         if (item.getItemId() == R.id.menu_save_draft) {
             Preferences.saveDraft(this, mParentId, mEditText.getText().toString());
+            updateBackPressedCallback();
             return true;
         }
         if (item.getItemId() == R.id.menu_discard_draft) {
             Preferences.deleteDraft(this, mParentId);
+            updateBackPressedCallback();
             return true;
         }
         if (item.getItemId() == R.id.menu_guidelines) {
@@ -269,6 +302,7 @@ public class ComposeActivity extends ThemedActivity {
         mSending = sending;
         mEditText.setEnabled(!sending);
         supportInvalidateOptionsMenu();
+        updateBackPressedCallback();
     }
 
     static class ComposeCallback extends UserServices.Callback {

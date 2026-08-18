@@ -97,6 +97,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   private WebItem mItem;
   private boolean mIsHackerNewsUrl, mEmpty, mReadability;
   private PdfAndroidJavascriptBridge mPdfAndroidJavascriptBridge;
+  @Synthetic OnBackPressedCallback mBackPressedCallback;
 
   @Override
   public void onAttach(Context context) {
@@ -161,38 +162,44 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mFullscreen) {
       setFullscreen(true);
     }
-    // KEYCODE_BACK interception (KeyDelegate) stops working on API 33+ once
-    // enableOnBackInvokedCallback is on, so route WebView history navigation
-    // through the OnBackPressedDispatcher.
+    // Route WebView history navigation through OnBackPressedDispatcher when
+    // in-webview back navigation is possible. When not (or when off-screen),
+    // callback is disabled to let the OS execute native predictive back.
+    mBackPressedCallback =
+        new OnBackPressedCallback(false) {
+          @Override
+          public void handleOnBackPressed() {
+            if (mWebView != null && mWebView.canGoBack()) {
+              mWebView.goBack();
+              updateBackPressedCallback();
+            }
+          }
+        };
     requireActivity()
         .getOnBackPressedDispatcher()
-        .addCallback(
-            getViewLifecycleOwner(),
-            new OnBackPressedCallback(true) {
-              @Override
-              public void handleOnBackPressed() {
-                // In pager hosts (ItemActivity / multi-pane BaseListActivity)
-                // off-screen fragments keep their callbacks armed; only the
-                // current page may consume back, matching the old
-                // setBackInterceptor(getCurrent(...)) per-press re-pick.
-                if (requireActivity() instanceof BaseListActivity
-                    && !((BaseListActivity) requireActivity()).isCurrentPage(WebFragment.this)) {
-                  return;
-                }
-                if (requireActivity() instanceof ItemActivity
-                    && !((ItemActivity) requireActivity()).isCurrentPage(WebFragment.this)) {
-                  return;
-                }
-                if (mWebView != null && mWebView.canGoBack()) {
-                  mWebView.goBack();
-                } else {
-                  setEnabled(false);
-                  requireActivity().getOnBackPressedDispatcher().onBackPressed();
-                  setEnabled(true);
-                }
-              }
-            });
+        .addCallback(getViewLifecycleOwner(), mBackPressedCallback);
+    updateBackPressedCallback();
   }
+
+  public void updateBackPressedCallback() {
+    if (mBackPressedCallback == null) {
+      return;
+    }
+    boolean isCurrent = isCurrentWebPage();
+    boolean canGoBack = mWebView != null && mWebView.canGoBack();
+    mBackPressedCallback.setEnabled(isCurrent && canGoBack);
+  }
+
+  private boolean isCurrentWebPage() {
+    if (getActivity() instanceof BaseListActivity) {
+      return ((BaseListActivity) getActivity()).isCurrentPage(this);
+    }
+    if (getActivity() instanceof ItemActivity) {
+      return ((ItemActivity) getActivity()).isCurrentPage(this);
+    }
+    return isResumed() && isVisible();
+  }
+
 
   @Override
   protected void createOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -231,6 +238,15 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mWebView.onResume();
       mWebView.resumeTimers();
     }
+    updateBackPressedCallback();
+  }
+
+  @Override
+  public void onPause() {
+    super.onPause();
+    if (mBackPressedCallback != null) {
+      mBackPressedCallback.setEnabled(false);
+    }
   }
 
   @Override
@@ -251,6 +267,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Override
   public void onDestroyView() {
+    if (mBackPressedCallback != null) {
+      mBackPressedCallback.setEnabled(false);
+      mBackPressedCallback = null;
+    }
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();
       mPdfAndroidJavascriptBridge = null;
@@ -552,6 +572,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             if (getActivity() != null) {
               getActivity().invalidateOptionsMenu();
             }
+            updateBackPressedCallback();
           }
 
           @Override
@@ -560,6 +581,13 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             if (getActivity() != null) {
               getActivity().invalidateOptionsMenu();
             }
+            updateBackPressedCallback();
+          }
+
+          @Override
+          public void doUpdateVisitedHistory(android.webkit.WebView view, String url, boolean isReload) {
+            super.doUpdateVisitedHistory(view, url, isReload);
+            updateBackPressedCallback();
           }
         });
     mWebView.setWebChromeClient(

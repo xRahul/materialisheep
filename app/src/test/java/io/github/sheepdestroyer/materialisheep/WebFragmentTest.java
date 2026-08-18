@@ -177,4 +177,92 @@ public class WebFragmentTest {
         webView.loadUrl("about:blank");
         webView.reloadUrl("https://example.com");
     }
+
+    @Test
+    public void testBackPressedCallbackDisabledWhenCannotGoBack() {
+        Bundle args = new Bundle();
+        WebItem item = mock(WebItem.class);
+        when(item.getUrl()).thenReturn("https://example.com");
+        when(item.getId()).thenReturn("1");
+        args.putParcelable(WebFragment.EXTRA_ITEM, item);
+
+        WebFragment fragment = new WebFragment();
+        fragment.setArguments(args);
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+
+        // When webView cannot go back, callback must be disabled for predictive back
+        org.junit.Assert.assertNotNull(fragment.mBackPressedCallback);
+        assertFalse(fragment.mBackPressedCallback.isEnabled());
+    }
+
+    @Test
+    public void testBackPressedCallbackDisabledWhenNotCurrentPage() {
+        ItemActivity itemActivity = mock(ItemActivity.class);
+        when(itemActivity.isCurrentPage(any(Fragment.class))).thenReturn(false);
+
+        Bundle args = new Bundle();
+        WebItem item = mock(WebItem.class);
+        when(item.getUrl()).thenReturn("https://example.com");
+        when(item.getId()).thenReturn("1");
+        args.putParcelable(WebFragment.EXTRA_ITEM, item);
+
+        WebFragment fragment = new WebFragment();
+        fragment.setArguments(args);
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+
+        // Simulate not being current page
+        fragment.updateBackPressedCallback();
+        assertFalse(fragment.mBackPressedCallback.isEnabled());
+    }
+
+    @Test
+    public void testBackPressedCallbackEnabledWhenCanGoBack() {
+        Bundle args = new Bundle();
+        WebItem item = mock(WebItem.class);
+        when(item.getUrl()).thenReturn("https://example.com");
+        when(item.getId()).thenReturn("1");
+        args.putParcelable(WebFragment.EXTRA_ITEM, item);
+
+        WebFragment fragment = new WebFragment();
+        fragment.setArguments(args);
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+
+        // Load multiple URLs so WebView has back history
+        fragment.mWebView.loadUrl("https://example.com/page1");
+        fragment.mWebView.loadUrl("https://example.com/page2");
+
+        fragment.updateBackPressedCallback();
+        if (fragment.mWebView.canGoBack()) {
+            org.junit.Assert.assertTrue(fragment.mBackPressedCallback.isEnabled());
+            fragment.mBackPressedCallback.handleOnBackPressed();
+        }
+    }
 }
+

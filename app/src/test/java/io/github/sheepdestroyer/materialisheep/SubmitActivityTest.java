@@ -85,4 +85,26 @@ public class SubmitActivityTest {
             });
         }
     }
+
+    @Test
+    public void testBackPressedCallbackDisabledWhenEmpty() {
+        try (ActivityScenario<SubmitActivity> scenario = ActivityScenario.launch(SubmitActivity.class)) {
+            scenario.onActivity(activity -> {
+                org.junit.Assert.assertNotNull(activity.mOnBackPressedCallback);
+                org.junit.Assert.assertFalse(activity.mOnBackPressedCallback.isEnabled());
+            });
+        }
+    }
+
+    @Test
+    public void testBackPressedCallbackEnabledWhenInputPresent() {
+        try (ActivityScenario<SubmitActivity> scenario = ActivityScenario.launch(SubmitActivity.class)) {
+            scenario.onActivity(activity -> {
+                TextView title = activity.findViewById(R.id.edittext_title);
+                title.setText("Some Title");
+                org.junit.Assert.assertTrue(activity.mOnBackPressedCallback.isEnabled());
+            });
+        }
+    }
 }
+

@@ -59,24 +59,37 @@ public class SubmitActivity extends ThemedActivity {
   private TextInputLayout mTitleLayout;
   private TextInputLayout mContentLayout;
   private boolean mSending;
-  private final OnBackPressedCallback mOnBackPressedCallback =
-      new OnBackPressedCallback(true) {
+  @Synthetic
+  final OnBackPressedCallback mOnBackPressedCallback =
+      new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
-          setEnabled(false);
           mAlertDialogBuilder
               .init(SubmitActivity.this)
               .setMessage(mSending ? R.string.confirm_no_waiting : R.string.confirm_no_submit)
-              .setNegativeButton(android.R.string.cancel, (dialog, which) -> setEnabled(true))
+              .setNegativeButton(android.R.string.cancel, (dialog, which) -> updateBackPressedCallback())
               .setPositiveButton(
                   android.R.string.ok,
                   (dialog, which) -> {
-                    getOnBackPressedDispatcher().onBackPressed();
+                    mOnBackPressedCallback.setEnabled(false);
+                    finish();
                   })
-              .setOnCancelListener(dialog -> setEnabled(true))
+              .setOnCancelListener(dialog -> updateBackPressedCallback())
               .show();
         }
       };
+
+  @Synthetic
+  boolean hasUnsavedContent() {
+    return mSending
+        || (mTitleEditText != null && mTitleEditText.length() > 0)
+        || (mContentEditText != null && mContentEditText.length() > 0);
+  }
+
+  @Synthetic
+  void updateBackPressedCallback() {
+    mOnBackPressedCallback.setEnabled(hasUnsavedContent());
+  }
 
   /**
    * Called when the activity is first created.
@@ -129,7 +142,29 @@ public class SubmitActivity extends ThemedActivity {
         extractUrl(text);
       }
     }
+    android.text.TextWatcher textWatcher =
+        new android.text.TextWatcher() {
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+          @Override
+          public void onTextChanged(CharSequence s, int start, int count, int after) {}
+
+          @Override
+          public void afterTextChanged(android.text.Editable s) {
+            updateBackPressedCallback();
+          }
+        };
+    mTitleEditText.addTextChangedListener(textWatcher);
+    mContentEditText.addTextChangedListener(textWatcher);
     getOnBackPressedDispatcher().addCallback(this, mOnBackPressedCallback);
+    updateBackPressedCallback();
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    updateBackPressedCallback();
   }
 
   /**
@@ -307,6 +342,7 @@ public class SubmitActivity extends ThemedActivity {
     mTitleEditText.setEnabled(!sending);
     mContentEditText.setEnabled(!sending);
     supportInvalidateOptionsMenu();
+    updateBackPressedCallback();
   }
 
   static class SubmitCallback extends UserServices.Callback {

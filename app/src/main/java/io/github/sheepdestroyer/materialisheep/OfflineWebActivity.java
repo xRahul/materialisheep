@@ -18,6 +18,7 @@ package io.github.sheepdestroyer.materialisheep;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.widget.NestedScrollView;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
@@ -35,6 +36,20 @@ import io.github.sheepdestroyer.materialisheep.widget.CacheableWebView;
  */
 public class OfflineWebActivity extends ThemedActivity {
     static final String EXTRA_URL = OfflineWebActivity.class.getName() + ".EXTRA_URL";
+    private WebView mWebView;
+    private final OnBackPressedCallback mBackPressedCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            if (mWebView != null && mWebView.canGoBack()) {
+                mWebView.goBack();
+                updateBackPressedCallback();
+            }
+        }
+    };
+
+    private void updateBackPressedCallback() {
+        mBackPressedCallback.setEnabled(mWebView != null && mWebView.canGoBack());
+    }
 
     /**
      * Called when the activity is first created.
@@ -64,15 +79,22 @@ public class OfflineWebActivity extends ThemedActivity {
                 ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
         getSupportActionBar().setSubtitle(R.string.offline);
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress);
-        final WebView webView = (WebView) findViewById(R.id.web_view);
-        webView.setBackgroundColor(Color.TRANSPARENT);
-        webView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(this)) {
+        mWebView = (WebView) findViewById(R.id.web_view);
+        mWebView.setBackgroundColor(Color.TRANSPARENT);
+        mWebView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(this)) {
             @Override
             public void onPageFinished(WebView view, String url) {
                 setTitle(view.getTitle());
+                updateBackPressedCallback();
+            }
+
+            @Override
+            public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                super.doUpdateVisitedHistory(view, url, isReload);
+                updateBackPressedCallback();
             }
         });
-        webView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
+        mWebView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
                 super.onProgressChanged(view, newProgress);
@@ -80,13 +102,15 @@ public class OfflineWebActivity extends ThemedActivity {
                 progressBar.setProgress(newProgress);
                 if (newProgress == 100) {
                     progressBar.setVisibility(View.GONE);
-                    webView.setBackgroundColor(Color.WHITE);
-                    webView.setVisibility(View.VISIBLE);
+                    mWebView.setBackgroundColor(Color.WHITE);
+                    mWebView.setVisibility(View.VISIBLE);
                 }
             }
         });
-        AppUtils.toggleWebViewZoom(webView.getSettings(), true);
-        webView.loadUrl(url);
+        AppUtils.toggleWebViewZoom(mWebView.getSettings(), true);
+        getOnBackPressedDispatcher().addCallback(this, mBackPressedCallback);
+        updateBackPressedCallback();
+        mWebView.loadUrl(url);
     }
 
     /**
