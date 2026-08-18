@@ -16,14 +16,11 @@
 
 package io.github.sheepdestroyer.materialisheep;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
-import androidx.annotation.WorkerThread;
 import android.text.TextUtils;
 import android.webkit.WebResourceResponse;
+import androidx.annotation.WorkerThread;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -41,7 +38,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * hosts file.
  */
 public class AdBlocker {
-    private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
+    private static final String AD_HOSTS_FILE = "hagezi-pro-mini.txt";
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static volatile TrieNode AD_HOSTS = new TrieNode();
     private static volatile Disposable sLoadDisposable;
@@ -69,6 +66,9 @@ public class AdBlocker {
      * @return True if the URL is an ad, false otherwise.
      */
     public static boolean isAd(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
         HttpUrl httpUrl = HttpUrl.parse(url);
         return isAdHost(httpUrl != null ? httpUrl.host() : "");
     }
@@ -80,7 +80,7 @@ public class AdBlocker {
      * @return True if the URI is an ad, false otherwise.
      */
     public static boolean isAd(Uri uri) {
-        return isAdHost(uri != null ? uri.getHost() : "");
+        return uri != null && isAdHost(uri.getHost());
     }
 
     /**
@@ -99,7 +99,10 @@ public class AdBlocker {
                 BufferedSource buffer = Okio.buffer(Okio.source(stream))) {
             String line;
             while ((line = buffer.readUtf8Line()) != null) {
-                root.add(line);
+                line = line.trim();
+                if (!line.isEmpty() && !line.startsWith("#") && !line.startsWith("!")) {
+                    root.add(line.toLowerCase(java.util.Locale.ROOT));
+                }
             }
         }
         return root.toTrieNode();
@@ -113,6 +116,7 @@ public class AdBlocker {
         if (host == null || host.isEmpty()) {
             return false;
         }
+        host = host.toLowerCase(java.util.Locale.ROOT);
         TrieNode node = AD_HOSTS;
         for (int i = host.length() - 1; i >= 0; i--) {
             node = node.getChild(host.charAt(i));

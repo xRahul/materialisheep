@@ -1,6 +1,9 @@
 package io.github.sheepdestroyer.materialisheep;
 
+import android.content.Context;
 import android.net.Uri;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -8,11 +11,11 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
@@ -24,6 +27,10 @@ public class AdBlockerTest {
         Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
         field.setAccessible(true);
         field.set(null, new AdBlocker.TrieNode());
+
+        Field disposableField = AdBlocker.class.getDeclaredField("sLoadDisposable");
+        disposableField.setAccessible(true);
+        disposableField.set(null, null);
     }
 
     @Test
@@ -74,5 +81,51 @@ public class AdBlockerTest {
 
         // Test negative cases
         assertFalse("http://google.com should NOT be ad", AdBlocker.isAd(Uri.parse("http://google.com")));
+    }
+
+    @Test
+    public void testInitFromHaGeZiAssetAndMatch() {
+        Context context = ApplicationProvider.getApplicationContext();
+        AdBlocker.init(context, Schedulers.trampoline());
+
+        // Verify known ad/tracker hosts in HaGeZi Pro Mini
+        assertTrue("googleads.g.doubleclick.net should be blocked",
+                AdBlocker.isAd("https://googleads.g.doubleclick.net/pagead/ads"));
+        assertTrue("pagead2.googlesyndication.com should be blocked",
+                AdBlocker.isAd("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"));
+        assertTrue("analytics.google.com should be blocked",
+                AdBlocker.isAd("https://analytics.google.com/analytics/web/"));
+        assertTrue("criteo.com should be blocked",
+                AdBlocker.isAd("https://criteo.com/delivery/ajs.php"));
+        assertTrue("static.criteo.net should be blocked",
+                AdBlocker.isAd("https://static.criteo.net/js/ld/ld.js"));
+        assertTrue("scorecardresearch.com should be blocked",
+                AdBlocker.isAd("https://b.scorecardresearch.com/beacon.js"));
+        assertTrue("moatads.com should be blocked",
+                AdBlocker.isAd("https://z.moatads.com/swf/p.js"));
+
+        // Case insensitivity test
+        assertTrue("Uppercase URL should be blocked",
+                AdBlocker.isAd("HTTPS://CRITEO.COM/DELIVERY/AJS.PHP"));
+        assertTrue("Uppercase subdomain URL should be blocked",
+                AdBlocker.isAd("HTTPS://PAGEAD2.GOOGLEADSERVICES.COM.COM/TEST"));
+
+        // Verify legitimate sites are NOT blocked
+        assertFalse("news.ycombinator.com should NOT be blocked",
+                AdBlocker.isAd("https://news.ycombinator.com/"));
+        assertFalse("google.com should NOT be blocked",
+                AdBlocker.isAd("https://google.com/search?q=test"));
+        assertFalse("github.com should NOT be blocked",
+                AdBlocker.isAd("https://github.com/sheepdestroyer/materialisheep"));
+        assertFalse("android.com should NOT be blocked",
+                AdBlocker.isAd("https://developer.android.com/reference"));
+        assertFalse("wikipedia.org should NOT be blocked",
+                AdBlocker.isAd("https://en.wikipedia.org/wiki/Main_Page"));
+
+        // Edge cases
+        assertFalse("Empty string should not be ad", AdBlocker.isAd(""));
+        assertFalse("Null string should not be ad", AdBlocker.isAd((String) null));
+        assertFalse("Null Uri should not be ad", AdBlocker.isAd((Uri) null));
+        assertNotNull("Empty resource response should not be null", AdBlocker.createEmptyResource());
     }
 }

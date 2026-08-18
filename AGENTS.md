@@ -76,7 +76,7 @@ This repository uses a custom **Advanced Setup** workflow (`.github/workflows/co
 - **DI:** Dagger 2 via `ApplicationComponent` (singleton) + `ApplicationModule`/`DataModule`/`NetworkModule`/`UiModule`/`ActivityModule`.
 - **Data layer:** RxJava 3 (`ItemManager` produces/consumes callbacks), blocking Retrofit `.execute()` calls in Kotlin ViewModels on `Dispatchers.IO`.
 - **Story list:** `ListFragment` → Kotlin `StoryListViewModel` (StateFlow) → `HackerNewsClient.getStories()` → batched `getItems()`.
-- **Web content:** `WebFragment` + `MaterialWebView`. **Security hardening:** `setJavaScriptEnabled(isRemote)` — JS is off for local content, on for remote + PDF.js viewer (`WebFragmentSecurityTest` enforces). `AdBlockWebViewClient` + `AdBlocker` drop ad/tracker requests. `FullscreenViewModel` (LiveData `fullscreenEvent()`) drives reader fullscreen.
+- **Web content:** `WebFragment` + `MaterialWebView`. **Security hardening:** `setJavaScriptEnabled(isRemote)` — JS is off for local content, on for remote + PDF.js viewer (`WebFragmentSecurityTest` enforces). `AdBlockWebViewClient` + `AdBlocker` (backed by HaGeZi Multi Pro Mini blocklist) drop ad/tracker requests. `FullscreenViewModel` (LiveData `fullscreenEvent()`) drives reader fullscreen.
 - **Widgets:** `WidgetHelper` (`@Inject` HN + Algolia `ItemManager`s) builds `RemoteCollectionItems`; `WidgetRefreshJobService` (JobScheduler) schedules refreshes.
 - **Crash reporting (fork):** debug builds install a default uncaught-exception handler launching `CrashActivity`; bypassed when `Build.FINGERPRINT == "robolectric"` so unit tests never self-terminate (`System.exit`).
 
