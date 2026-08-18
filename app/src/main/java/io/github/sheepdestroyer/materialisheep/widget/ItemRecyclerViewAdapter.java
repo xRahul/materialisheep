@@ -24,8 +24,14 @@ import android.os.Build;
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
+import android.graphics.Typeface;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import androidx.core.content.ContextCompat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -205,6 +211,41 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     protected void onItemLoaded(int position, Item item) {
         if (position < getItemCount()) {
             notifyItemChanged(position);
+        }
+    }
+
+    private String mStoryAuthor;
+
+    public void setStoryAuthor(@Nullable String storyAuthor) {
+        mStoryAuthor = storyAuthor;
+    }
+
+    @Nullable
+    public String getStoryAuthor() {
+        return mStoryAuthor;
+    }
+
+    protected void appendAuthorBadges(TextView postedTextView, Item item) {
+        if (postedTextView == null || item == null || TextUtils.isEmpty(item.getBy())) {
+            return;
+        }
+        Context ctx = mContext != null ? mContext : postedTextView.getContext();
+        if (ctx == null) {
+            return;
+        }
+        String author = item.getBy();
+        if (!TextUtils.isEmpty(mStoryAuthor) && TextUtils.equals(author, mStoryAuthor)) {
+            SpannableString opBadge = new SpannableString(" OP");
+            int accentColor = ContextCompat.getColor(ctx, AppUtils.getThemedResId(ctx, androidx.appcompat.R.attr.colorAccent));
+            opBadge.setSpan(new ForegroundColorSpan(accentColor), 0, opBadge.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+            opBadge.setSpan(new StyleSpan(Typeface.BOLD), 0, opBadge.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+            postedTextView.append(opBadge);
+        } else if (!TextUtils.isEmpty(mUsername) && TextUtils.equals(author, mUsername)) {
+            SpannableString youBadge = new SpannableString(" YOU");
+            int linkColor = ContextCompat.getColor(ctx, AppUtils.getThemedResId(ctx, android.R.attr.textColorLink));
+            youBadge.setSpan(new ForegroundColorSpan(linkColor), 0, youBadge.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+            youBadge.setSpan(new StyleSpan(Typeface.BOLD), 0, youBadge.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+            postedTextView.append(youBadge);
         }
     }
 

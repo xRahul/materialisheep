@@ -406,6 +406,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mWebView == null) {
       return;
     }
+    if (url != null && !TextUtils.equals(PDF_LOADER_URL, url)) {
+      url = UrlSanitizer.sanitizeUrl(url);
+    }
     mIsPdf = false;
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();

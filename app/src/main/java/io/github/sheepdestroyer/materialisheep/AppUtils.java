@@ -109,6 +109,7 @@ public class AppUtils {
    */
   public static void openWebUrlExternal(
       Context context, @Nullable WebItem item, String url, @Nullable CustomTabsSession session) {
+    url = UrlSanitizer.sanitizeUrl(url);
     if (!hasConnection(context)) {
       context.startActivity(
           new Intent(context, OfflineWebActivity.class)
@@ -194,10 +195,11 @@ public class AppUtils {
     if (TextUtils.isEmpty(htmlText)) {
       return null;
     }
+    String processed = CodeBlockFormatter.preprocessCodeTags(htmlText);
     // noinspection InlinedApi
     CharSequence spanned =
-        Html.fromHtml(htmlText, compact ? Html.FROM_HTML_MODE_COMPACT : Html.FROM_HTML_MODE_LEGACY);
-    return trim(spanned);
+        Html.fromHtml(processed, compact ? Html.FROM_HTML_MODE_COMPACT : Html.FROM_HTML_MODE_LEGACY);
+    return trim(CodeBlockFormatter.formatCodeBlocks(spanned));
   }
 
   /**

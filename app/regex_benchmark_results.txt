@@ -1,3 +1,0 @@
-Uncompiled time: 225035386 ns
-Compiled time: 192084967 ns
-Improvement: 1.171540852543656x

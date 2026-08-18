@@ -343,6 +343,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
             mAdapter = new MultiPageItemRecyclerViewAdapter(mItemManager, mItem.getKidItems());
         }
         mAdapter.setCacheMode(mCacheMode);
+        mAdapter.setStoryAuthor(mItem != null ? mItem.getBy() : null);
         mAdapter.initDisplayOptions(getActivity());
         mAdapter.attach(getActivity(), mRecyclerView);
         mRecyclerView.setAdapter(mAdapter);

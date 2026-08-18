@@ -287,6 +287,7 @@ public class SinglePageItemRecyclerViewAdapter
         int position = holder.getBindingAdapterPosition();
         holder.mPostedTextView.append(item.getDisplayedAuthor(mContext, true,
                 getThreadColor(position != RecyclerView.NO_POSITION ? getItemViewType(position) : 0)));
+        appendAuthorBadges(holder.mPostedTextView, item);
         bindKids(holder, item);
     }
 

@@ -25,6 +25,8 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
 *   **Threaded Comments:**
     *   Collapsible comment threads for easy navigation of deep discussions.
     *   Visual indicators for thread depth.
+    *   **Author Badges:** Prominent `[OP]` badge identifying the story submitter and `[YOU]` identifying the logged-in reader across discussion threads.
+    *   **Syntax Highlighting:** Code blocks (`<pre><code>`) rendered in monospace with subtle container tinting and keyword syntax highlighting for programming languages.
     *   Navigation helpers: Floating action button and volume key scrolling to jump between comments.
 *   **Search:**
     *   Powered by the Algolia Hacker News API.
@@ -77,6 +79,7 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   Option to always open in an external browser.
 *   **Security:**
     *   Hardware-backed AES-256 GCM encryption for user credentials via `AndroidKeyStore`.
+    *   **Universal Privacy Shield (`UrlSanitizer.kt`):** Strips marketing trackers and campaign attribution IDs (`utm_*`, `fbclid`, `gclid`, etc.) before launching Custom Tabs or opening WebViews.
     *   JavaScript is disabled for local (offline/readability) content and only enabled for remote pages and the bundled PDF viewer, mitigating XSS via injected content.
     *   Ad and tracker blocking powered by synchronized `AdBlocker` trie.
     *   Backend API endpoints enforce HTTPS.
