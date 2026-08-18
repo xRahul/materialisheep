@@ -57,7 +57,9 @@ public class CacheableWebView extends MaterialWebView {
     if (TextUtils.isEmpty(url)) {
       return;
     }
-    mArchiveClient.lastProgress = 0;
+    if (mArchiveClient != null) {
+      mArchiveClient.lastProgress = 0;
+    }
     super.loadUrl(getCacheableUrl(url));
   }
 
@@ -66,12 +68,19 @@ public class CacheableWebView extends MaterialWebView {
     if (TextUtils.isEmpty(url)) {
       return;
     }
-    mArchiveClient.lastProgress = 0;
+    if (mArchiveClient != null) {
+      mArchiveClient.lastProgress = 0;
+    }
     super.loadUrl(getCacheableUrl(url), additionalHttpHeaders);
   }
 
   @Override
   public void setWebChromeClient(WebChromeClient client) {
+    if (client == null) {
+      mArchiveClient = null;
+      super.setWebChromeClient(null);
+      return;
+    }
     if (!(client instanceof ArchiveClient)) {
       throw new IllegalArgumentException(
           "client should be an instance of " + ArchiveClient.class.getName());
@@ -106,6 +115,9 @@ public class CacheableWebView extends MaterialWebView {
   }
 
   private String getCacheableUrl(String url) {
+    if (mArchiveClient == null || TextUtils.isEmpty(url)) {
+      return url;
+    }
     if (TextUtils.equals(url, BLANK) || TextUtils.equals(url, FILE)) {
       mArchiveClient.cacheFileName = null;
       return url;

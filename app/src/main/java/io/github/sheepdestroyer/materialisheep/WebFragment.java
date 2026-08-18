@@ -183,7 +183,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
                     && !((ItemActivity) requireActivity()).isCurrentPage(WebFragment.this)) {
                   return;
                 }
-                if (mWebView.canGoBack()) {
+                if (mWebView != null && mWebView.canGoBack()) {
                   mWebView.goBack();
                 } else {
                   setEnabled(false);
@@ -227,8 +227,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   @Override
   public void onResume() {
     super.onResume();
-    mWebView.onResume();
-    mWebView.resumeTimers();
+    if (mWebView != null) {
+      mWebView.onResume();
+      mWebView.resumeTimers();
+    }
   }
 
   @Override
@@ -248,13 +250,53 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   @Override
+  public void onDestroyView() {
+    if (mPdfAndroidJavascriptBridge != null) {
+      mPdfAndroidJavascriptBridge.cleanUp();
+      mPdfAndroidJavascriptBridge = null;
+    }
+    if (mWebView != null) {
+      ViewGroup parent = (ViewGroup) mWebView.getParent();
+      if (parent != null) {
+        parent.removeView(mWebView);
+      }
+      mWebView.stopLoading();
+      mWebView.setWebChromeClient(null);
+      mWebView.setWebViewClient(null);
+      mWebView.setDownloadListener(null);
+      mWebView.loadUrl("about:blank");
+      mWebView.clearHistory();
+      mWebView.removeAllViews();
+      mWebView.destroy();
+      mWebView = null;
+    }
+    mScrollView = null;
+    mFullscreenView = null;
+    mScrollViewContent = null;
+    mControls = null;
+    mButtonRefresh = null;
+    mButtonMore = null;
+    mButtonNext = null;
+    mEditText = null;
+    mProgressBar = null;
+    mScrollableHelper = null;
+    mSystemUiHelper = null;
+    mFragmentView = null;
+    super.onDestroyView();
+  }
+
+  @Override
   public void onDestroy() {
     super.onDestroy();
     mDisposables.clear();
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();
+      mPdfAndroidJavascriptBridge = null;
     }
-    mWebView.destroy();
+    if (mWebView != null) {
+      mWebView.destroy();
+      mWebView = null;
+    }
     // Note: mReadabilityClient is a singleton, do not call destroy() here.
     // Subscriptions are fire-and-forget and managed internally.
   }
@@ -268,8 +310,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   @Override
   public void scrollToTop() {
     if (mFullscreen) {
-      mWebView.pageUp(true);
-    } else {
+      if (mWebView != null) {
+        mWebView.pageUp(true);
+      }
+    } else if (mScrollableHelper != null) {
       mScrollableHelper.scrollToTop();
     }
   }
@@ -277,26 +321,32 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   @Override
   public boolean scrollToNext() {
     if (mFullscreen) {
-      mWebView.pageDown(false);
-      return true;
+      if (mWebView != null) {
+        mWebView.pageDown(false);
+        return true;
+      }
+      return false;
     } else {
-      return mScrollableHelper.scrollToNext();
+      return mScrollableHelper != null && mScrollableHelper.scrollToNext();
     }
   }
 
   @Override
   public boolean scrollToPrevious() {
     if (mFullscreen) {
-      mWebView.pageUp(false);
-      return true;
+      if (mWebView != null) {
+        mWebView.pageUp(false);
+        return true;
+      }
+      return false;
     } else {
-      return mScrollableHelper.scrollToPrevious();
+      return mScrollableHelper != null && mScrollableHelper.scrollToPrevious();
     }
   }
 
   @Override
   public boolean onBackPressed() {
-    if (mWebView.canGoBack()) {
+    if (mWebView != null && mWebView.canGoBack()) {
       mWebView.goBack();
       return true;
     }
@@ -305,6 +355,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Override
   protected void load() {
+    if (mWebView == null) {
+      return;
+    }
     mWebView.setVisibility(View.INVISIBLE);
     if (mIsHackerNewsUrl) {
       bindContent();
@@ -330,6 +383,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @SuppressLint({"AddJavascriptInterface", "SetJavaScriptEnabled"}) // We are a browser and need JS; PDF loader is local and trusted
   private void reloadUrl(String url, @Nullable String pdfFilePath) {
+    if (mWebView == null) {
+      return;
+    }
     mIsPdf = false;
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();
@@ -362,12 +418,17 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Synthetic
   void loadContent() {
+    if (mWebView == null) {
+      return;
+    }
     setWebSettings(false);
     mWebView.reloadHtml(AppUtils.wrapHtml(getActivity(), mContent));
   }
 
   private void parse() {
-    mProgressBar.setProgress(DEFAULT_PROGRESS);
+    if (mProgressBar != null) {
+      mProgressBar.setProgress(DEFAULT_PROGRESS);
+    }
     mReadabilityClient.parse(mItem.getId(), mItem.getUrl(), new ReadabilityCallback(this));
   }
 
@@ -381,8 +442,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void pauseWebView() {
-    mWebView.onPause();
-    mWebView.pauseTimers();
+    if (mWebView != null) {
+      mWebView.onPause();
+      mWebView.pauseTimers();
+    }
   }
 
   private boolean fontEnabled() {
@@ -390,38 +453,60 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private boolean modeToggleEnabled() {
-    return !mIsHackerNewsUrl && !mWebView.canGoBack();
+    return !mIsHackerNewsUrl && mWebView != null && !mWebView.canGoBack();
   }
 
   private void setUpWebControls(View view) {
     view.findViewById(R.id.toolbar_web).setOnClickListener(v -> scrollToTop());
-    view.findViewById(R.id.button_back).setOnClickListener(v -> mWebView.goBack());
-    view.findViewById(R.id.button_forward).setOnClickListener(v -> mWebView.goForward());
+    view.findViewById(R.id.button_back).setOnClickListener(v -> {
+      if (mWebView != null) {
+        mWebView.goBack();
+      }
+    });
+    view.findViewById(R.id.button_forward).setOnClickListener(v -> {
+      if (mWebView != null) {
+        mWebView.goForward();
+      }
+    });
     view.findViewById(R.id.button_clear)
         .setOnClickListener(
             v -> {
-              mSystemUiHelper.setFullscreen(true);
+              if (mSystemUiHelper != null) {
+                mSystemUiHelper.setFullscreen(true);
+              }
               reset();
-              mControls.showNext();
+              if (mControls != null) {
+                mControls.showNext();
+              }
             });
     view.findViewById(R.id.button_find)
         .setOnClickListener(
             v -> {
-              mEditText.requestFocus();
+              if (mEditText != null) {
+                mEditText.requestFocus();
+              }
               toggleSoftKeyboard(true);
-              mControls.showNext();
+              if (mControls != null) {
+                mControls.showNext();
+              }
             });
     mButtonRefresh.setOnClickListener(
         v -> {
-          if (mWebView.getProgress() < 100) {
-            mWebView.stopLoading();
-          } else {
-            mWebView.reload();
+          if (mWebView != null) {
+            if (mWebView.getProgress() < 100) {
+              mWebView.stopLoading();
+            } else {
+              mWebView.reload();
+            }
           }
         });
     view.findViewById(R.id.button_exit)
         .setOnClickListener(v -> mFullscreenViewModel.setFullscreen(false));
-    mButtonNext.setOnClickListener(v -> mWebView.findNext(true));
+    mButtonNext.setOnClickListener(v -> {
+      if (mWebView != null) {
+        mWebView.findNext(true);
+      }
+    });
     mButtonMore.setOnClickListener(
         v ->
             mPopupMenu
@@ -434,11 +519,15 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
                         return true;
                       }
                       if (item.getItemId() == R.id.menu_zoom_in) {
-                        mWebView.zoomIn();
+                        if (mWebView != null) {
+                          mWebView.zoomIn();
+                        }
                         return true;
                       }
                       if (item.getItemId() == R.id.menu_zoom_out) {
-                        mWebView.zoomOut();
+                        if (mWebView != null) {
+                          mWebView.zoomOut();
+                        }
                         return true;
                       }
                       return false;
@@ -500,36 +589,55 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void offerExternalApp() {
+    if (getActivity() == null || mItem == null) {
+      return;
+    }
     final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mItem.getUrl()));
     if (intent.resolveActivity(getActivity().getPackageManager()) == null) {
       return;
     }
     mExternalRequired = true;
-    mWebView.setVisibility(GONE);
-    getActivity().findViewById(R.id.empty).setVisibility(VISIBLE);
-    getActivity().findViewById(R.id.download_button).setOnClickListener(v -> startActivity(intent));
+    if (mWebView != null) {
+      mWebView.setVisibility(GONE);
+    }
+    View emptyView = getActivity().findViewById(R.id.empty);
+    if (emptyView != null) {
+      emptyView.setVisibility(VISIBLE);
+    }
+    View downloadButton = getActivity().findViewById(R.id.download_button);
+    if (downloadButton != null) {
+      downloadButton.setOnClickListener(v -> startActivity(intent));
+    }
   }
 
   private void setProgress(int progress) {
-    mProgressBar.setProgress(progress);
-    mProgressBar.setVisibility(progress == 100 ? GONE : VISIBLE);
-    mButtonRefresh.setImageResource(
-        progress == 100 ? R.drawable.ic_refresh_white_24dp : R.drawable.ic_clear_white_24dp);
+    if (mProgressBar != null) {
+      mProgressBar.setProgress(progress);
+      mProgressBar.setVisibility(progress == 100 ? GONE : VISIBLE);
+    }
+    if (mButtonRefresh != null) {
+      mButtonRefresh.setImageResource(
+          progress == 100 ? R.drawable.ic_refresh_white_24dp : R.drawable.ic_clear_white_24dp);
+    }
   }
 
   @SuppressLint("SetJavaScriptEnabled")
   private void setWebSettings(boolean isRemote) {
     mReadability = !isRemote;
-    mWebView.setBackgroundColor(isRemote ? Color.WHITE : Color.TRANSPARENT);
-    mWebView.getSettings().setLoadWithOverviewMode(isRemote);
-    mWebView.getSettings().setUseWideViewPort(isRemote);
-    mWebView.getSettings().setJavaScriptEnabled(isRemote);
-    getActivity().invalidateOptionsMenu();
+    if (mWebView != null) {
+      mWebView.setBackgroundColor(isRemote ? Color.WHITE : Color.TRANSPARENT);
+      mWebView.getSettings().setLoadWithOverviewMode(isRemote);
+      mWebView.getSettings().setUseWideViewPort(isRemote);
+      mWebView.getSettings().setJavaScriptEnabled(isRemote);
+    }
+    if (getActivity() != null) {
+      getActivity().invalidateOptionsMenu();
+    }
   }
 
   @Synthetic
   void setFullscreen(boolean isFullscreen) {
-    if (getView() == null) {
+    if (getView() == null || mWebView == null || mControls == null || mScrollViewContent == null) {
       return;
     }
     mFullscreen = isFullscreen;
@@ -541,9 +649,13 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
         if (mScrollViewContent.getParent() != null) {
           ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
         }
-        mFullscreenView.addView(mScrollViewContent);
+        if (mFullscreenView != null) {
+          mFullscreenView.addView(mScrollViewContent);
+        }
       }
-      mWebView.scrollTo(mScrollView.getScrollX(), mScrollView.getScrollY());
+      if (mScrollView != null) {
+        mWebView.scrollTo(mScrollView.getScrollX(), mScrollView.getScrollY());
+      }
       params.height = ViewGroup.LayoutParams.MATCH_PARENT;
     } else {
       reset();
@@ -554,13 +666,19 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       while (mWebView.zoomOut() && i < 30) {
         i++;
       }
-      if (mScrollViewContent.getParent() != mScrollView) {
+      if (mScrollView != null && mScrollViewContent.getParent() != mScrollView) {
         if (mScrollViewContent.getParent() != null) {
           ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
         }
         mScrollView.addView(mScrollViewContent);
       }
-      mScrollView.post(() -> mScrollView.scrollTo(mWebView.getScrollX(), mWebView.getScrollY()));
+      if (mScrollView != null) {
+        mScrollView.post(() -> {
+          if (mScrollView != null && mWebView != null) {
+            mScrollView.scrollTo(mWebView.getScrollX(), mWebView.getScrollY());
+          }
+        });
+      }
       params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
     }
     mWebView.setLayoutParams(params);
@@ -583,13 +701,22 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void reset() {
-    mEditText.setText(null);
-    mButtonNext.setEnabled(false);
+    if (mEditText != null) {
+      mEditText.setText(null);
+    }
+    if (mButtonNext != null) {
+      mButtonNext.setEnabled(false);
+    }
     toggleSoftKeyboard(false);
-    mWebView.clearMatches();
+    if (mWebView != null) {
+      mWebView.clearMatches();
+    }
   }
 
   private void findInPage() {
+    if (mEditText == null || mWebView == null) {
+      return;
+    }
     String query = mEditText.getText().toString().trim();
     if (TextUtils.isEmpty(query)) {
       return;
@@ -604,17 +731,27 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void handleFindResults(int numberOfMatches) {
-    mButtonNext.setEnabled(numberOfMatches > 0);
+    if (mButtonNext != null) {
+      mButtonNext.setEnabled(numberOfMatches > 0);
+    }
     if (numberOfMatches == 0) {
-      Toast.makeText(getContext(), R.string.no_matches, Toast.LENGTH_SHORT).show();
+      if (getContext() != null) {
+        Toast.makeText(getContext(), R.string.no_matches, Toast.LENGTH_SHORT).show();
+      }
     } else {
       toggleSoftKeyboard(false);
     }
   }
 
   private void toggleSoftKeyboard(boolean visible) {
+    if (getActivity() == null || mEditText == null) {
+      return;
+    }
     InputMethodManager imm =
         (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+    if (imm == null) {
+      return;
+    }
     if (visible) {
       imm.showSoftInput(mEditText, InputMethodManager.SHOW_IMPLICIT);
     } else {

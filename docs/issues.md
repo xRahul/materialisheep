@@ -1,416 +1,367 @@
-# Materialisheep Comprehensive Issues & Audit Report
+# Materialisheep Strategic Engineering Roadmap, Issue Taxonomy & Technical Architecture
 
-This document records the exhaustive, multi-role review and adversarial **Gauntlet-Loop** audit of the `materialisheep` repository (codebase, architecture, UI/UX, security, build systems, CI/CD pipelines, test coverage, and documentation), along with completed remediations and newly verified findings.
-
----
-
-## Executive Summary & Taxonomy
-
-### Issues by Category & Severity
-| Category | Historical Resolved | Newly Audited & Verified | Total Issues | Key Focus Areas |
-|---|---|---|---|---|
-| **Critical** | 8 | 0 | 8 | Options menu, Security permissions, Disposables, Widget click navigation, Sync queue crash, CodeQL SARIF upload |
-| **High** | 8 | 0 | 8 | Singleton safety, Insets, Predictive back, Jsoup parsing, Back button dispatch, OkHttp response leaks |
-| **Medium** | 7 | 0 | 7 | Dead dependencies, Room schema, Background web cache, Comment squeeze, Cursor leak, PDF stream read safety |
-| **Low / Tech Debt** | 3 | 0 | 3 | Dynamic theming, Obsolete SDK version checks (API 30 on minSdk 31), Deprecated Bundle Parcelable APIs |
-| **Doc Sync Errors** | 7 | 0 | 7 | Min/target SDK sync, `ItemManager` `Disposable` status, `TODO.md` pruning, Clone repo URLs |
+This document provides a deep-dive, restructured analysis of the `materialisheep` codebase. It cleanly separates **Existing System & Architectural Improvements** from **New Product Features**, establishing a strict execution sequence based on technical dependencies, performance impact, and stability risks.
 
 ---
 
-## 1. Functional Bugs & Runtime Logic Issues
+## Strategic Phasing & Execution Order
 
-### [CRIT-01] Fragment `MenuProvider` Migration Incomplete: Options Menu Clicks Dropped
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`BaseFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/BaseFragment.java#L63-L85)
-  - [`BaseListFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/BaseListFragment.java#L129-L138)
-  - [`ItemFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemFragment.java#L199-L208)
-  - [`FavoriteFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/FavoriteFragment.java#L161-L172)
-- **Problem Statement:**
-  [`BaseFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/BaseFragment.java) registers a modern `MenuProvider` which delegates menu clicks to `BaseFragment.this.onMenuItemSelected(MenuItem)`. Child fragments previously overrode deprecated `onOptionsItemSelected(MenuItem)`.
-- **Resolution:**
-  Changed all child fragment methods to `@Override public boolean onMenuItemSelected(MenuItem item)` and removed deprecated `setHasOptionsMenu(true)`.
+```mermaid
+flowchart TD
+    subgraph Phase1["PHASE 1: Critical Reliability, Memory & Tooling (DO FIRST - P0)"]
+        A1["ARCH-09: WebView Native Memory Leak"]
+        A2["ARCH-10: Thread-Unsafe LiveData DB Bus"]
+        A3["ARCH-15: FontCache Uncaught Crash"]
+        A4["ARCH-16: Unscoped Rx Subscriptions"]
+        D1["DEP-01: Gradle Version Catalog"]
+    end
 
----
+    subgraph Phase2["PHASE 2: Data Layer, Concurrency & Security Modernization (DO SECOND - P1)"]
+        A5["ARCH-11: Encrypted Keystore Auth Cookie"]
+        A6["ARCH-12: Granular Network Cache-Control"]
+        A7["ARCH-13: In-Memory LruCache"]
+        A8["ARCH-04: DataStore Preferences Migration"]
+        A9["ARCH-03: Coroutines/Flow Data Layer"]
+        A10["ARCH-06: PrecomputedText & ListAdapter"]
+        A11["ARCH-05: WorkManager Sync Migration"]
+        A12["ARCH-14: Modern Custom Tabs APIs"]
+    end
 
-### [CRIT-02] `SettingsActivity` Declares System Permission `WRITE_SECURE_SETTINGS`
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`AndroidManifest.xml`](file:///home/rahul/projects/materialisheep/app/src/main/AndroidManifest.xml)
-- **Problem Statement:**
-  `android.permission.WRITE_SECURE_SETTINGS` was declared on `SettingsActivity`, causing third-party launcher apps and preference intents to crash with `SecurityException`.
-- **Resolution:**
-  Removed signature-level `android:permission="android.permission.WRITE_SECURE_SETTINGS"` from `SettingsActivity` in `AndroidManifest.xml`.
+    subgraph Phase3["PHASE 3: Core Product Features & UX Upgrades (DO THIRD - P1/P2)"]
+        F1["FEAT-07: Pure Black OLED Theme"]
+        F2["FEAT-01: Content Filter & Muting Engine"]
+        F3["FEAT-03: Algolia Search Filter Chips"]
+        F4["FEAT-05: WorkManager Reply Alerts"]
+        F5["FEAT-04: Power-User Comment Gestures"]
+        F6["FEAT-06: Rich Previews & Syntax Highlighting"]
+        F7["FEAT-08: Offline Storage Manager"]
+    end
 
----
+    subgraph Phase4["PHASE 4: Jetpack Compose, AI & Modularization (DO LAST - P2/P3)"]
+        A13["ARCH-01: Full Kotlin Migration"]
+        A14["ARCH-02: Jetpack Compose Phased UI"]
+        D2["DEP-02: kotlinx.serialization"]
+        D3["DEP-03: Dagger to Hilt Migration"]
+        F8["FEAT-02: AI Article/Comment Summarizer"]
+        A15["ARCH-07: Multi-Module Architecture"]
+        A16["ARCH-08: Roborazzi Screenshot Tests"]
+        D4["DEP-04: AndroidX Baseline Profiles"]
+    end
 
-### [CRIT-03] Uncancellable RxJava Subscriptions & Missing `Disposable` Lifecycle Management
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`HackerNewsClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/HackerNewsClient.java)
-  - [`AlgoliaClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/AlgoliaClient.java)
-  - [`UserServicesClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/UserServicesClient.java)
-  - [`AdBlocker.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/AdBlocker.java)
-- **Problem Statement:**
-  RxJava subscriptions were made without capturing disposables, allowing network and background threads to run indefinitely.
-- **Resolution:**
-  Updated `ItemManager` methods (`getStories`, `getItem`, `getItems`), `UserServicesClient` (`reply`, `voteUp`), and `AdBlocker.init` to return and manage active `Disposable` references.
+    Phase1 --> Phase2
+    Phase2 --> Phase3
+    Phase3 --> Phase4
+```
 
----
-
-### [CRIT-06] Home Screen Widget Uses `FLAG_IMMUTABLE` with `setPendingIntentTemplate`, Breaking Item Clicks (Android 12+)
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`WidgetHelper.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/appwidget/WidgetHelper.java#L268-L273)
-  - [`WidgetHelperTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/appwidget/WidgetHelperTest.java)
-- **Problem Statement:**
-  In [`WidgetHelper.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/appwidget/WidgetHelper.java), `remoteViews.setPendingIntentTemplate` was initialized with `PendingIntent.FLAG_IMMUTABLE`. On Android 12+ (`minSdk = 31`), immutable PendingIntents prevent the Android framework from applying fill-in data (`setOnClickFillInIntent`), breaking story click navigation from the home screen widget.
-- **Resolution:**
-  Updated the template PendingIntent flag to `PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT`, removed unused `mAlarmManager` field, and added Robolectric multi-SDK unit tests verifying mutable template flag behavior.
-
----
-
-### [CRIT-07] `SyncDelegate.stopSync()` Throws `NumberFormatException` on Null `job.id` During Batch Sync
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`SyncDelegate.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/SyncDelegate.java#L420-L435)
-  - [`SyncDelegateFinishTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/data/SyncDelegateFinishTest.java)
-- **Problem Statement:**
-  When `SyncDelegate` executes a batch queue sync via `mSyncQueueDao.getAll()`, `mJob.id` is null. When all items finished, `finish()` called `stopSync()`, which unconditionally executed `int id = Integer.valueOf(mJob.id);`, crashing the background sync with `NumberFormatException: null`.
-- **Resolution:**
-  Guarded the parsing logic with `if (mJob != null && !TextUtils.isEmpty(mJob.id))` and `try-catch (NumberFormatException)`, and added automated unit tests verifying null-ID batch sync completion.
+### Why This Sequence?
+1. **Phase 1 (Foundations & Fixes First):** Resolves native memory leaks, unhandled crashes, and thread-safety bugs that corrupt state. Centralizes dependencies into `libs.versions.toml` so subsequent refactoring uses clean version-catalog aliases.
+2. **Phase 2 (Architecture Modernization Second):** Establishes the coroutine repository, reactive DataStore, in-memory caching, and encrypted authentication. All new features in Phase 3 directly depend on these modern data and background pipelines.
+3. **Phase 3 (New Features Third):** Introduces user-facing features (muting, background reply notifications, search chips, AMOLED theme) on top of the robust, non-blocking Phase 2 architecture.
+4. **Phase 4 (Advanced Modernization Last):** Large-scale architectural shifts (Jetpack Compose migration, Multi-module splitting, Hilt DI, AI Summarization) that require a completely stable, bug-free core.
 
 ---
 
-### [HIGH-01] Non-Thread-Safe Global State & Singletons
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`FontCache.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/FontCache.java)
-  - [`AlgoliaClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/AlgoliaClient.java)
-  - [`Preferences.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/Preferences.java)
-- **Problem Statement:**
-  Unsynchronized singletons and unsynchronized collections accessed across UI and worker threads.
-- **Resolution:**
-  Added thread-safe `ConcurrentHashMap` and double-checked locking singletons in `FontCache`, `volatile` modifier on `AlgoliaClient.sSortByTime`, and synchronized static sets in `Preferences.Observable`.
+## Part I: Existing System Improvements, Bug Fixes & Architecture Modernization
+
+### [ARCH-09] WebView Lifecycle & Native Memory Leak in `WebFragment`
+- **Category:** `Memory Management / Reliability`
+- **Execution Order:** `Phase 1 (Do First - P0)`
+- **Impacted Files:** [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java#L251-L260)
+- **Deep-Dive Root Cause:**
+  `mWebView.destroy()` is executed in `onDestroy()` rather than `onDestroyView()`. In ViewPager2 / Fragment transactions, when tabs switch, `onDestroyView()` is invoked to destroy the view hierarchy, but the fragment instance is retained in memory. The retained `mWebView` instance holds strong references to the old `Context`, native Chromium `WebContents`, GPU composition surfaces, and hardware render nodes, causing multi-megabyte native memory leaks on every tab switch.
+- **Actionable Blueprint:**
+  1. In `onDestroyView()`, remove `mWebView` from its parent `ViewGroup` via `((ViewGroup) mWebView.getParent()).removeView(mWebView)`.
+  2. Clear webview listeners, load `about:blank`, and call `mWebView.destroy()`.
+  3. Nullify view binding and webview references.
 
 ---
 
-### [HIGH-02] Brittle HTML Screen-Scraping for Authentication & Voting
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`UserServicesClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/UserServicesClient.java)
-- **Problem Statement:**
-  Regex pattern matchers were used to parse HTML forms from HN login and submit pages.
-- **Resolution:**
-  Replaced regex scraping with robust DOM parsing via `org.jsoup.Jsoup` (`selectFirst`, `body().ownText()`).
+### [ARCH-10] Lossy & Thread-Unsafe LiveData Database Event Bus in `MaterialisticDatabase`
+- **Category:** `Concurrency / State Management`
+- **Execution Order:** `Phase 1 (Do First - P0)`
+- **Impacted Files:** [`MaterialisticDatabase.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/MaterialisticDatabase.java#L131-L135)
+- **Deep-Dive Root Cause:**
+  `setLiveValue(Uri uri)` invokes `mLiveData.setValue(uri)` followed immediately by `mLiveData.setValue(null)`. When called from background DAO or sync worker threads, `setValue()` crashes the app with `IllegalStateException: Cannot invoke setValue on a background thread`. Furthermore, because `LiveData` is lossy when values are posted rapidly in succession, intermediate database update events are dropped before UI observers receive them.
+- **Actionable Blueprint:**
+  1. Replace `MutableLiveData<Uri>` with Kotlin `MutableSharedFlow<Uri>` with `replay = 0`, `extraBufferCapacity = 64`, and `onBufferOverflow = BufferOverflow.DROP_OLDEST`.
+  2. Expose thread-safe emission method `tryEmit(uri)` runnable from any dispatcher.
 
 ---
 
-### [HIGH-07] `WebFragment` `OnBackPressedCallback` Intercepts Back Press on Comments Tab in `ItemActivity`
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java#L177-L184)
-  - [`ItemActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemActivity.java#L642-L647)
-  - [`WebFragmentTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/WebFragmentTest.java)
-- **Problem Statement:**
-  [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java) only checked `isCurrentPage` when hosted in `BaseListActivity`. In `ItemActivity`, pressing Back while viewing comments on position 0 hijacked navigation into the hidden WebView history.
-- **Resolution:**
-  Added `isCurrentPage(Fragment)` to `ItemActivity.java`, added `isCurrentPage` validation inside `WebFragment.java`'s back callback, and added automated unit tests verifying Back behavior when active vs off-screen.
+### [ARCH-15] Uncaught Exception Crash Risk in `FontCache.java`
+- **Category:** `Reliability / Crash Prevention`
+- **Execution Order:** `Phase 1 (Do First - P0)`
+- **Impacted Files:** [`FontCache.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/FontCache.java#L63)
+- **Deep-Dive Root Cause:**
+  `FontCache.get()` delegates to `mTypefaceMap.computeIfAbsent(typefaceName, name -> Typeface.createFromAsset(context.getAssets(), name))`. If an asset font is missing, corrupted, or unsupported, `createFromAsset` throws an unchecked `RuntimeException` that escapes `computeIfAbsent` and crashes the main UI thread during layout inflation.
+- **Actionable Blueprint:**
+  1. Wrap `createFromAsset` inside a `try-catch (RuntimeException)` block returning `Typeface.DEFAULT` on failure.
+  2. Migrate bundled fonts to Android standard `res/font/` XML font families via `ResourcesCompat.getFont(context, resId)`.
 
 ---
 
-### [HIGH-08] Unclosed OkHttp `Response` Instances Leak Sockets & Connections in `UserServicesClient`
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`UserServicesClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/UserServicesClient.java#L103-L160)
-- **Problem Statement:**
-  In `UserServicesClient.login`, `voteUp`, and `reply`, OkHttp `Response` objects returned from `execute(request)` were mapped or redirected without calling `response.close()` in `try-finally` blocks, leaking socket descriptors and connection pool slots.
-- **Resolution:**
-  Wrapped response handling across `login()`, `voteUp()`, `reply()`, and `submit()` with `try-finally { response.close(); }`.
+### [ARCH-16] Unscoped Fire-and-Forget RxJava Subscriptions in `SessionManager.kt`
+- **Category:** `Concurrency / Resource Management`
+- **Execution Order:** `Phase 1 (Do First - P0)`
+- **Impacted Files:** [`SessionManager.kt`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/SessionManager.kt#L75-L79)
+- **Deep-Dive Root Cause:**
+  `SessionManager.view(itemId)` runs an `@SuppressLint("CheckResult")` uncaptured RxJava subscription without lifecycle management. If multiple items are marked as viewed concurrently, runaway threads are spawned without backpressure or cancellation.
+- **Actionable Blueprint:**
+  1. Convert `view(itemId)` to a `suspend fun` or launch it inside a dedicated application-scoped `CoroutineScope(SupervisorJob() + Dispatchers.IO)`.
 
 ---
 
-## 2. Modern Android Development (MAD) & Platform Compliance
-
-### [CRIT-04] Outdated Embedded JavaScript Assets (`pdf.js` & `Readability.js`)
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`app/src/main/assets/Readability.js`](file:///home/rahul/projects/materialisheep/app/src/main/assets/Readability.js)
-  - [`app/src/main/assets/pdf/`](file:///home/rahul/projects/materialisheep/app/src/main/assets/pdf/)
-- **Problem Statement:**
-  Arc90 2010 readability script and outdated pdf.js 1.9.658 failed on modern HTML5/PDFs.
-- **Resolution:**
-  Upgraded to `@mozilla/readability` v0.5.0 and `pdf.js` v4.10.38 with lazy-allocated page canvases.
+### [DEP-01] Centralize Dependencies with Gradle Version Catalog (`libs.versions.toml`)
+- **Category:** `Build System / Tooling`
+- **Execution Order:** `Phase 1 (Do First - P0)`
+- **Impacted Files:** [`build.gradle`](file:///home/rahul/projects/materialisheep/build.gradle), [`app/build.gradle`](file:///home/rahul/projects/materialisheep/app/build.gradle)
+- **Deep-Dive Root Cause:**
+  Dependencies are declared using fragmented string literals and `ext` blocks across root and app `build.gradle` files. This prevents automated dependency update tooling (Renovate/Dependabot), lacks type-safety, and hinders future multi-module build optimization.
+- **Actionable Blueprint:**
+  1. Create `gradle/libs.versions.toml` defining versions, libraries, and plugin bundles.
+  2. Refactor `app/build.gradle` to use `libs.*` accessors.
 
 ---
 
-### [HIGH-03] Missing Android 13–16 Predictive Back Support
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`AndroidManifest.xml`](file:///home/rahul/projects/materialisheep/app/src/main/AndroidManifest.xml)
-  - [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java)
-- **Problem Statement:**
-  Lacked `android:enableOnBackInvokedCallback="true"` and modern back dispatcher routing.
-- **Resolution:**
-  Enabled `android:enableOnBackInvokedCallback="true"` in `AndroidManifest.xml` and wired WebView back history through `OnBackPressedDispatcher`.
+### [ARCH-11] Plaintext Password Storage in `AccountManager` & Zero-Trust Session Security
+- **Category:** `Security / Credential Hygiene`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`LoginActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/LoginActivity.java#L150), [`UserServicesClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/UserServicesClient.java)
+- **Deep-Dive Root Cause:**
+  `LoginActivity.addAccount` calls `mAccountManager.addAccountExplicitly(account, password, null)` and `setPassword(account, password)`. Storing the plaintext account password in system AccountManager exposes credentials to backup leaks and root inspection. Modern zero-trust mobile architecture dictates storing only the authenticated session cookie (`user` cookie) securely.
+- **Actionable Blueprint:**
+  1. Migrate credential persistence to `EncryptedSharedPreferences` backed by the Android Keystore (`MasterKey.DEFAULT_MASTER_KEY_ALIAS`).
+  2. Store only the HN session token (`user` cookie) and discard plaintext passwords immediately after authentication.
 
 ---
 
-### [HIGH-04] Android 15 Edge-to-Edge System Bar Inset Clashing
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`ThemedActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ThemedActivity.java)
-  - [`ListActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ListActivity.java)
-- **Problem Statement:**
-  Bottom navigation bars overlapped FABs and RecyclerView items under Android 15 edge-to-edge enforcement.
-- **Resolution:**
-  Configured `ViewCompat.setOnApplyWindowInsetsListener` to consume system bar insets and apply padding dynamically.
+### [ARCH-12] Coarse 30-Minute Network Cache Overrides in `NetworkModule`
+- **Category:** `Networking / Caching Strategy`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`NetworkModule.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/NetworkModule.java#L165-L182)
+- **Deep-Dive Root Cause:**
+  `CacheOverrideNetworkInterceptor` unconditionally rewrites the HTTP `Cache-Control` header to `max-age=1800` (30 minutes) for all requests to `hacker-news.firebaseio.com`. Feed endpoints (`topstories.json`, `newstories.json`, `beststories.json`) update continuously on Hacker News; caching them for 30 minutes in OkHttp causes user pull-to-refresh to return stale cached story ID lists unless offline force flags are used.
+- **Actionable Blueprint:**
+  1. Refactor interceptor to inspect request path:
+     - Feed index endpoints (`/v0/*stories.json`): No-cache or `max-age=60` (1 minute).
+     - Static item detail endpoints (`/v0/item/{id}.json`): Long cache (`max-age=1800` or immutable).
+     - User endpoints (`/v0/user/{id}.json`): Short cache (`max-age=300`).
 
 ---
 
-### [MED-01] Background Sync & Background Safety
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`SyncDelegate.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/SyncDelegate.java)
-- **Problem Statement:**
-  Background service startup (`Context.startService(WebCacheService)`) risked `IllegalStateException` on Android 8.0+ when triggered from background sync jobs.
-- **Resolution:**
-  Routed web caching through main `Handler.post` dispatch with exception guarding, and added explicit `mWebView.destroy()` cleanup on completion and `stopSync()`.
+### [ARCH-13] Missing Multi-Tier In-Memory `LruCache` for Story & Comment Items
+- **Category:** `Performance / Caching`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`HackerNewsClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/HackerNewsClient.java)
+- **Deep-Dive Root Cause:**
+  [`HackerNewsClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/HackerNewsClient.java) queries SQLite (Room) and OkHttp disk cache for every single item request. During fast fling-scrolling, screen rotation, or navigating back from story to feed, the app re-executes disk I/O and JSON parsing for the same 30+ items.
+- **Actionable Blueprint:**
+  1. Implement an in-memory `LruCache<String, HackerNewsItem>` (capacity: 250 items) inside the repository layer.
+  2. Serve items from memory first (0ms latency), falling back to Room DB, and finally network.
 
 ---
 
-### [MED-02] Room Database Schema Export
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`MaterialisticDatabase.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/MaterialisticDatabase.java)
-  - [`app/build.gradle`](file:///home/rahul/projects/materialisheep/app/build.gradle)
-- **Problem Statement:**
-  `exportSchema = false` disabled Room schema exports.
-- **Resolution:**
-  Set `exportSchema = true` and configured `ksp { arg("room.schemaLocation", "$projectDir/schemas") }`, successfully generating versioned schema JSON artifacts (`app/schemas/`).
+### [ARCH-04] Migrate Monolithic `Preferences.java` to Jetpack DataStore
+- **Category:** `Architecture / Persistence`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`Preferences.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/Preferences.java)
+- **Deep-Dive Root Cause:**
+  [`Preferences.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/Preferences.java) is an 800+ line class wrapping `SharedPreferences`. `SharedPreferences` reads the entire XML file into memory synchronously on the main thread during initial access, creating cold-start UI hitching and potential ANRs.
+- **Actionable Blueprint:**
+  1. Migrate to **Jetpack Preferences DataStore** (`androidx.datastore:datastore-preferences`).
+  2. Expose settings as type-safe, asynchronous Kotlin `Flow<T>` streams.
 
 ---
 
-### [MED-06] `FavoriteManager.FavoriteRoomLoader` Leaks `SQLiteCursor` on Multiple Loads
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`FavoriteManager.kt`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/FavoriteManager.kt#L123-L126,L394-L398)
-  - [`FavoriteManagerTest.kt`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/data/FavoriteManagerTest.kt)
-- **Problem Statement:**
-  Inside `FavoriteRoomLoader.load()`, `cursor = Cursor(it)` reassigned the `cursor` field on every reload without invoking `cursor?.close()` on the previous instance, leaking SQLite native cursors.
-- **Resolution:**
-  Cached and closed previous cursor on reloads (`oldCursor?.close()`), added explicit `cursor?.close()` in `detach()`, and hardened column lookups against null/missing values.
+### [ARCH-03] Unify Concurrency: Migrate RxJava 3 Data Layer to Kotlin Coroutines & Flow
+- **Category:** `Architecture / Concurrency`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`ItemManager.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/ItemManager.java), [`HackerNewsClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/HackerNewsClient.java), [`StoryListViewModel.kt`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/StoryListViewModel.kt)
+- **Deep-Dive Root Cause:**
+  The codebase uses a fragmented hybrid concurrency model: ViewModels use Coroutines `StateFlow`, but bridge to RxJava 3 Data Layer via blocking `.execute()` calls on `Dispatchers.IO`. This prevents structured cancellation propagation and adds unnecessary thread hops.
+- **Actionable Blueprint:**
+  1. Refactor `ItemManager` to a modern Kotlin `ItemRepository` with `suspend fun` and `Flow<T>`.
+  2. Eliminate RxJava 3 dependencies in favor of native Kotlin Coroutines.
 
 ---
 
-### [MED-07] `PdfAndroidJavascriptBridge.getChunk` Susceptible to Incomplete Buffer Reads
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`WebFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/WebFragment.java#L709-L733)
-- **Problem Statement:**
-  `mRandomAccessFile.read(data)` did not guarantee reading all requested bytes into the array in a single call, causing corrupted Base64 chunks sent to PDF.js.
-- **Resolution:**
-  Added sanity checks for chunk bounds and size limits, and switched to `mRandomAccessFile.readFully(data)` with `EOFException` guarding.
+### [ARCH-06] Asynchronous Precomputed Text & Adapter View-Holder Optimization
+- **Category:** `Performance / UI Rendering`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`StoryRecyclerViewAdapter.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/widget/StoryRecyclerViewAdapter.java), [`SinglePageItemRecyclerViewAdapter.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/widget/SinglePageItemRecyclerViewAdapter.java)
+- **Deep-Dive Root Cause:**
+  Both adapters perform `Html.fromHtml` parsing, relative timestamp formatting, and span creation on the main UI thread inside `onBindViewHolder()`, dropping frames during high-velocity scrolling.
+- **Actionable Blueprint:**
+  1. Precompute text formatting off the UI thread via `PrecomputedTextCompat`.
+  2. Migrate from raw `RecyclerView.Adapter` to `androidx.recyclerview.widget.ListAdapter` with `DiffUtil.ItemCallback`.
 
 ---
 
-## 3. Build System & CI/CD Pipeline Deficiencies
-
-### [CRIT-05] GitHub Actions Release Tag Overwrite in `release.yml`
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`.github/workflows/release.yml`](file:///home/rahul/projects/materialisheep/.github/workflows/release.yml)
-- **Problem Statement:**
-  Release workflow hardcoded `v3.4.<run_number>` tag, ignoring developer-pushed tags.
-- **Resolution:**
-  Configured `tag_name: ${{ github.ref_name }}` and `name: Release ${{ github.ref_name }}`.
+### [ARCH-05] Deprecate Legacy `SyncAdapter` & `JobScheduler` in Favor of AndroidX `WorkManager`
+- **Category:** `Architecture / Background Execution`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** `ItemSyncService.java`, `ItemSyncJobService.java`, `SyncContentProvider.java`, `SyncDelegate.java`
+- **Deep-Dive Root Cause:**
+  Uses deprecated Android `AbstractThreadedSyncAdapter` and platform `JobScheduler`, requiring dummy accounts and content provider boilerplate.
+- **Actionable Blueprint:**
+  1. Replace with `androidx.work:work-runtime-ktx` `CoroutineWorker`.
+  2. Delete `SyncContentProvider.java`, `ItemSyncService.java`, and obsolete manifest permissions.
 
 ---
 
-### [CRIT-08] CodeQL Analysis Disables SARIF Upload via `upload: false`
-- **Severity:** `Critical`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`.github/workflows/codeql.yml`](file:///home/rahul/projects/materialisheep/.github/workflows/codeql.yml#L114)
-- **Problem Statement:**
-  `codeql.yml` explicitly set `upload: false` in `github/codeql-action/analyze@v4`, silently suppressing SARIF analysis upload to GitHub Security.
-- **Resolution:**
-  Removed `upload: false` from `.github/workflows/codeql.yml`.
+### [ARCH-14] Deprecated Custom Tabs Intent APIs in `AppUtils`
+- **Category:** `Platform Compliance / API Modernization`
+- **Execution Order:** `Phase 2 (Do Second - P1)`
+- **Impacted Files:** [`AppUtils.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/AppUtils.java#L860-L868)
+- **Deep-Dive Root Cause:**
+  Uses deprecated `setToolbarColor()`, `enableUrlBarHiding()`, and `addDefaultShareMenuItem()`.
+- **Actionable Blueprint:**
+  1. Migrate to `CustomTabColorSchemeParams.Builder` and `setShareState(CustomTabsIntent.SHARE_STATE_ON)`.
 
 ---
 
-### [MED-03] Deprecated AGP Flags & Built-in Kotlin Migration
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`gradle.properties`](file:///home/rahul/projects/materialisheep/gradle.properties)
-  - [`app/build.gradle`](file:///home/rahul/projects/materialisheep/app/build.gradle)
-- **Problem Statement:**
-  `android.newDsl=false`, `android.builtInKotlin=false`, and `kotlin-android` plugin caused deprecation warnings and blocked AGP 10.
-- **Resolution:**
-  Removed deprecated properties from `gradle.properties`, removed `kotlin-android` plugin in favor of AGP 9.2+ built-in Kotlin support, and modernized DSL options (`minSdk = 31`, `targetSdk = 36`, `lint { ... }`).
+### [ARCH-01] Monolithic Java-to-Kotlin Migration Strategy
+- **Category:** `Architecture / Modernization`
+- **Execution Order:** `Phase 4 (Do Last - P2)`
+- **Impacted Files:** Monolithic Java codebase (~65%)
+- **Actionable Blueprint:**
+  1. Convert data models (`Item.java`, `HackerNewsItem.java`, `WebItem.java`).
+  2. Convert network clients and UI adapters.
+  3. Convert core activities and fragments.
 
 ---
 
-### [MED-04] Dead Dependency: `androidx.localbroadcastmanager`
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`app/build.gradle`](file:///home/rahul/projects/materialisheep/app/build.gradle)
-- **Problem Statement:**
-  Unused `localbroadcastmanager` dependency included in APK.
-- **Resolution:**
-  Removed `androidx.localbroadcastmanager` from `app/build.gradle`.
+### [ARCH-02] Jetpack Compose Phased Migration Roadmap
+- **Category:** `Architecture / UI Framework`
+- **Execution Order:** `Phase 4 (Do Last - P2)`
+- **Actionable Blueprint:**
+  1. Define Material 3 Compose Design System tokens.
+  2. Migrate dialogs and secondary screens (`AboutActivity`, `ComposeActivity`, `ReleaseNotesActivity`).
+  3. Build reusable Compose `StoryCard` and `CommentRow` components.
+  4. Migrate `ListFragment` and `ItemFragment` to Compose `LazyColumn`.
 
 ---
 
-### [LOW-02] Obsolete SDK Checks in `AppUtils.java`
-- **Severity:** `Low`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`AppUtils.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/AppUtils.java#L733)
-- **Problem Statement:**
-  `if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R)` was redundant because the application's `minSdk` is 31 (Android S, API 31 > API 30).
-- **Resolution:**
-  Removed dead legacy branch and simplified `getDisplayWidth` to direct `WindowMetrics` calculation.
+### [DEP-02] Modernize Serialization: Replace `Gson` with `kotlinx.serialization`
+- **Category:** `Dependencies / Performance`
+- **Execution Order:** `Phase 4 (Do Last - P2)`
+- **Actionable Blueprint:**
+  1. Replace `converter-gson` with `retrofit2:converter-kotlinx-serialization`.
+  2. Annotate models with `@Serializable` for reflection-free JSON parsing.
 
 ---
 
-### [LOW-03] Deprecated `Bundle.getParcelable` in `ItemFragment.java`
-- **Severity:** `Low`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`ItemFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemFragment.java#L117,L119,L122)
-- **Problem Statement:**
-  [`ItemFragment.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/ItemFragment.java) used deprecated `Bundle.getParcelable(String)` without class parameters, producing compiler deprecation warnings.
-- **Resolution:**
-  Migrated to `BundleCompat.getParcelable(bundle, key, Item.class)` / `BundleCompat.getParcelable(bundle, key, WebItem.class)` consistent with `WebFragment` and `ItemActivity`.
+### [DEP-03] Modernize Dependency Injection: Migrate Dagger 2 to Hilt
+- **Category:** `Architecture / DI`
+- **Execution Order:** `Phase 4 (Do Last - P2)`
+- **Actionable Blueprint:**
+  1. Migrate `ApplicationComponent` to `@HiltAndroidApp`, `@AndroidEntryPoint`, and `@HiltViewModel`.
 
 ---
 
-## 4. Test Strategy & Quality Assurance Gaps
-
-### [HIGH-05] Robolectric Multi-SDK Target Matrix
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - Unit tests in `app/src/test/`
-- **Problem Statement:**
-  Robolectric tests were only running on API 31.
-- **Resolution:**
-  Configured supported SDK test matrix across API 31, 34, and 35.
+### [ARCH-07] Multi-Module Codebase Architecture
+- **Category:** `Architecture / Modularity`
+- **Execution Order:** `Phase 4 (Do Last - P3)`
+- **Actionable Blueprint:**
+  1. Extract `:core:model`, `:core:database`, `:core:network`, `:core:datastore`, `:feature:stories`, `:feature:comments`, `:feature:reader`, `:app`.
 
 ---
 
-### [HIGH-06] Baseline Android Instrumentation Tests (`androidTest`)
-- **Severity:** `High`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`app/build.gradle`](file:///home/rahul/projects/materialisheep/app/build.gradle)
-  - [`app/src/androidTest/java/io/github/sheepdestroyer/materialisheep/ListActivityTest.kt`](file:///home/rahul/projects/materialisheep/app/src/androidTest/java/io/github/sheepdestroyer/materialisheep/ListActivityTest.kt)
-- **Problem Statement:**
-  Zero UI / Espresso instrumentation tests existed in repository.
-- **Resolution:**
-  Configured `AndroidJUnitRunner` and added `ListActivityTest.kt` with Espresso assertions.
+### [ARCH-08] Automated UI, Snapshot & Screenshot Regression Testing
+- **Category:** `Quality Assurance & CI`
+- **Execution Order:** `Phase 4 (Do Last - P2)`
+- **Actionable Blueprint:**
+  1. Integrate **Roborazzi** for JVM-based screenshot regression testing across themes and form factors.
 
 ---
 
-## 5. UI/UX Design & Usability Issues
-
-### [MED-05] Deep Comment Squeeze on Mobile Screens
-- **Severity:** `Medium`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`SinglePageItemRecyclerViewAdapter.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/widget/SinglePageItemRecyclerViewAdapter.java)
-  - [`ThreadPreviewAdapter.kt`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/widget/ThreadPreviewAdapter.kt)
-  - [`CommentItemDecoration.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/widget/CommentItemDecoration.java)
-  - [`CommentIndentationTest.java`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/widget/CommentIndentationTest.java)
-- **Problem Statement:**
-  Uncapped indentation margins (`mLevelIndicatorWidth * level`) crushed nested comments into narrow vertical strips.
-- **Resolution:**
-  Clamped effective indentation margin and guide line count to `MAX_INDENT_LEVEL = 4` across all comment adapters and decorations.
+### [DEP-04] Baseline Profiles & R8 Rules Optimization
+- **Category:** `Performance / Optimization`
+- **Execution Order:** `Phase 4 (Do Last - P3)`
+- **Actionable Blueprint:**
+  1. Add `:baselineprofile` module to generate DEX pre-compilation profiles for sub-300ms launch.
 
 ---
 
-### [LOW-01] Material You Dynamic Theming (Monet)
-- **Severity:** `Low`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`MaterialisticApplication.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/MaterialisticApplication.java)
-  - [`Preferences.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/Preferences.java)
-  - [`preference_keys.xml`](file:///home/rahul/projects/materialisheep/app/src/main/res/values/preference_keys.xml)
-  - [`preferences_display.xml`](file:///home/rahul/projects/materialisheep/app/src/main/res/xml/preferences_display.xml)
-- **Problem Statement:**
-  Lacked support for Android 12+ wallpaper-based dynamic color palettes.
-- **Resolution:**
-  Integrated `DynamicColors.applyToActivitiesIfAvailable(this, DynamicColorsOptions)` with user preference toggle.
+## Part II: New Product Features & User Experience Enhancements
+
+### [FEAT-07] Pure Black (AMOLED/OLED #000000) Dark Theme & High Contrast Mode
+- **Category:** `Product Feature / Customization`
+- **Execution Order:** `Phase 3 (Do First in Features - P0)`
+- **Feature Scope:**
+  - Introduce an explicit **"Pure Black (OLED)"** toggle under Settings → Display.
+  - Overrides dark theme background and surface colors with true `#000000` for OLED battery savings and maximum contrast.
 
 ---
 
-## 6. Documentation Synchronization Discrepancies
-
-### [DOC-01..04] Baseline Documentation Synchronization
-- **Severity:** `Doc Sync`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`PROJECT_KNOWLEDGE.md`](file:///home/rahul/projects/materialisheep/PROJECT_KNOWLEDGE.md)
-  - [`CI.md`](file:///home/rahul/projects/materialisheep/CI.md)
-  - [`AGENTS.md`](file:///home/rahul/projects/materialisheep/AGENTS.md)
-  - [`TODO.md`](file:///home/rahul/projects/materialisheep/TODO.md)
-- **Resolution:**
-  Synchronized Min SDK (31), Target SDK (36), Gradle (9.5.1), AGP (9.2.1), Retrofit (3.0.0), `debug.yml` trigger (`workflow_dispatch`), and task completion status across all documentation.
+### [FEAT-01] Content Filtering, Keyword Muting & Domain/User Blocklists
+- **Category:** `Product Feature / Content Control`
+- **Execution Order:** `Phase 3 (Do Second in Features - P1)`
+- **Feature Scope:**
+  - **Keyword Filter:** Case-insensitive string matching or Regex to mute repetitive topics (e.g. AI hype, political flame-wars).
+  - **Domain Blocklist:** Auto-collapse or hide submissions from specified domains (paywalled news).
+  - **Author Blocklist:** Hide comments and submissions from muted usernames.
+  - In-feed placeholder: *"1 story hidden by filter (Tap to view)"*.
 
 ---
 
-### [DOC-05] `docs/SUMMARY_REPORT.md` & `docs/TD.md` State `ItemManager` Lacks `Disposable`
-- **Severity:** `Doc Sync`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`docs/SUMMARY_REPORT.md`](file:///home/rahul/projects/materialisheep/docs/SUMMARY_REPORT.md#L41)
-  - [`docs/TD.md`](file:///home/rahul/projects/materialisheep/docs/TD.md#L79)
-- **Problem Statement:**
-  Both documents stated `ItemManager` methods do not return `Disposable` and requests are fire-and-forget. In reality, `ItemManager` methods (`getStories`, `getItem`, `getItems`) were refactored to return `Disposable`.
-- **Resolution:**
-  Synchronized `SUMMARY_REPORT.md` and `TD.md` to reflect active `Disposable` subscription support.
+### [FEAT-03] Interactive Search UI with Algolia Filter Chips
+- **Category:** `Product Feature / Search & Discovery`
+- **Execution Order:** `Phase 3 (P1)`
+- **Feature Scope:**
+  - Modernize [`SearchActivity`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/SearchActivity.java) with horizontally scrolling Material 3 **Filter Chips**:
+    - Time: *Past 24h*, *Past Week*, *Past Month*, *Past Year*, *All Time*.
+    - Sort: *Relevance (Score)* vs *Date (Latest)*.
+    - Type: *All*, *Stories*, *Ask HN*, *Show HN*, *Comments*.
+    - Thresholds: *Points (50+, 100+, 500+)* and *Comments count*.
 
 ---
 
-### [DOC-06] `TODO.md` Contains Obsolete `minSdk` 28 Upgrade Goal
-- **Severity:** `Doc Sync`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`TODO.md`](file:///home/rahul/projects/materialisheep/TODO.md#L32-L34)
-- **Problem Statement:**
-  `TODO.md` listed "Consider upgrading minSdk to 28 for architectural benefits". The project `minSdk` is already 31.
-- **Resolution:**
-  Removed obsolete item from `TODO.md`.
+### [FEAT-05] Background Reply & Karma Tracking Notification Engine
+- **Category:** `Product Feature / User Engagement`
+- **Execution Order:** `Phase 3 (P1)`
+- **Feature Scope:**
+  - Background periodic checker via AndroidX `WorkManager` (every 1–3 hours on unmetered network/battery).
+  - Detects new child replies to user's comments/submissions.
+  - Posts rich system notification with comment snippet and direct inline *"Reply"* and *"Mark as Read"* actions.
 
 ---
 
-### [DOC-07] Clone Repository URL and CI Trigger Inaccuracies in `README.md` & `CI.md`
-- **Severity:** `Doc Sync`
-- **Status:** `Fixed`
-- **Impacted Files:**
-  - [`README.md`](file:///home/rahul/projects/materialisheep/README.md#L52)
-  - [`CI.md`](file:///home/rahul/projects/materialisheep/CI.md#L9)
-- **Problem Statement:**
-  `README.md` instructed users to clone upstream `sheepdestroyer/materialisheep.git` rather than `xRahul/materialisheep.git`. `CI.md` omitted references to `debug.yml`, `codeql.yml`, and `gemini-review.yml`.
-- **Resolution:**
-  Synchronized repository URLs and documented full CI/CD workflow coverage.
+### [FEAT-04] Power-User Comment Navigation & Contextual Swipe Gestures
+- **Category:** `Product Feature / Navigation & Gestures`
+- **Execution Order:** `Phase 3 (P1)`
+- **Feature Scope:**
+  - Swipe Right on comment: Upvote / Favorite.
+  - Swipe Left on comment: Collapse thread / Inline Reply.
+  - Double-tap comment body: Upvote.
+  - Long-press comment header: Collapse entire thread to root comment.
+  - Badges: Highlight Original Poster (OP) and author's replies in comment threads.
+
+---
+
+### [FEAT-06] Rich Media Previews (OpenGraph Cards, Favicons & Reading Time) & Code Syntax Highlighting
+- **Category:** `Product Feature / Content Presentation`
+- **Execution Order:** `Phase 3 (P2)`
+- **Feature Scope:**
+  - Extract OpenGraph thumbnail images, domain favicons, and estimated reading time for story list items (with data-saver toggle).
+  - Integrate lightweight Prism.js / Kotlin syntax highlighting for code blocks (`<pre><code>`) in comments (Python, Go, Rust, JavaScript, C/C++, SQL).
+
+---
+
+### [FEAT-08] Offline Archive Manager & Storage Management UI
+- **Category:** `Product Feature / Offline Utility`
+- **Execution Order:** `Phase 3 (P2)`
+- **Feature Scope:**
+  - Settings screen displaying storage consumption across Room DB, WebView Cache, and Readability HTML.
+  - Actions: *"Clear Web Cache"*, *"Purge Read Stories"*, *"Download Top 100 Stories & Readability for Offline"*.
+
+---
+
+### [FEAT-02] AI-Powered Article & Discussion Summarization (TL;DR Engine)
+- **Category:** `Product Feature / AI Integration`
+- **Execution Order:** `Phase 4 (Do Last in Features - P2)`
+- **Feature Scope:**
+  - **"AI Summary"** action in Reader Mode and Item Header.
+  - On-Device: Google Play Services ML Kit / Gemini Nano for offline, private summary.
+  - Cloud BYOK: OpenAI / Anthropic Claude / Google Gemini API key support in Preferences.
+  - Outputs 3-bullet article summary + community consensus & dissenting views.

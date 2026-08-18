@@ -121,4 +121,60 @@ public class WebFragmentTest {
         assertFalse(activity.isCurrentPage(fragment));
         assertFalse(activity.isCurrentPage(null));
     }
+
+    @Test
+    public void testOnDestroyViewCleansUpWebView() {
+        Bundle args = new Bundle();
+        WebItem item = mock(WebItem.class);
+        when(item.getUrl()).thenReturn("https://example.com");
+        when(item.getId()).thenReturn("1");
+        args.putParcelable(WebFragment.EXTRA_ITEM, item);
+
+        WebFragment fragment = new WebFragment();
+        fragment.setArguments(args);
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+
+        io.github.sheepdestroyer.materialisheep.widget.MaterialWebView webView = fragment.mWebView;
+        org.junit.Assert.assertNotNull(webView);
+
+        fragment.onDestroyView();
+
+        org.junit.Assert.assertNull(fragment.mWebView);
+        org.junit.Assert.assertNull(webView.getParent());
+
+        // Verify subsequent calls when view is destroyed do not crash
+        fragment.scrollToTop();
+        fragment.scrollToNext();
+        fragment.scrollToPrevious();
+        fragment.onBackPressed();
+        fragment.onResume();
+        fragment.onStop();
+        fragment.setFullscreen(false);
+        fragment.onDestroy();
+    }
+
+    @Test
+    public void testCacheableWebViewNullChromeClientAndUrlHandling() {
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).create().get();
+        io.github.sheepdestroyer.materialisheep.widget.CacheableWebView webView =
+                new io.github.sheepdestroyer.materialisheep.widget.CacheableWebView(activity);
+
+        // Null url reload
+        webView.reloadUrl(null);
+        webView.loadUrl(null);
+
+        // Setting null ChromeClient (teardown)
+        webView.setWebChromeClient(null);
+        webView.loadUrl("about:blank");
+        webView.reloadUrl("https://example.com");
+    }
 }
