@@ -280,6 +280,52 @@ class FavoriteManager @Inject constructor(
     return file.getUri(context, FILE_AUTHORITY)
   }
 
+  @WorkerThread
+  private fun exportMarkdown(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdir()) return null
+    val file = File(dir, "materialisheep-bookmarks.md")
+    if (!file.exists() && !file.createNewFile()) return null
+
+    val items = mutableListOf<WebItem>()
+    do {
+      items.add(cursor.favorite)
+    } while (cursor.moveToNext())
+
+    val markdownContent = FavoriteExporter.toMarkdown(items)
+    val bufferedSink = file.sink().buffer()
+    with(bufferedSink) {
+      writeUtf8(markdownContent)
+      flush()
+      closeQuietly()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
+  @WorkerThread
+  private fun exportJson(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdir()) return null
+    val file = File(dir, "materialisheep-bookmarks.json")
+    if (!file.exists() && !file.createNewFile()) return null
+
+    val items = mutableListOf<WebItem>()
+    do {
+      items.add(cursor.favorite)
+    } while (cursor.moveToNext())
+
+    val jsonContent = FavoriteExporter.toJson(items)
+    val bufferedSink = file.sink().buffer()
+    with(bufferedSink) {
+      writeUtf8(jsonContent)
+      flush()
+      closeQuietly()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
   @SuppressLint("MissingPermission")
   private fun notifyExportStart(context: Context) {
     NotificationManagerCompat.from(context)

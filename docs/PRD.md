@@ -24,10 +24,10 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
 *   **Readability Mode:** Integrated `Readability.js` to parse and display article content natively within the app, stripping clutter for a clean reading experience.
 *   **Threaded Comments:**
     *   Collapsible comment threads for easy navigation of deep discussions.
-    *   Visual indicators for thread depth.
+    *   Visual indicators for thread depth with interactive parent/root jump: tap color bar to smooth-scroll to parent comment, long-press to jump to root comment.
     *   **Author Badges:** Prominent `[OP]` badge identifying the story submitter and `[YOU]` identifying the logged-in reader across discussion threads.
     *   **Syntax Highlighting:** Code blocks (`<pre><code>`) rendered in monospace with subtle container tinting and keyword syntax highlighting for programming languages.
-    *   Navigation helpers: Floating action button and volume key scrolling to jump between comments.
+    *   Navigation helpers: Floating action button, depth indicator tap gestures, and volume key scrolling to jump between comments.
 *   **Search:**
     *   Powered by the Algolia Hacker News API.
     *   Filter by date, popularity, and specific tags (story, comment, poll, etc.).
@@ -64,6 +64,8 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
 *   **Display Options:**
     *   List View vs. Card View for stories.
     *   Comment display modes (Single page, Multiple pages).
+*   **Data Sovereignty & Export:**
+    *   Multi-format export of saved favorites: JSON metadata archive, Markdown with backlinks for PKM workflows (Obsidian, Logseq, Readwise), and standard Netscape Bookmark HTML.
 *   **Gestures:** Configurable swipe actions on list items (e.g., Swipe Left to Vote, Swipe Right to Save).
 
 ### 4.5 Widgets

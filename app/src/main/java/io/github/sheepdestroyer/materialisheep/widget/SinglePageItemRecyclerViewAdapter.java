@@ -184,10 +184,62 @@ public class SinglePageItemRecyclerViewAdapter
             holder.mLevel.setVisibility(View.VISIBLE);
             holder.mLevel.setBackgroundColor(getThreadColor(getItemViewType(position)));
             holder.mLevel.setAlpha(mColorOpacity / 100f);
+            Item item = getItem(position);
+            if (item != null && item.getLevel() > 1) {
+                holder.mLevel.setOnClickListener(v -> {
+                    int parentPos = findParentPosition(holder.getBindingAdapterPosition(), item);
+                    if (parentPos >= 0 && mRecyclerView != null) {
+                        mRecyclerView.smoothScrollToPosition(parentPos);
+                    }
+                });
+                holder.mLevel.setOnLongClickListener(v -> {
+                    int rootPos = findRootPosition(holder.getBindingAdapterPosition(), item);
+                    if (rootPos >= 0 && mRecyclerView != null) {
+                        mRecyclerView.smoothScrollToPosition(rootPos);
+                        return true;
+                    }
+                    return false;
+                });
+            } else {
+                holder.mLevel.setOnClickListener(null);
+                holder.mLevel.setOnLongClickListener(null);
+            }
         } else {
             holder.mLevel.setVisibility(View.GONE);
+            holder.mLevel.setOnClickListener(null);
+            holder.mLevel.setOnLongClickListener(null);
         }
         super.onBindViewHolder(holder, position);
+    }
+
+    public int findParentPosition(int currentPosition, Item currentItem) {
+        if (currentItem == null || currentItem.getLevel() <= 1 || currentPosition <= 0) {
+            return -1;
+        }
+        int targetLevel = currentItem.getLevel() - 1;
+        for (int i = currentPosition - 1; i >= 0; i--) {
+            Item item = getItem(i);
+            if (item != null && item.getLevel() == targetLevel) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int findRootPosition(int currentPosition, Item currentItem) {
+        if (currentItem == null || currentPosition <= 0) {
+            return -1;
+        }
+        if (currentItem.getLevel() <= 1) {
+            return currentPosition;
+        }
+        for (int i = currentPosition - 1; i >= 0; i--) {
+            Item item = getItem(i);
+            if (item != null && item.getLevel() == 1) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override

@@ -2,6 +2,8 @@
  
 ## [UNRELEASED]
 ### Added
+- **Comment Thread Ancestor & Parent Navigation:** Tap on the left depth color bar to instantly smooth-scroll to the parent comment; long-press to jump directly to the thread root comment in single-page comment discussions.
+- **Universal Data Portability (`FavoriteExporter.kt`):** Export saved stories to structured JSON, Markdown for PKM apps (Obsidian/Logseq), and Netscape Bookmark HTML.
 - **Universal URL Privacy Shield (`UrlSanitizer.kt`):** Automatically strips ad-attribution and tracking query parameters (`utm_*`, `fbclid`, `gclid`, `mc_eid`, `hsa_*`, etc.) before launching Custom Tabs or loading internal WebViews.
 - **Discussion Hierarchy & Author Badges (`[OP]`, `[YOU]`):** Dynamic author badges in single-page and multi-page comment threads distinguishing the story submitter (`[OP]`) and the logged-in reader (`[YOU]`).
 - **Code Block Formatting & Syntax Highlights (`CodeBlockFormatter.kt`):** Monospace styling with subtle container shading and keyword syntax highlighting for developer code snippets in comments.
@@ -9,7 +11,7 @@
 - **Granular Network `Cache-Control` Hierarchy:** Endpoint-aware caching in `NetworkModule` providing 1-min TTL for feeds (`*stories.json`), 5-min TTL for user profiles, and 30-min TTL for items, while preserving explicit `no-cache` requests and shielding against caching HTTP errors ([ARCH-12]).
 - **Pure Black AMOLED (`#000000`) Theme:** True `#000000` dark theme tokens and style overlay with high-contrast AAA legibility ([FEAT-07]).
 - **AdBlocker Concurrency Hardening:** Synchronized initialization locks and test lifecycle hooks for thread-safe ad blocking.
-- **Unit Test Coverage:** New Robolectric test suites for `UrlSanitizerTest`, `AuthorBadgeTest`, `CodeBlockFormatterTest`, `AccountSecurityTest`, `NetworkModuleTest`, `ThemePreferenceTest`, and expanded `AppUtilsTest` / `AdBlockerTest`.
+- **Unit Test Coverage:** New Robolectric test suites for `CommentNavigationTest`, `FavoriteExporterTest`, `UrlSanitizerTest`, `AuthorBadgeTest`, `CodeBlockFormatterTest`, `AccountSecurityTest`, `NetworkModuleTest`, `ThemePreferenceTest`, and expanded `AppUtilsTest` / `AdBlockerTest`.
 
 ## [4.0] - 2026-XX-XX
 ### Added
