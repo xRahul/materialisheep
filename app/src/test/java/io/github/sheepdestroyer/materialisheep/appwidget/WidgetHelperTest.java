@@ -109,11 +109,13 @@ public class WidgetHelperTest {
 
         widgetHelper.refresh(appWidgetId);
 
+        Intent queryIntent = new Intent(Intent.ACTION_VIEW);
+        queryIntent.setPackage(context.getPackageName());
         PendingIntent pendingIntent =
             PendingIntent.getActivity(
                 context,
                 0,
-                new Intent(Intent.ACTION_VIEW),
+                queryIntent,
                 PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_MUTABLE);
         assertNotNull("PendingIntent template should be registered", pendingIntent);
         assertFalse("PendingIntent should be mutable to allow fill-in intents", pendingIntent.isImmutable());

@@ -263,12 +263,14 @@ public class WidgetHelper {
 
     remoteViews.setRemoteAdapter(android.R.id.list, itemsBuilder.build());
     remoteViews.setEmptyView(android.R.id.list, R.id.empty);
+    Intent templateIntent = new Intent(Intent.ACTION_VIEW);
+    templateIntent.setPackage(mContext.getPackageName());
     remoteViews.setPendingIntentTemplate(
         android.R.id.list,
         PendingIntent.getActivity(
             mContext,
             0,
-            new Intent(Intent.ACTION_VIEW),
+            templateIntent,
             PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
   }
 

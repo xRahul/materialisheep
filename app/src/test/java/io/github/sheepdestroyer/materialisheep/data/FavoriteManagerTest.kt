@@ -40,7 +40,8 @@ class FavoriteManagerTest {
         MockitoAnnotations.openMocks(this)
 
         // Override RxAndroid main thread scheduler
-        RxAndroidPlugins.setInitMainThreadSchedulerHandler { Schedulers.trampoline() }
+        RxAndroidPlugins.reset()
+        RxAndroidPlugins.setMainThreadSchedulerHandler { Schedulers.trampoline() }
 
         // Inject mock database into singleton
         setDatabaseInstance(database)
