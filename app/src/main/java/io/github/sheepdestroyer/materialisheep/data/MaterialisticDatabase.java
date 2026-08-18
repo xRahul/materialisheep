@@ -1,7 +1,11 @@
 package io.github.sheepdestroyer.materialisheep.data;
 
+import androidx.lifecycle.FlowLiveDataConversions;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+import kotlinx.coroutines.channels.BufferOverflow;
+import kotlinx.coroutines.flow.MutableSharedFlow;
+import kotlinx.coroutines.flow.SharedFlow;
+import kotlinx.coroutines.flow.SharedFlowKt;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.room.ColumnInfo;
 import androidx.room.Dao;
@@ -40,7 +44,10 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     private static final String BASE_URI = "content://io.github.sheepdestroyer.materialisheep";
 
     private static MaterialisticDatabase sInstance;
-    private final MutableLiveData<Uri> mLiveData = new MutableLiveData<>();
+    private final MutableSharedFlow<Uri> mEventsFlow =
+            SharedFlowKt.MutableSharedFlow(0, 64, BufferOverflow.DROP_OLDEST);
+    private final LiveData<Uri> mLiveData =
+            FlowLiveDataConversions.asLiveData(mEventsFlow);
 
     /**
      * Gets the singleton instance of the database.
@@ -115,6 +122,15 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     public abstract SyncQueueDao getSyncQueueDao();
 
     /**
+     * Gets a {@link SharedFlow} that is notified of changes to the database.
+     *
+     * @return a {@link SharedFlow} that is notified of changes to the database
+     */
+    public SharedFlow<Uri> getEventsFlow() {
+        return mEventsFlow;
+    }
+
+    /**
      * Gets a {@link LiveData} that is notified of changes to the database.
      *
      * @return a {@link LiveData} that is notified of changes to the database
@@ -124,14 +140,15 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     }
 
     /**
-     * Sets the value of the {@link LiveData} to notify observers of a change.
+     * Emits a URI change notification to the database event bus in a thread-safe manner.
+     * Safe to call from any background thread or dispatcher without crashing or dropping events.
      *
      * @param uri the URI of the changed data
      */
     public void setLiveValue(Uri uri) {
-        mLiveData.setValue(uri);
-        // clear notification Uri after notifying all active observers
-        mLiveData.setValue(null);
+        if (uri != null) {
+            mEventsFlow.tryEmit(uri);
+        }
     }
 
     /**
