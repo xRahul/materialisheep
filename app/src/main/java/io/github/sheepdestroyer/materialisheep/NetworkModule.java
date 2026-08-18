@@ -23,8 +23,9 @@ import android.util.Log;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.net.SocketFactory;
@@ -138,13 +139,10 @@ public class NetworkModule {
 
     static class ConnectionAwareInterceptor implements Interceptor {
 
-        static final Map<String, String> CACHE_ENABLED_HOSTS = new HashMap<>();
-        static {
-            CACHE_ENABLED_HOSTS.put(HackerNewsClient.HOST,
-                    RestServiceFactory.CACHE_CONTROL_MAX_AGE_30M);
-            CACHE_ENABLED_HOSTS.put(AlgoliaClient.HOST,
-                    RestServiceFactory.CACHE_CONTROL_MAX_AGE_30M);
-        }
+        static final Set<String> CACHE_ENABLED_HOSTS = new HashSet<>(Arrays.asList(
+                HackerNewsClient.HOST,
+                AlgoliaClient.HOST
+        ));
         private final Context mContext;
 
         ConnectionAwareInterceptor(Context context) {
@@ -154,7 +152,7 @@ public class NetworkModule {
         @Override
         public Response intercept(Chain chain) throws IOException {
             Request request = chain.request();
-            boolean forceCache = CACHE_ENABLED_HOSTS.containsKey(request.url().host()) &&
+            boolean forceCache = CACHE_ENABLED_HOSTS.contains(request.url().host()) &&
                     !AppUtils.hasConnection(mContext);
             return chain.proceed(forceCache ? request.newBuilder()
                     .cacheControl(CacheControl.FORCE_CACHE)
@@ -168,16 +166,40 @@ public class NetworkModule {
         public Response intercept(Chain chain) throws IOException {
             Request request = chain.request();
             Response response = chain.proceed(request);
-            if (!ConnectionAwareInterceptor.CACHE_ENABLED_HOSTS
-                    .containsKey(request.url().host())) {
+            String host = request.url().host();
+            if (!ConnectionAwareInterceptor.CACHE_ENABLED_HOSTS.contains(host)) {
                 return response;
-            } else {
-                return response.newBuilder()
-                        .header("Cache-Control",
-                                ConnectionAwareInterceptor.CACHE_ENABLED_HOSTS
-                                        .get(request.url().host()))
-                        .build();
             }
+
+            // Only cache successful HTTP responses (do not cache 4xx/5xx errors)
+            if (!response.isSuccessful()) {
+                return response;
+            }
+
+            // If request already explicitly demanded no-cache or force-network, respect it
+            String requestCacheControl = request.header("Cache-Control");
+            if (requestCacheControl != null &&
+                    (requestCacheControl.contains("no-cache") || requestCacheControl.contains("max-age=0"))) {
+                return response;
+            }
+
+            String path = request.url().encodedPath();
+            String cacheControlHeader;
+            if (path.endsWith("stories.json") || path.endsWith("maxitem.json") ||
+                    path.endsWith("updates.json") || path.startsWith("/api/v1/")) {
+                // Feed indices and search queries: short cache (1 min) so pull-to-refresh stays fresh
+                cacheControlHeader = "max-age=60";
+            } else if (path.startsWith("/v0/user/")) {
+                // User profiles: 5 min cache
+                cacheControlHeader = "max-age=300";
+            } else {
+                // Item details and comments: 30 min cache
+                cacheControlHeader = "max-age=" + (30 * 60);
+            }
+
+            return response.newBuilder()
+                    .header("Cache-Control", cacheControlHeader)
+                    .build();
         }
     }
 

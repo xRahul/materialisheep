@@ -73,3 +73,8 @@ app/.settings/
 
 # CodeGraph local index
 .codegraph/
+
+# Superpowers and agent scratch
+docs/superpowers/
+app/benchmark_results.txt
+app/regex_benchmark_results.txt

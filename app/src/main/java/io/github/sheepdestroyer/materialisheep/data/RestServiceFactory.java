@@ -43,6 +43,14 @@ public interface RestServiceFactory {
      */
     String CACHE_CONTROL_FORCE_NETWORK = "Cache-Control: no-cache";
     /**
+     * A cache control header that sets the maximum age of cached data to 1 minute.
+     */
+    String CACHE_CONTROL_MAX_AGE_1M = "Cache-Control: max-age=60";
+    /**
+     * A cache control header that sets the maximum age of cached data to 5 minutes.
+     */
+    String CACHE_CONTROL_MAX_AGE_5M = "Cache-Control: max-age=" + (5 * 60);
+    /**
      * A cache control header that sets the maximum age of cached data to 30
      * minutes.
      */

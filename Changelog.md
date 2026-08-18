@@ -1,6 +1,12 @@
 # Changelog
-
+ 
 ## [UNRELEASED]
+### Added
+- **Hardware-Backed Credential Security (`AccountSecurity.kt`):** AES-256 GCM encryption via `AndroidKeyStore` replaces plaintext password persistence in `AccountManager` ([ARCH-11]).
+- **Granular Network `Cache-Control` Hierarchy:** Endpoint-aware caching in `NetworkModule` providing 1-min TTL for feeds (`*stories.json`), 5-min TTL for user profiles, and 30-min TTL for items, while preserving explicit `no-cache` requests and shielding against caching HTTP errors ([ARCH-12]).
+- **Pure Black AMOLED (`#000000`) Theme:** True `#000000` dark theme tokens and style overlay with high-contrast AAA legibility ([FEAT-07]).
+- **AdBlocker Concurrency Hardening:** Synchronized initialization locks and test lifecycle hooks for thread-safe ad blocking.
+- **Unit Test Coverage:** New Robolectric test suites for `AccountSecurityTest`, `NetworkModuleTest`, `ThemePreferenceTest`, and expanded `AppUtilsTest` / `AdBlockerTest`.
 
 ## [4.0] - 2026-XX-XX
 ### Added

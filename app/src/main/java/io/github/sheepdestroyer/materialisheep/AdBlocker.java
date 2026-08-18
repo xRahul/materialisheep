@@ -42,6 +42,7 @@ public class AdBlocker {
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static volatile TrieNode AD_HOSTS = new TrieNode();
     private static volatile Disposable sLoadDisposable;
+    private static final Object LOCK = new Object();
 
     /**
      * Initializes the ad blocker by loading the ad hosts from the assets file.
@@ -50,13 +51,48 @@ public class AdBlocker {
      * @param scheduler The RxJava scheduler to perform the operation on.
      */
     public static void init(Context context, Scheduler scheduler) {
-        if (sLoadDisposable != null && !sLoadDisposable.isDisposed()) {
-            return;
+        if (context == null) return;
+        Context appContext = context.getApplicationContext();
+        synchronized (LOCK) {
+            if (sLoadDisposable != null && !sLoadDisposable.isDisposed()) {
+                return;
+            }
+            sLoadDisposable = Observable.fromCallable(() -> loadFromAssets(appContext))
+                    .subscribeOn(scheduler)
+                    .subscribe(result -> {
+                        synchronized (LOCK) {
+                            AD_HOSTS = result;
+                        }
+                    }, t -> android.util.Log.e(AdBlocker.class.getSimpleName(), "Error loading ad hosts", t));
         }
-        sLoadDisposable = Observable.fromCallable(() -> loadFromAssets(context))
-                .subscribeOn(scheduler)
-                .subscribe(result -> AD_HOSTS = result,
-                        t -> android.util.Log.e(AdBlocker.class.getSimpleName(), "Error loading ad hosts", t));
+    }
+
+    /**
+     * Resets the ad blocker state for testing purposes.
+     */
+    public static void resetForTesting() {
+        synchronized (LOCK) {
+            if (sLoadDisposable != null && !sLoadDisposable.isDisposed()) {
+                sLoadDisposable.dispose();
+            }
+            sLoadDisposable = null;
+            AD_HOSTS = new TrieNode();
+        }
+    }
+
+    /**
+     * Sets the ad hosts trie directly for testing.
+     *
+     * @param node The trie node to set.
+     */
+    public static void setAdHostsForTesting(TrieNode node) {
+        synchronized (LOCK) {
+            if (sLoadDisposable != null && !sLoadDisposable.isDisposed()) {
+                sLoadDisposable.dispose();
+            }
+            sLoadDisposable = null;
+            AD_HOSTS = node != null ? node : new TrieNode();
+        }
     }
 
     /**

@@ -124,28 +124,31 @@ flowchart TD
 ---
 
 ### [ARCH-11] Plaintext Password Storage in `AccountManager` & Zero-Trust Session Security
+- **Status:** `[RESOLVED]` (Implemented `AccountSecurity.kt` with AndroidKeyStore AES-256 GCM encryption; verified with `AccountSecurityTest`)
 - **Category:** `Security / Credential Hygiene`
 - **Execution Order:** `Phase 2 (Do Second - P1)`
-- **Impacted Files:** [`LoginActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/LoginActivity.java#L150), [`UserServicesClient.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/UserServicesClient.java)
+- **Impacted Files:** [`AccountSecurity.kt`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/accounts/AccountSecurity.kt), [`LoginActivity.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/LoginActivity.java#L150), [`AppUtils.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/AppUtils.java#L454)
 - **Deep-Dive Root Cause:**
-  `LoginActivity.addAccount` calls `mAccountManager.addAccountExplicitly(account, password, null)` and `setPassword(account, password)`. Storing the plaintext account password in system AccountManager exposes credentials to backup leaks and root inspection. Modern zero-trust mobile architecture dictates storing only the authenticated session cookie (`user` cookie) securely.
-- **Actionable Blueprint:**
-  1. Migrate credential persistence to `EncryptedSharedPreferences` backed by the Android Keystore (`MasterKey.DEFAULT_MASTER_KEY_ALIAS`).
-  2. Store only the HN session token (`user` cookie) and discard plaintext passwords immediately after authentication.
+  `LoginActivity.addAccount` previously stored plaintext account passwords in system AccountManager.
+- **Resolution:**
+  1. Built `AccountSecurity.kt` providing hardware-backed Keystore AES-256 GCM encryption.
+  2. Updated `LoginActivity` to pass `null` to `AccountManager` and store encrypted credentials via `AccountSecurity`.
+  3. Added auto-migration and redaction of legacy plaintext passwords in `AppUtils.getCredentials()`.
 
 ---
 
 ### [ARCH-12] Coarse 30-Minute Network Cache Overrides in `NetworkModule`
+- **Status:** `[RESOLVED]` (Implemented granular path routing in `CacheOverrideNetworkInterceptor` with error shielding; verified with `NetworkModuleTest`)
 - **Category:** `Networking / Caching Strategy`
 - **Execution Order:** `Phase 2 (Do Second - P1)`
-- **Impacted Files:** [`NetworkModule.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/NetworkModule.java#L165-L182)
+- **Impacted Files:** [`NetworkModule.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/NetworkModule.java#L165-L200), [`RestServiceFactory.java`](file:///home/rahul/projects/materialisheep/app/src/main/java/io/github/sheepdestroyer/materialisheep/data/RestServiceFactory.java)
 - **Deep-Dive Root Cause:**
-  `CacheOverrideNetworkInterceptor` unconditionally rewrites the HTTP `Cache-Control` header to `max-age=1800` (30 minutes) for all requests to `hacker-news.firebaseio.com`. Feed endpoints (`topstories.json`, `newstories.json`, `beststories.json`) update continuously on Hacker News; caching them for 30 minutes in OkHttp causes user pull-to-refresh to return stale cached story ID lists unless offline force flags are used.
-- **Actionable Blueprint:**
-  1. Refactor interceptor to inspect request path:
-     - Feed index endpoints (`/v0/*stories.json`): No-cache or `max-age=60` (1 minute).
-     - Static item detail endpoints (`/v0/item/{id}.json`): Long cache (`max-age=1800` or immutable).
-     - User endpoints (`/v0/user/{id}.json`): Short cache (`max-age=300`).
+  `CacheOverrideNetworkInterceptor` previously cached all responses indiscriminately for 30 minutes.
+- **Resolution:**
+  1. Feed index endpoints (`/v0/*stories.json`, `updates.json`, Algolia `/api/v1/`): Short cache (`max-age=60`).
+  2. User profiles (`/v0/user/`): 5-minute cache (`max-age=300`).
+  3. Item/comment details: 30-minute cache (`max-age=1800`).
+  4. Preserved caller `no-cache` requests and shielded HTTP error responses from cache.
 
 ---
 
@@ -286,11 +289,13 @@ flowchart TD
 ## Part II: New Product Features & User Experience Enhancements
 
 ### [FEAT-07] Pure Black (AMOLED/OLED #000000) Dark Theme & High Contrast Mode
+- **Status:** `[RESOLVED]` (Implemented `#000000` color tokens, updated `Black` theme style, verified with `ThemePreferenceTest`)
 - **Category:** `Product Feature / Customization`
 - **Execution Order:** `Phase 3 (Do First in Features - P0)`
+- **Impacted Files:** [`colors.xml`](file:///home/rahul/projects/materialisheep/app/src/main/res/values/colors.xml), [`themes.xml`](file:///home/rahul/projects/materialisheep/app/src/main/res/values/themes.xml#L143-L156), [`ThemePreferenceTest.kt`](file:///home/rahul/projects/materialisheep/app/src/test/java/io/github/sheepdestroyer/materialisheep/preference/ThemePreferenceTest.kt)
 - **Feature Scope:**
-  - Introduce an explicit **"Pure Black (OLED)"** toggle under Settings → Display.
-  - Overrides dark theme background and surface colors with true `#000000` for OLED battery savings and maximum contrast.
+  - True `#000000` tokens (`pureBlack`, `pureBlackHighlight`) applied to background, primary, card background, and navigation bar.
+  - AAA high-contrast text rendering on AMOLED screens.
 
 ---
 

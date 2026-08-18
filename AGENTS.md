@@ -74,9 +74,11 @@ This repository uses a custom **Advanced Setup** workflow (`.github/workflows/co
 ## Architecture Notes
 
 - **DI:** Dagger 2 via `ApplicationComponent` (singleton) + `ApplicationModule`/`DataModule`/`NetworkModule`/`UiModule`/`ActivityModule`.
-- **Data layer:** RxJava 3 (`ItemManager` produces/consumes callbacks), blocking Retrofit `.execute()` calls in Kotlin ViewModels on `Dispatchers.IO`.
+- **Data layer:** RxJava 3 (`ItemManager` produces/consumes callbacks), blocking Retrofit `.execute()` calls in Kotlin ViewModels on `Dispatchers.IO`. Path-based `CacheOverrideNetworkInterceptor` routes 1-min TTL for feeds, 5-min TTL for users, and 30-min TTL for items with error shielding.
 - **Story list:** `ListFragment` → Kotlin `StoryListViewModel` (StateFlow) → `HackerNewsClient.getStories()` → batched `getItems()`.
-- **Web content:** `WebFragment` + `MaterialWebView`. **Security hardening:** `setJavaScriptEnabled(isRemote)` — JS is off for local content, on for remote + PDF.js viewer (`WebFragmentSecurityTest` enforces). `AdBlockWebViewClient` + `AdBlocker` (backed by HaGeZi Multi Pro Mini blocklist) drop ad/tracker requests. `FullscreenViewModel` (LiveData `fullscreenEvent()`) drives reader fullscreen.
+- **Security & Auth:** `AccountSecurity.kt` (`AndroidKeyStore` AES-256 GCM) encrypts credentials; no plaintext passwords in `AccountManager`.
+- **Web content:** `WebFragment` + `MaterialWebView`. **Security hardening:** `setJavaScriptEnabled(isRemote)` — JS is off for local content, on for remote + PDF.js viewer (`WebFragmentSecurityTest` enforces). `AdBlockWebViewClient` + synchronized `AdBlocker` drop ad/tracker requests. `FullscreenViewModel` (LiveData `fullscreenEvent()`) drives reader fullscreen.
+- **Theming:** Dynamic overlay theming via `ThemePreference` with Pure Black AMOLED (`#000000`) tokens.
 - **Widgets:** `WidgetHelper` (`@Inject` HN + Algolia `ItemManager`s) builds `RemoteCollectionItems`; `WidgetRefreshJobService` (JobScheduler) schedules refreshes.
 - **Crash reporting (fork):** debug builds install a default uncaught-exception handler launching `CrashActivity`; bypassed when `Build.FINGERPRINT == "robolectric"` so unit tests never self-terminate (`System.exit`).
 
@@ -84,7 +86,7 @@ This repository uses a custom **Advanced Setup** workflow (`.github/workflows/co
 
 Unit tests run under Robolectric; describing a background exception on the Robolectric looper triggers the production crash handler, which (post-fingerprint guard) is safe for tests. Keep Robolectric SDK config `@Config(sdk = Build.VERSION_CODES.S)` or newer — the pipeline loads the APK manifest which requires minSdk 31.
 
-Test classes to be aware of: `AppUtilsTest`, `WebFragmentSecurityTest`, `NetworkHttpsTest`, `WidgetHelperTest`, `BaseListActivityTest`, `StoryListViewModelTest`, plus client/perf tests.
+Test classes to be aware of: `AppUtilsTest`, `AccountSecurityTest`, `NetworkModuleTest`, `ThemePreferenceTest`, `WebFragmentSecurityTest`, `NetworkHttpsTest`, `WidgetHelperTest`, `BaseListActivityTest`, `StoryListViewModelTest`, `AdBlockerTest`, plus client/perf tests.
 
 ## CICD
 

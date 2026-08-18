@@ -29,6 +29,7 @@ import java.lang.ref.WeakReference;
 
 import javax.inject.Inject;
 
+import io.github.sheepdestroyer.materialisheep.accounts.AccountSecurity;
 import io.github.sheepdestroyer.materialisheep.accounts.UserServices;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
@@ -147,8 +148,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
     private void addAccount(String username, String password) {
         Account account = new Account(username, BuildConfig.APPLICATION_ID);
-        mAccountManager.addAccountExplicitly(account, password, null);
-        mAccountManager.setPassword(account, password); // for re-login with updated password
+        mAccountManager.addAccountExplicitly(account, null, null);
+        AccountSecurity.savePassword(this, username, password);
         Bundle bundle = new Bundle();
         bundle.putString(AccountManager.KEY_ACCOUNT_NAME, username);
         bundle.putString(AccountManager.KEY_ACCOUNT_TYPE, BuildConfig.APPLICATION_ID);

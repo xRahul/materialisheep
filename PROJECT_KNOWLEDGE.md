@@ -80,6 +80,7 @@ Implements the Android Home Screen Widget.
 - `WidgetRefreshJobService.java`: JobService for periodic widget updates.
 
 ### `accounts` Package
+- `AccountSecurity.kt`: Hardware-backed AES-256 GCM encryption via `AndroidKeyStore` for zero-trust credential storage.
 - `UserServicesClient.java`: Handles user login, voting, and commenting.
 - `AuthenticatorService.java`: Android Account Manager integration.
 

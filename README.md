@@ -16,12 +16,12 @@ Materialisheep follows a modular architecture that separates concerns and promot
 
 The codebase is organized into the following packages:
 
-*   `data`: Contains the data models, network clients, and local data sources for the application.
-*   `accounts`: Contains classes for managing user accounts.
+*   `data`: Contains the data models, network clients (`HackerNewsClient`, `AlgoliaClient`), cache hierarchy interceptors, and local Room data sources.
+*   `accounts`: Contains user authentication, `AccountSecurity` (Keystore AES-256 GCM encryption), and session management.
 *   `appwidget`: Contains classes for implementing home screen widgets.
 *   `ktx`: Contains Kotlin extension functions that are used throughout the application.
-*   `widget`: Contains custom Views and Adapters.
-*   `preference`: Contains preference-related classes.
+*   `widget`: Contains custom Views, WebViews, and Adapters.
+*   `preference`: Contains preference-related classes and the dynamic theming engine (including Pure Black OLED `#000000`).
 
 ## Setup
 

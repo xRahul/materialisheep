@@ -22,28 +22,24 @@ import static org.junit.Assert.assertTrue;
 public class AdBlockerTest {
 
     @Before
-    public void setUp() throws Exception {
-        // Reset AD_HOSTS to empty trie before each test
-        Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
-        field.setAccessible(true);
-        field.set(null, new AdBlocker.TrieNode());
+    public void setUp() {
+        AdBlocker.resetForTesting();
+    }
 
-        Field disposableField = AdBlocker.class.getDeclaredField("sLoadDisposable");
-        disposableField.setAccessible(true);
-        disposableField.set(null, null);
+    @org.junit.After
+    public void tearDown() {
+        AdBlocker.resetForTesting();
     }
 
     @Test
-    public void testIsAd() throws Exception {
+    public void testIsAd() {
         // Setup mock hosts
         AdBlocker.TrieNode root = new AdBlocker.TrieNode();
         root.add("doubleclick.net");
         root.add("ad.service.com");
 
-        // Inject hosts
-        Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
-        field.setAccessible(true);
-        field.set(null, root);
+        // Inject hosts via test hook
+        AdBlocker.setAdHostsForTesting(root);
 
         // Test positive cases
         assertTrue("http://doubleclick.net should be ad", AdBlocker.isAd("http://doubleclick.net"));
@@ -64,16 +60,14 @@ public class AdBlockerTest {
     }
 
     @Test
-    public void testIsAdUri() throws Exception {
+    public void testIsAdUri() {
         // Setup mock hosts
         AdBlocker.TrieNode root = new AdBlocker.TrieNode();
         root.add("doubleclick.net");
         root.add("ad.service.com");
 
-        // Inject hosts
-        Field field = AdBlocker.class.getDeclaredField("AD_HOSTS");
-        field.setAccessible(true);
-        field.set(null, root);
+        // Inject hosts via test hook
+        AdBlocker.setAdHostsForTesting(root);
 
         // Test positive cases
         assertTrue("http://doubleclick.net should be ad", AdBlocker.isAd(Uri.parse("http://doubleclick.net")));

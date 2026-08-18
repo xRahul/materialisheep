@@ -21,8 +21,8 @@ Separates **Existing System Improvements** from **New Product Features**.
 *Target: Establish non-blocking DataStore, Coroutines repository, in-memory caching, and encrypted authentication.*
 
 ### Existing System Improvements & Hardening
-- [ ] **Task 2.1:** Replace plaintext `AccountManager` password storage with `EncryptedSharedPreferences` Keystore cookie storage (`[ARCH-11]`)
-- [ ] **Task 2.2:** Split coarse 30-minute OkHttp `Cache-Control` overrides into granular feed vs item TTLs (`[ARCH-12]`)
+- [x] **Task 2.1:** Replace plaintext `AccountManager` password storage with `AndroidKeyStore` AES-GCM encrypted storage (`[ARCH-11]`)
+- [x] **Task 2.2:** Split coarse 30-minute OkHttp `Cache-Control` overrides into granular feed vs item TTLs (`[ARCH-12]`)
 - [ ] **Task 2.3:** Implement multi-tier in-memory `LruCache` for story and comment items (`[ARCH-13]`)
 - [ ] **Task 2.4:** Migrate monolithic `Preferences.java` to Jetpack Preferences DataStore (`Flow<T>`) (`[ARCH-04]`)
 - [ ] **Task 2.5:** Unify data layer from RxJava 3 to Kotlin Coroutines `suspend fun` and `Flow<T>` (`[ARCH-03]`)
@@ -36,7 +36,7 @@ Separates **Existing System Improvements** from **New Product Features**.
 *Target: Deliver high-demand user-facing features on top of the modernized Phase 2 foundation.*
 
 ### New Product Features
-- [ ] **Task 3.1:** Implement Pure Black (AMOLED/OLED `#000000`) theme toggle in Preferences & Activity theme engine (`[FEAT-07]`)
+- [x] **Task 3.1:** Implement Pure Black (AMOLED/OLED `#000000`) theme in Preferences & Activity theme engine (`[FEAT-07]`)
 - [ ] **Task 3.2:** Implement Keyword, Domain, and Author Muting & Filter Engine (`[FEAT-01]`)
 - [ ] **Task 3.3:** Add interactive Material 3 Filter Chips to Algolia search (`[FEAT-03]`)
 - [ ] **Task 3.4:** Build Background Reply & Karma Notification Engine via `WorkManager` (`[FEAT-05]`)

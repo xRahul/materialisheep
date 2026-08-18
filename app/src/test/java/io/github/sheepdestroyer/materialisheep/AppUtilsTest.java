@@ -2,10 +2,17 @@ package io.github.sheepdestroyer.materialisheep;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import androidx.core.util.Pair;
+import io.github.sheepdestroyer.materialisheep.accounts.AccountSecurity;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -198,5 +205,40 @@ public class AppUtilsTest {
 
     AppUtils.openPlayStore(wrapper);
     assertEquals(context.getString(R.string.no_playstore), ShadowToast.getTextOfLatestToast());
+  }
+
+  @Test
+  public void testGetCredentials_noUsername_returnsNull() {
+    Context context = ApplicationProvider.getApplicationContext();
+    Preferences.setUsername(context, null);
+    assertNull(AppUtils.getCredentials(context));
+  }
+
+  @Test
+  public void testGetCredentials_secureStorage_returnsCredentials() {
+    Context context = ApplicationProvider.getApplicationContext();
+    String username = "alice";
+    String password = "alicePassword123";
+
+    Preferences.setUsername(context, username);
+    AccountManager accountManager = AccountManager.get(context);
+    Account account = new Account(username, BuildConfig.APPLICATION_ID);
+    accountManager.addAccountExplicitly(account, null, null);
+    AccountSecurity.savePassword(context, username, password);
+
+    Pair<String, String> credentials = AppUtils.getCredentials(context);
+    assertNotNull(credentials);
+    assertEquals(username, credentials.first);
+    assertEquals(password, credentials.second);
+  }
+
+  @Test
+  public void testGetCredentials_accountNotInAccountManager_returnsNull() {
+    Context context = ApplicationProvider.getApplicationContext();
+    String username = "ghost_user";
+    Preferences.setUsername(context, username);
+    AccountSecurity.savePassword(context, username, "some_pass");
+
+    assertNull(AppUtils.getCredentials(context));
   }
 }

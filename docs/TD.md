@@ -54,7 +54,10 @@ The project uses **Dagger 2** for dependency injection.
 ### Web Content Rendering
 -   `WebFragment` hosts a `MaterialWebView` (extends `WebView`; package `widget/`) for article rendering.
 -   **Security hardening (fork):** `setJavaScriptEnabled(isRemote)` — JavaScript is disabled for local/offline content and only enabled for remote pages and the bundled PDF.js viewer. A `WebFragmentSecurityTest` enforces this contract.
--   **Ad blocking:** `AdBlockWebViewClient` + lock-free `AdBlocker` intercept and drop known ad/tracker requests.
+-   **Credential Security:** `AccountSecurity.kt` implements hardware-backed `AndroidKeyStore` AES-256 GCM encryption for user passwords, eliminating plaintext credential persistence in `AccountManager`.
+-   **Network Cache Hierarchy:** `CacheOverrideNetworkInterceptor` in `NetworkModule` applies path-based cache expiration: 1-minute TTL for feeds (`*stories.json`), 5-minute TTL for users, and 30-minute TTL for story/comment items; preserves explicit `no-cache` requests and bypasses caching HTTP error responses.
+-   **Ad blocking:** `AdBlockWebViewClient` + synchronized `AdBlocker` trie intercept and drop known ad/tracker requests with safe initialization locks.
+-   **Theming Engine:** Dynamic overlay theming via `ThemePreference` with Pure Black AMOLED (`#000000`) tokens and high-contrast typography.
 -   **Fullscreen:** `FullscreenViewModel` exposes a `LiveData<Boolean>` `fullscreenEvent()`; `WebFragment`/`ItemActivity`/`BaseListActivity` observe it to expand/collapse the reading view.
 
 ### Widgets

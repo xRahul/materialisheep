@@ -141,11 +141,14 @@
     </style>
 
     <style name="Black">
-        <item name="colorPrimary">@color/grey900</item>
-        <item name="colorPrimaryDark">@color/blackT87</item>
+        <item name="colorPrimary">@color/pureBlack</item>
+        <item name="colorPrimaryDark">@color/pureBlack</item>
         <item name="colorAccent">@color/redA100</item>
-        <item name="colorCardBackground">@color/blackT87</item>
-        <item name="colorCardHighlight">@color/grey900</item>
+        <item name="colorCardBackground">@color/pureBlack</item>
+        <item name="colorCardHighlight">@color/pureBlackHighlight</item>
+        <item name="android:windowBackground">@color/pureBlack</item>
+        <item name="android:colorBackground">@color/pureBlack</item>
+        <item name="android:navigationBarColor">@color/pureBlack</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/whiteT70</item>
         <item name="alertDialogTheme">@style/AppAlertDialog.Dark</item>

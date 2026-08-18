@@ -32,7 +32,7 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   Sort results by relevance or date.
 
 ### 4.2 User Account Integration
-*   **Authentication:** Secure login using existing Hacker News credentials. Credentials are stored safely using the Android Account Manager.
+*   **Authentication:** Zero-trust login architecture. Hacker News credentials are encrypted using hardware-backed `AndroidKeyStore` (AES-256 GCM in `AccountSecurity.kt`) instead of plaintext storage in system `AccountManager`.
 *   **Engagement:**
     *   **Upvote/Downvote:** Vote on stories and comments.
     *   **Comment:** Reply to stories or other comments.
@@ -41,7 +41,11 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
 *   **Profile:** View user profiles, including "karma" score, account creation date, and submission history.
 
 ### 4.3 Offline Capabilities
-*   **Smart Caching:** Automatically caches visited stories and comments.
+*   **Smart Caching & Cache TTL Hierarchy:**
+    *   Feed index endpoints (`*stories.json`, `updates.json`, Algolia search): 1-minute TTL for fast pull-to-refresh without stale IDs.
+    *   User profiles: 5-minute TTL.
+    *   Story and comment items: 30-minute TTL.
+    *   Explicit `no-cache` directives preserved; HTTP error responses are shielded from caching.
 *   **Offline Mode:**
     *   Explicitly download content for offline access.
     *   Options to download full articles (web content), comments, and readability views.
@@ -50,7 +54,7 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
 
 ### 4.4 Customization & Settings
 *   **Themes:** Extensive theming engine with multiple presets:
-    *   Light, Dark, Black (AMOLED), Sepia, Solarized, Green, etc.
+    *   Light, Dark, Pure Black AMOLED (`#000000` true black surfaces and AAA contrast text), Sepia, Solarized, Green, etc.
     *   Auto Day/Night mode based on system settings or time.
 *   **Typography:**
     *   Adjustable text size (Extra Small to Extra Large).
@@ -72,7 +76,9 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   Support for Chrome Custom Tabs for a seamless browsing experience.
     *   Option to always open in an external browser.
 *   **Security:**
+    *   Hardware-backed AES-256 GCM encryption for user credentials via `AndroidKeyStore`.
     *   JavaScript is disabled for local (offline/readability) content and only enabled for remote pages and the bundled PDF viewer, mitigating XSS via injected content.
+    *   Ad and tracker blocking powered by synchronized `AdBlocker` trie.
     *   Backend API endpoints enforce HTTPS.
     *   Automated CodeQL analysis runs on every push/PR (Advanced Setup; GitHub Default Setup must stay disabled — see `docs/CODEQL_SETUP.md`).
 

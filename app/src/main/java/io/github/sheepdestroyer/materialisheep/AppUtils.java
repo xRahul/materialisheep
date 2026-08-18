@@ -18,6 +18,7 @@ package io.github.sheepdestroyer.materialisheep;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import io.github.sheepdestroyer.materialisheep.accounts.AccountSecurity;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -458,12 +459,35 @@ public class AppUtils {
     }
     AccountManager accountManager = AccountManager.get(context);
     Account[] accounts = accountManager.getAccountsByType(BuildConfig.APPLICATION_ID);
+    Account matchedAccount = null;
     for (Account account : accounts) {
       if (TextUtils.equals(username, account.name)) {
-        return Pair.create(username, accountManager.getPassword(account));
+        matchedAccount = account;
+        break;
       }
     }
-    return null;
+    // If account was deleted from device settings, do not return credentials
+    if (matchedAccount == null) {
+      return null;
+    }
+
+    // Read from hardware-backed encrypted storage first
+    String password = AccountSecurity.getPassword(context, username);
+    if (!TextUtils.isEmpty(password)) {
+      return Pair.create(username, password);
+    }
+
+    // Fallback & automatic migration from legacy AccountManager plaintext
+    String legacyPassword = accountManager.getPassword(matchedAccount);
+    if (!TextUtils.isEmpty(legacyPassword)) {
+      AccountSecurity.savePassword(context, username, legacyPassword);
+      try {
+        accountManager.setPassword(matchedAccount, null);
+      } catch (Exception ignored) {
+      }
+      return Pair.create(username, legacyPassword);
+    }
+    return Pair.create(username, null);
   }
 
   /**
