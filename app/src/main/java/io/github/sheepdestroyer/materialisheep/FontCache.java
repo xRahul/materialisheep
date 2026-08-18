@@ -19,16 +19,34 @@ package io.github.sheepdestroyer.materialisheep;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.text.TextUtils;
-
+import android.util.Log;
+import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A simple cache for Typeface objects.
+ * A thread-safe cache and loader for Typeface objects supporting both res/font resources
+ * and legacy assets with safe exception handling and graceful fallbacks.
  */
 public class FontCache {
 
+    private static final String TAG = "FontCache";
     private static volatile FontCache sInstance;
     private final ConcurrentHashMap<String, Typeface> mTypefaceMap = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> FONT_RESOURCE_MAP = new HashMap<>();
+
+    static {
+        FONT_RESOURCE_MAP.put("DroidSans.ttf", R.font.droid_sans);
+        FONT_RESOURCE_MAP.put("droid_sans", R.font.droid_sans);
+        FONT_RESOURCE_MAP.put("DroidSerif.ttf", R.font.droid_serif);
+        FONT_RESOURCE_MAP.put("droid_serif", R.font.droid_serif);
+        FONT_RESOURCE_MAP.put("LibreBaskerville-Regular.ttf", R.font.libre_baskerville_regular);
+        FONT_RESOURCE_MAP.put("libre_baskerville_regular", R.font.libre_baskerville_regular);
+        FONT_RESOURCE_MAP.put("RobotoSlab-Regular.ttf", R.font.roboto_slab_regular);
+        FONT_RESOURCE_MAP.put("roboto_slab_regular", R.font.roboto_slab_regular);
+    }
 
     /**
      * Gets the singleton instance of the FontCache.
@@ -49,17 +67,39 @@ public class FontCache {
     private FontCache() { }
 
     /**
-     * Gets a Typeface from the cache.
+     * Gets a Typeface from the cache, res/font, or assets with fallback to Typeface.DEFAULT.
      *
      * @param context      The context.
-     * @param typefaceName The name of the typeface.
-     * @return The Typeface object.
+     * @param typefaceName The name of the typeface or asset file.
+     * @return The Typeface object or null if name is empty.
      */
+    @Nullable
     public Typeface get(Context context, String typefaceName) {
-        if (TextUtils.isEmpty(typefaceName)) {
+        if (context == null || TextUtils.isEmpty(typefaceName)) {
             return null;
         }
-        return mTypefaceMap.computeIfAbsent(typefaceName,
-                name -> Typeface.createFromAsset(context.getAssets(), name));
+        return mTypefaceMap.computeIfAbsent(typefaceName, name -> loadTypeface(context, name));
+    }
+
+    private Typeface loadTypeface(Context context, String name) {
+        Integer fontResId = FONT_RESOURCE_MAP.get(name);
+        if (fontResId != null) {
+            try {
+                Typeface typeface = ResourcesCompat.getFont(context, fontResId);
+                if (typeface != null) {
+                    return typeface;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to load font from resource: " + fontResId, e);
+            }
+        }
+
+        // Fallback to asset loading
+        try {
+            return Typeface.createFromAsset(context.getAssets(), name);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create typeface from asset: " + name + ", falling back to DEFAULT", e);
+            return Typeface.DEFAULT;
+        }
     }
 }
