@@ -16,4 +16,8 @@ interface ReadableDao {
 
     @Query("SELECT * FROM readable WHERE itemid = :itemId LIMIT 1")
     fun selectByItemId(itemId: String?): Readable?
+
+    @Query("DELETE FROM readable WHERE itemid NOT IN (SELECT itemid FROM saved) AND _id NOT IN (SELECT _id FROM readable ORDER BY _id DESC LIMIT :limit)")
+    fun prune(limit: Int = 500): Int
 }
+

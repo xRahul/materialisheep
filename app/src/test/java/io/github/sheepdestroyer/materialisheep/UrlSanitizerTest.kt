@@ -67,6 +67,10 @@ class UrlSanitizerTest {
         assertTrue(UrlSanitizer.isTrackingParam("gclid"))
         assertTrue(UrlSanitizer.isTrackingParam("mc_eid"))
         assertTrue(UrlSanitizer.isTrackingParam("hsa_cam"))
+        assertTrue(UrlSanitizer.isTrackingParam("si"))
+        assertTrue(UrlSanitizer.isTrackingParam("ref_src"))
+        assertTrue(UrlSanitizer.isTrackingParam("pk_campaign"))
+        assertTrue(UrlSanitizer.isTrackingParam("matomo_source"))
         assertFalse(UrlSanitizer.isTrackingParam("id"))
         assertFalse(UrlSanitizer.isTrackingParam("page"))
         assertFalse(UrlSanitizer.isTrackingParam("q"))
@@ -74,3 +78,4 @@ class UrlSanitizerTest {
         assertFalse(UrlSanitizer.isTrackingParam(""))
     }
 }
+

@@ -71,4 +71,22 @@ class CodeBlockFormatterTest {
         val fgSpans = spanned.getSpans(0, spanned.length, ForegroundColorSpan::class.java)
         assertTrue(fgSpans.isNotEmpty())
     }
+
+    @Test
+    fun testFormatCodeBlocks_darkModeVsLightModeColors() {
+        val html = "<pre><code>val x = true</code></pre>"
+        val processed = CodeBlockFormatter.preprocessCodeTags(html)
+
+        val lightSpanned = Html.fromHtml(processed, Html.FROM_HTML_MODE_LEGACY)
+        val lightFormatted = CodeBlockFormatter.formatCodeBlocks(lightSpanned, isDark = false) as Spanned
+        val lightFg = lightFormatted.getSpans(0, lightFormatted.length, ForegroundColorSpan::class.java).first()
+        assertEquals(0xFF00796B.toInt(), lightFg.foregroundColor)
+
+        val darkSpanned = Html.fromHtml(processed, Html.FROM_HTML_MODE_LEGACY)
+        val darkFormatted = CodeBlockFormatter.formatCodeBlocks(darkSpanned, isDark = true) as Spanned
+        val darkFg = darkFormatted.getSpans(0, darkFormatted.length, ForegroundColorSpan::class.java).first()
+        assertEquals(0xFF4DB6AC.toInt(), darkFg.foregroundColor)
+    }
 }
+
+

@@ -321,11 +321,25 @@
     <string name="hint_update">Your app has just been updated!</string>
     <string name="export_saved_stories">Export saved stories</string>
     <string name="export_notification">Saved to file. Tap for options.</string>
+    <string name="export_format_markdown">Markdown (Obsidian / PKM)</string>
+    <string name="export_format_html">HTML Bookmarks (Netscape)</string>
+    <string name="export_format_json">JSON Archive</string>
+    <string name="export_format_text">Plain Text (.txt)</string>
+    <string name="open_copied_hn_story">Open copied HN story #%1$s?</string>
+    <string name="open">Open</string>
+
     <string name="share_file">Share file</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="notification_channel_downloads">Downloads</string>
     <string name="reply">Reply</string>
+    <string name="hide_comments">Hide replies</string>
+    <string name="show_comments">Show replies</string>
+    <string name="jump_parent_comment">Jump to parent comment</string>
+    <string name="comment_level">Level %1$d</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
 </resources>
+
+
+

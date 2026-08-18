@@ -38,11 +38,19 @@ class Cache @Inject constructor(
     private val readableDao: ReadableDao,
     @param:Named(DataModule.MAIN_THREAD) private val mainScheduler: Scheduler) : LocalCache {
 
+  private val insertCounter = java.util.concurrent.atomic.AtomicInteger(0)
+
   override fun getReadability(itemId: String?) = readableDao.selectByItemId(itemId)?.content
 
   override fun putReadability(itemId: String?, content: String?) {
     readableDao.insert(MaterialisticDatabase.Readable(itemId, content))
+    if (insertCounter.incrementAndGet() % 50 == 0) {
+      readableDao.prune()
+    }
   }
+
+
+
 
   override fun isViewed(itemId: String?) = readStoriesDao.selectByItemId(itemId) != null
 

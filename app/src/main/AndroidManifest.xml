@@ -86,7 +86,7 @@
             android:name=".ItemActivity"
             android:label="@string/title_activity_item"
             android:exported="true">
-            <intent-filter android:label="@string/title_activity_item" android:autoVerify="true">
+            <intent-filter android:label="@string/title_activity_item">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -97,7 +97,7 @@
                     android:pathPrefix="/item"
                     android:scheme="https" />
             </intent-filter>
-            <intent-filter android:label="@string/title_activity_item" android:autoVerify="true">
+            <intent-filter android:label="@string/title_activity_item">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -133,28 +133,125 @@
         </activity>
         <activity
             android:name=".NewActivity"
-            android:label="@string/title_activity_new" >
+            android:label="@string/title_activity_new"
+            android:exported="true">
+            <intent-filter android:label="@string/title_activity_new">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/newest"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:label="@string/title_activity_new">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/newest"
+                    android:scheme="http" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".ShowActivity"
-            android:label="@string/title_activity_show" >
+            android:label="@string/title_activity_show"
+            android:exported="true">
+            <intent-filter android:label="@string/title_activity_show">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/show"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:label="@string/title_activity_show">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/show"
+                    android:scheme="http" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".AskActivity"
-            android:label="@string/title_activity_ask" >
+            android:label="@string/title_activity_ask"
+            android:exported="true">
+            <intent-filter android:label="@string/title_activity_ask">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/ask"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:label="@string/title_activity_ask">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/ask"
+                    android:scheme="http" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".JobsActivity"
-            android:label="@string/title_activity_jobs" >
+            android:label="@string/title_activity_jobs"
+            android:exported="true">
+            <intent-filter android:label="@string/title_activity_jobs">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/jobs"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:label="@string/title_activity_jobs">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/jobs"
+                    android:scheme="http" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".BestActivity"
-            android:label="@string/title_activity_best" >
+            android:label="@string/title_activity_best"
+            android:exported="true">
+            <intent-filter android:label="@string/title_activity_best">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/best"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:label="@string/title_activity_best">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="news.ycombinator.com"
+                    android:pathPrefix="/best"
+                    android:scheme="http" />
+            </intent-filter>
         </activity>
+
         <activity
             android:name=".PopularActivity"
             android:label="@string/title_activity_popular" >
         </activity>
+
         <activity
             android:name=".SearchActivity"
             android:label="@string/title_activity_search"
@@ -216,7 +313,7 @@
             android:label="@string/title_activity_user"
             android:theme="@style/AppTheme.Translucent"
             android:exported="true">
-            <intent-filter android:label="@string/title_activity_user" android:autoVerify="true">
+            <intent-filter android:label="@string/title_activity_user">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -227,7 +324,7 @@
                     android:pathPrefix="/user"
                     android:scheme="https" />
             </intent-filter>
-            <intent-filter android:label="@string/title_activity_user" android:autoVerify="true">
+            <intent-filter android:label="@string/title_activity_user">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -242,6 +339,7 @@
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data

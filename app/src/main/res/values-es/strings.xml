@@ -269,8 +269,21 @@
     <string name="hint_update">La aplicación acaba de ser actualizada!</string>
     <string name="export_saved_stories">Exportar historias guardadas</string>
     <string name="export_notification">Guardado a un fichero. Haz click para ver más opciones.</string>
+    <string name="export_format_markdown">Markdown (Obsidian / PKM)</string>
+    <string name="export_format_html">Marcadores HTML (Netscape)</string>
+    <string name="export_format_json">Archivo JSON</string>
+    <string name="export_format_text">Texto plano (.txt)</string>
+    <string name="open_copied_hn_story">¿Abrir historia copiada de HN #%1$s?</string>
+    <string name="open">Abrir</string>
     <string name="share_file">Compartir archivo</string>
     <string name="privacy_policy">Política de privacidad</string>
     <string name="notification_channel_downloads">Descargas</string>
-    <string name="hint_nav_short">Deslizar \\u2191 \\u2193 \\u2192 \\u2190 parra navegar Pulsación larga para volver a posicionar</string>
+    <string name="reply">Responder</string>
+    <string name="hide_comments">Ocultar respuestas</string>
+    <string name="show_comments">Mostrar respuestas</string>
+    <string name="jump_parent_comment">Saltar al comentario superior</string>
+    <string name="comment_level">Nivel %1$d</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="hint_nav_short">Deslizar \u2191 \u2193 \u2192 \u2190 para navegar. Pulsación larga para mover</string>
 </resources>

@@ -141,9 +141,13 @@ public class SinglePageItemRecyclerViewAdapter
     public void detach(Context context, RecyclerView recyclerView) {
         super.detach(context, recyclerView);
         recyclerView.removeOnScrollListener(mScrollListener);
-        mColors.recycle();
+        if (mColors != null) {
+            mColors.recycle();
+            mColors = null;
+        }
         mItemTouchHelper.attachToRecyclerView(null);
     }
+
 
     @Override
     public ToggleItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -248,8 +252,9 @@ public class SinglePageItemRecyclerViewAdapter
         if (item == null) { // footer
             return VIEW_TYPE_FOOTER;
         }
-        return item.getLevel() - 1;
+        return Math.min(Math.max(0, item.getLevel() - 1), MAX_INDENT_LEVEL);
     }
+
 
     @Override
     public int getItemCount() {
@@ -327,6 +332,11 @@ public class SinglePageItemRecyclerViewAdapter
     protected void clear(ToggleItemViewHolder holder) {
         super.clear(holder);
         holder.mToggleButton.setVisibility(View.GONE);
+        holder.mPostedTextView.setOnClickListener(null);
+        androidx.core.view.ViewCompat.removeAccessibilityAction(holder.itemView, R.id.action_jump_parent);
+        androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
+                androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                null, null);
     }
 
     @Override
@@ -341,7 +351,49 @@ public class SinglePageItemRecyclerViewAdapter
                 getThreadColor(position != RecyclerView.NO_POSITION ? getItemViewType(position) : 0)));
         appendAuthorBadges(holder.mPostedTextView, item);
         bindKids(holder, item);
+
+        if (item.getKidCount() > 0) {
+            holder.mPostedTextView.setOnClickListener(v -> {
+                changeToggleState(holder, item, !mState.isExpanded(item));
+                toggleKids(item);
+            });
+            androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
+                    androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                    mContext.getString(mState.isExpanded(item) ? R.string.hide_comments : R.string.show_comments),
+                    (v, arguments) -> {
+                        changeToggleState(holder, item, !mState.isExpanded(item));
+                        toggleKids(item);
+                        return true;
+                    });
+        } else {
+            holder.mPostedTextView.setOnClickListener(null);
+            androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
+                    androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                    null, null);
+        }
+
+        androidx.core.view.ViewCompat.setStateDescription(holder.itemView,
+                mContext.getString(R.string.comment_level, item.getLevel()));
+
+        if (item.getLevel() > 1) {
+            androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
+                    new androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                            R.id.action_jump_parent, mContext.getString(R.string.jump_parent_comment)),
+                    mContext.getString(R.string.jump_parent_comment),
+                    (v, arguments) -> {
+                        int parentPos = findParentPosition(holder.getBindingAdapterPosition(), item);
+                        if (parentPos >= 0 && mRecyclerView != null) {
+                            mRecyclerView.smoothScrollToPosition(parentPos);
+                            return true;
+                        }
+                        return false;
+                    });
+        } else {
+            androidx.core.view.ViewCompat.removeAccessibilityAction(holder.itemView, R.id.action_jump_parent);
+        }
     }
+
+
 
     @Override
     public void lockBinding(int[] lock) {

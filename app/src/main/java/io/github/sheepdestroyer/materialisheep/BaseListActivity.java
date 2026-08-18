@@ -217,6 +217,10 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         }
     }
 
+    private static final java.util.regex.Pattern HN_ITEM_URL_PATTERN =
+            java.util.regex.Pattern.compile("(?:https?://)?news\\.ycombinator\\.com/item\\?(?:[^#\\s]*&)?id=(\\d+)");
+    private static int sLastCheckedClipHash = 0;
+
     /**
      * Called when the activity is becoming visible to the user.
      */
@@ -226,6 +230,59 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         mCustomTabsDelegate.bindCustomTabsService(this);
         mKeyDelegate.attach(this);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkClipboard();
+    }
+
+    private void checkClipboard() {
+        try {
+            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cm == null || !cm.hasPrimaryClip()) {
+                return;
+            }
+            android.content.ClipDescription desc = cm.getPrimaryClipDescription();
+            if (desc == null || !desc.hasMimeType(android.content.ClipDescription.MIMETYPE_TEXT_PLAIN)) {
+                return;
+            }
+            android.content.ClipData clipData = cm.getPrimaryClip();
+            if (clipData == null || clipData.getItemCount() == 0) {
+                return;
+            }
+            CharSequence text = clipData.getItemAt(0).getText();
+            if (text == null || text.length() > 500) {
+                return;
+            }
+            String clipString = text.toString().trim();
+            if (!clipString.contains("news.ycombinator.com/item")) {
+                return;
+            }
+            int clipHash = clipString.hashCode();
+            if (clipHash == sLastCheckedClipHash) {
+                return;
+            }
+            sLastCheckedClipHash = clipHash;
+            java.util.regex.Matcher matcher = HN_ITEM_URL_PATTERN.matcher(clipString);
+            if (matcher.find()) {
+                String itemId = matcher.group(1);
+                View container = mListView != null ? mListView : findViewById(R.id.content_frame);
+                if (container != null) {
+                    Snackbar.make(container, getString(R.string.open_copied_hn_story, itemId), Snackbar.LENGTH_LONG)
+                            .setAction(R.string.open, v -> startActivity(new Intent(BaseListActivity.this, ItemActivity.class)
+                                    .setAction(Intent.ACTION_VIEW)
+                                    .setData(android.net.Uri.parse("https://news.ycombinator.com/item?id=" + itemId))))
+                            .show();
+                }
+            }
+
+        } catch (Throwable ignored) {
+            // Ignore clipboard access security exceptions on various OEMs/versions
+        }
+    }
+
+
 
     /**
      * Initialize the contents of the Activity's standard options menu.

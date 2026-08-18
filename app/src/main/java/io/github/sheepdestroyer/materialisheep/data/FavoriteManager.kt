@@ -126,26 +126,40 @@ class FavoriteManager @Inject constructor(
     loader = null
   }
 
+  enum class ExportFormat {
+    MARKDOWN, HTML, JSON, TEXT
+  }
+
   /**
-   * Exports all favorites matched given query to a file.
+   * Exports all favorites matched given query to a file in specified format.
    *
    * @param context an instance of [Context]
    * @param query   a query to filter stories to be retrieved
+   * @param format  the export format to use (MARKDOWN, HTML, JSON, TEXT)
    */
+  @JvmOverloads
   @SuppressLint("CheckResult")
-  fun export(context: Context, query: String?) {
+  fun export(context: Context, query: String?, format: ExportFormat = ExportFormat.MARKDOWN) {
     val appContext = context.applicationContext
     notifyExportStart(appContext)
     Observable.defer { Observable.just(query ?: "") }
-        .map { query(it) }
-        .filter { it.moveToFirst() }
-        .map {
-          try {
-            toFile(appContext, Cursor(it))?.let { uri -> listOf(uri) } ?: emptyList()
-          } catch (e: IOException) {
-            emptyList<Uri>()
-          } finally {
-            it.close()
+        .map { filter ->
+          query(filter).use { rawCursor ->
+            if (!rawCursor.moveToFirst()) {
+              emptyList<Uri>()
+            } else {
+              try {
+                val uri = when (format) {
+                  ExportFormat.MARKDOWN -> exportMarkdown(appContext, Cursor(rawCursor))
+                  ExportFormat.HTML -> exportHtml(appContext, Cursor(rawCursor))
+                  ExportFormat.JSON -> exportJson(appContext, Cursor(rawCursor))
+                  ExportFormat.TEXT -> toFile(appContext, Cursor(rawCursor))
+                }
+                uri?.let { u -> listOf(u) } ?: emptyList()
+              } catch (e: IOException) {
+                emptyList()
+              }
+            }
           }
         }
         .onErrorReturn { emptyList() }
@@ -154,6 +168,8 @@ class FavoriteManager @Inject constructor(
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe { notifyExportDone(appContext, it.firstOrNull()) }
   }
+
+
 
   /**
    * Adds a story as a favorite.
@@ -257,25 +273,23 @@ class FavoriteManager @Inject constructor(
   private fun toFile(context: Context, cursor: Cursor): Uri? {
     if (cursor.count == 0) return null
     val dir = File(context.filesDir, PATH_SAVED)
-    if (!dir.exists() && !dir.mkdir()) return null
+    if (!dir.exists() && !dir.mkdirs()) return null
     val file = File(dir, FILENAME_EXPORT)
     if (!file.exists() && !file.createNewFile()) return null
-    val bufferedSink = file.sink().buffer()
-    with(bufferedSink) {
+    file.sink().buffer().use { sink ->
       do {
         val item = cursor.favorite
-        writeUtf8(item.displayedTitle)
-        writeByte('\n'.code)
-        writeUtf8(item.url)
-        writeByte('\n'.code)
-        writeUtf8(HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.id)
+        sink.writeUtf8(item.displayedTitle)
+        sink.writeByte('\n'.code)
+        sink.writeUtf8(item.url)
+        sink.writeByte('\n'.code)
+        sink.writeUtf8(HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.id)
         if (!cursor.isLast) {
-          writeByte('\n'.code)
-          writeByte('\n'.code)
+          sink.writeByte('\n'.code)
+          sink.writeByte('\n'.code)
         }
       } while (cursor.moveToNext())
-      flush()
-      closeQuietly()
+      sink.flush()
     }
     return file.getUri(context, FILE_AUTHORITY)
   }
@@ -284,7 +298,7 @@ class FavoriteManager @Inject constructor(
   private fun exportMarkdown(context: Context, cursor: Cursor): Uri? {
     if (cursor.count == 0) return null
     val dir = File(context.filesDir, PATH_SAVED)
-    if (!dir.exists() && !dir.mkdir()) return null
+    if (!dir.exists() && !dir.mkdirs()) return null
     val file = File(dir, "materialisheep-bookmarks.md")
     if (!file.exists() && !file.createNewFile()) return null
 
@@ -294,11 +308,9 @@ class FavoriteManager @Inject constructor(
     } while (cursor.moveToNext())
 
     val markdownContent = FavoriteExporter.toMarkdown(items)
-    val bufferedSink = file.sink().buffer()
-    with(bufferedSink) {
-      writeUtf8(markdownContent)
-      flush()
-      closeQuietly()
+    file.sink().buffer().use { sink ->
+      sink.writeUtf8(markdownContent)
+      sink.flush()
     }
     return file.getUri(context, FILE_AUTHORITY)
   }
@@ -307,7 +319,7 @@ class FavoriteManager @Inject constructor(
   private fun exportJson(context: Context, cursor: Cursor): Uri? {
     if (cursor.count == 0) return null
     val dir = File(context.filesDir, PATH_SAVED)
-    if (!dir.exists() && !dir.mkdir()) return null
+    if (!dir.exists() && !dir.mkdirs()) return null
     val file = File(dir, "materialisheep-bookmarks.json")
     if (!file.exists() && !file.createNewFile()) return null
 
@@ -317,11 +329,30 @@ class FavoriteManager @Inject constructor(
     } while (cursor.moveToNext())
 
     val jsonContent = FavoriteExporter.toJson(items)
-    val bufferedSink = file.sink().buffer()
-    with(bufferedSink) {
-      writeUtf8(jsonContent)
-      flush()
-      closeQuietly()
+    file.sink().buffer().use { sink ->
+      sink.writeUtf8(jsonContent)
+      sink.flush()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
+  @WorkerThread
+  private fun exportHtml(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdirs()) return null
+    val file = File(dir, "materialisheep-bookmarks.html")
+    if (!file.exists() && !file.createNewFile()) return null
+
+    val items = mutableListOf<WebItem>()
+    do {
+      items.add(cursor.favorite)
+    } while (cursor.moveToNext())
+
+    val htmlContent = FavoriteExporter.toNetscapeHtml(items)
+    file.sink().buffer().use { sink ->
+      sink.writeUtf8(htmlContent)
+      sink.flush()
     }
     return file.getUri(context, FILE_AUTHORITY)
   }
@@ -351,7 +382,6 @@ class FavoriteManager @Inject constructor(
     with(manager) {
       cancel(notificationId)
       if (uri == null) return
-      context.grantUriPermission(context.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
       notify(
         notificationId, createNotificationBuilder(context)
           .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -368,6 +398,7 @@ class FavoriteManager @Inject constructor(
       )
     }
   }
+
 
   private fun createNotificationBuilder(context: Context) =
       NotificationCompat.Builder(context, CHANNEL_EXPORT)

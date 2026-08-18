@@ -104,12 +104,22 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   **Concurrency:** Hybrid: RxJava 3 (Data Layer) and Kotlin Coroutines (ViewModel).
     *   **Observability:** Comprehensive logging of user flows, errors, and UI states (Debug builds).
 
-## 6. Future Roadmap
-*   **Modernization:**
-    *   Complete migration of legacy Java code to Kotlin.
-    *   Adopt Jetpack Compose for UI development to replace XML layouts.
-    *   Full "Edge-to-Edge" UI design.
-*   **Features:**
-    *   Enhanced tablet support with multi-pane layouts.
-    *   Improved Algolia search caching.
-    *   Updates to internal ad-blocking definitions.
+## 6. Future Roadmap & Product Review
+*See [`docs/PRODUCT_REVIEW.md`](PRODUCT_REVIEW.md) for the complete tri-perspective Product Management review and gap analysis.*
+
+*   **P0 / Near-Term Milestones:**
+    *   Multi-format PKM bookmark exporter dialog (Obsidian Markdown, Netscape HTML, JSON).
+    *   Accessibility compliance (48dp touch targets, TalkBack tree navigation, WCAG AA contrast).
+    *   Room DB cache auto-pruning for `readable` table.
+    *   Expanded privacy tracker blacklist (`UrlSanitizer.kt`).
+    *   Full HN deep link route map in `AndroidManifest.xml`.
+*   **P1 / Fast Follows:**
+    *   Algolia comment search & story-type filters.
+    *   Clipboard HN link detection on app resume.
+    *   Comment header tap-to-collapse and inline voting gestures.
+*   **P2 / Strategic Upgrades:**
+    *   Migration of background sync to AndroidX `WorkManager`.
+    *   Material 3 DayNight and Dynamic Color (Material You).
+    *   Responsive tablet/foldable multi-pane layouts via `WindowSizeClass`.
+    *   PKM 2.0 with tags, annotations, and FTS5 search.
+

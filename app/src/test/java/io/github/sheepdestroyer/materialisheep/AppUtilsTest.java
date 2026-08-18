@@ -241,4 +241,32 @@ public class AppUtilsTest {
 
     assertNull(AppUtils.getCredentials(context));
   }
+
+  @Test
+  public void testMakeSendIntentChooser() {
+    Context context = ApplicationProvider.getApplicationContext();
+    android.net.Uri testUri = android.net.Uri.parse("content://io.github.sheepdestroyer.materialisheep.fileprovider/saved/bookmarks.html");
+
+    Intent chooser = AppUtils.makeSendIntentChooser(context, testUri);
+    assertNotNull(chooser);
+    assertEquals(Intent.ACTION_CHOOSER, chooser.getAction());
+    assertEquals(context.getString(R.string.share_file), chooser.getStringExtra(Intent.EXTRA_TITLE));
+
+    Intent target = chooser.getParcelableExtra(Intent.EXTRA_INTENT);
+    assertNotNull(target);
+    assertEquals(Intent.ACTION_SEND_MULTIPLE, target.getAction());
+    assertEquals("text/plain", target.getType());
+    assertTrue((target.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0);
+
+    java.util.ArrayList<android.net.Uri> streams = target.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+    assertNotNull(streams);
+    assertEquals(1, streams.size());
+    assertEquals(testUri, streams.get(0));
+
+    android.content.ClipData clipData = target.getClipData();
+    assertNotNull(clipData);
+    assertEquals(1, clipData.getItemCount());
+    assertEquals(testUri, clipData.getItemAt(0).getUri());
+  }
 }
+

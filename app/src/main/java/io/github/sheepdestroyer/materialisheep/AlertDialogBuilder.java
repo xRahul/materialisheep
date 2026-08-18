@@ -77,31 +77,30 @@ public interface AlertDialogBuilder<T extends Dialog> {
     AlertDialogBuilder setView(View view);
 
     /**
-     * Set a list of items to be displayed in the dialog as the content, you will be
-     * notified
-     * of
-     * the selected item via the supplied listener. The list will have a check mark
-     * displayed
-     * to
-     * the right of the text for the checked item. Clicking on an item in the list
-     * will not
-     * dismiss the dialog. Clicking on a button will dismiss the dialog.
+    /**
+     * Set a list of items to be displayed in the dialog as the content, you will be notified of the
+     * selected item via the supplied listener.
+     *
+     * @param items    the items to be displayed.
+     * @param listener notified when an item on the list is clicked.
+     * @return This Builder object to allow for chaining of calls to set methods
+     */
+    AlertDialogBuilder setItems(CharSequence[] items, final DialogInterface.OnClickListener listener);
+
+    /**
+     * Set a list of items to be displayed in the dialog as the content, you will be notified of the
+     * selected item via the supplied listener. The list will have a check mark displayed to the
+     * right of the text for the checked item.
      *
      * @param items       the items to be displayed.
-     * @param checkedItem specifies which item is checked. If -1 no items are
-     *                    checked.
-     * @param listener    notified when an item on the list is clicked. The dialog
-     *                    will not be
-     *                    dismissed when an item is clicked. It will only be
-     *                    dismissed if
-     *                    clicked on a
-     *                    button, if no buttons are supplied it's up to the user to
-     *                    dismiss the
-     *                    dialog.
+     * @param checkedItem specifies which item is checked. If -1 no items are checked.
+     * @param listener    notified when an item on the list is clicked.
      * @return This Builder object to allow for chaining of calls to set methods
      */
     AlertDialogBuilder setSingleChoiceItems(CharSequence[] items, int checkedItem,
             final DialogInterface.OnClickListener listener);
+
+
 
     /**
      * Set a listener to be invoked when the negative button of the dialog is
@@ -192,11 +191,18 @@ public interface AlertDialogBuilder<T extends Dialog> {
         }
 
         @Override
+        public AlertDialogBuilder setItems(CharSequence[] items, DialogInterface.OnClickListener listener) {
+            mBuilder.setItems(items, listener);
+            return this;
+        }
+
+        @Override
         public AlertDialogBuilder setSingleChoiceItems(CharSequence[] items, int checkedItem,
                 DialogInterface.OnClickListener listener) {
             mBuilder.setSingleChoiceItems(items, checkedItem, listener);
             return this;
         }
+
 
         @Override
         public AlertDialogBuilder setNegativeButton(@StringRes int textId,

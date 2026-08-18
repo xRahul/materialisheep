@@ -42,6 +42,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:paddingStart="@dimen/flat_card_horizontal_margin"
+            android:paddingEnd="@dimen/flat_card_horizontal_margin"
             android:paddingLeft="@dimen/flat_card_horizontal_margin"
             android:paddingRight="@dimen/flat_card_horizontal_margin"
             style="@style/FlatCardView">
@@ -56,6 +58,8 @@
                     tools:text="2 days ago"
                     android:text="@string/loading_text"
                     style="@style/textSubtitleStyle"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingEnd="0dp"
                     android:paddingRight="0dp"
                     android:layout_gravity="center_vertical"
                     android:layout_width="0dp"
@@ -65,8 +69,8 @@
 
                 <include layout="@layout/button_more"
                     android:id="@+id/button_more"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp" />
+                    android:layout_width="48dp"
+                    android:layout_height="48dp" />
 
             </LinearLayout>
 
@@ -74,6 +78,8 @@
                 android:id="@id/text"
                 tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n"
                 android:text="@string/loading_text"
+                android:paddingStart="@dimen/padding"
+                android:paddingEnd="@dimen/padding"
                 android:paddingLeft="@dimen/padding"
                 android:paddingRight="@dimen/padding"
                 style="@style/textContentStyle"
@@ -89,6 +95,9 @@
                 android:visibility="gone"
                 tools:visibility="visible"
                 style="@style/textSubtitleStyle"
+                android:minHeight="48dp"
+                android:paddingStart="@dimen/padding"
+                android:paddingEnd="@dimen/padding"
                 android:paddingLeft="@dimen/padding"
                 android:paddingRight="@dimen/padding"
                 android:paddingTop="@dimen/padding"
@@ -120,9 +129,12 @@
                 android:id="@id/comment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin"
+                android:layout_marginEnd="@dimen/margin"
                 android:layout_marginLeft="@dimen/margin"
                 android:layout_marginRight="@dimen/margin"
                 android:layout_gravity="end" />
+
 
         </LinearLayout>
 

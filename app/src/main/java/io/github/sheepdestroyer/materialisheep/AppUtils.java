@@ -212,13 +212,15 @@ public class AppUtils {
   public static Intent makeSendIntentChooser(Context context, Uri data) {
     // use ACTION_SEND_MULTIPLE instead of ACTION_SEND to filter out
     // share receivers that accept only EXTRA_TEXT but not EXTRA_STREAM
-    return Intent.createChooser(
-        new Intent(Intent.ACTION_SEND_MULTIPLE)
-            .setType("text/plain")
-            .putParcelableArrayListExtra(
-                Intent.EXTRA_STREAM, new ArrayList<>(java.util.List.of(data))),
-        context.getString(R.string.share_file));
+    Intent sendIntent = new Intent(Intent.ACTION_SEND_MULTIPLE)
+        .setType("text/plain")
+        .putParcelableArrayListExtra(
+            Intent.EXTRA_STREAM, new ArrayList<>(java.util.List.of(data)))
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    sendIntent.setClipData(android.content.ClipData.newRawUri("", data));
+    return Intent.createChooser(sendIntent, context.getString(R.string.share_file));
   }
+
 
   /**
    * Opens a web item externally, showing a popup menu to choose between the article and comments.

@@ -27,8 +27,9 @@ object CodeBlockFormatter {
     // Code background color (subtle dark tint with alpha)
     private const val CODE_BG_COLOR = 0x1A808080 // ~10% transparent gray
 
-    // Keyword highlight color (cyan/teal tint)
-    private const val KEYWORD_COLOR = 0xFF0097A7.toInt()
+    // Keyword highlight colors tailored for WCAG AA ≥ 4.5:1 contrast
+    private const val KEYWORD_COLOR_LIGHT = 0xFF00796B.toInt() // Teal 700 (5.32:1 on white)
+    private const val KEYWORD_COLOR_DARK = 0xFF4DB6AC.toInt()  // Teal 300 (10.5:1 on black)
 
     /**
      * Converts <pre><code> and <code> tags to <tt> tags so that Android's Html.fromHtml
@@ -54,14 +55,17 @@ object CodeBlockFormatter {
      * tint and keyword syntax highlights.
      *
      * @param spanned The Spanned CharSequence produced by Html.fromHtml.
+     * @param isDark  Whether the target surface is a dark/AMOLED theme.
      * @return The styled CharSequence (or original if null/empty).
      */
     @JvmStatic
-    fun formatCodeBlocks(spanned: CharSequence?): CharSequence? {
+    @JvmOverloads
+    fun formatCodeBlocks(spanned: CharSequence?, isDark: Boolean = false): CharSequence? {
         if (spanned == null || spanned !is Spanned || spanned.isEmpty()) {
             return spanned
         }
 
+        val keywordColor = if (isDark) KEYWORD_COLOR_DARK else KEYWORD_COLOR_LIGHT
         val spannable = if (spanned is Spannable) spanned else SpannableString(spanned)
         val typefaceSpans = spannable.getSpans(0, spannable.length, TypefaceSpan::class.java)
 
@@ -86,7 +90,7 @@ object CodeBlockFormatter {
                         val keywordStart = start + matcher.start()
                         val keywordEnd = start + matcher.end()
                         spannable.setSpan(
-                            ForegroundColorSpan(KEYWORD_COLOR),
+                            ForegroundColorSpan(keywordColor),
                             keywordStart,
                             keywordEnd,
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -105,3 +109,4 @@ object CodeBlockFormatter {
         return spannable
     }
 }
+

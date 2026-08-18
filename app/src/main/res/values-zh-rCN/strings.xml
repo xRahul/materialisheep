@@ -293,8 +293,26 @@
     <string name="save_draft">保存草稿</string>
     <string name="discard_draft">舍弃草稿</string>
     <string name="clear_drafts">清除所有草稿</string>
-    <string name="more_sections">更多节点</string>
     <string name="list">列表</string>
     <string name="delete">删除</string>
+    <string name="export_saved_stories">导出收藏</string>
+    <string name="export_notification">已保存到文件。点击查看选项。</string>
+    <string name="export_format_markdown">Markdown (Obsidian / PKM)</string>
+    <string name="export_format_html">HTML 书签 (Netscape)</string>
+    <string name="export_format_json">JSON 存档</string>
+    <string name="export_format_text">纯文本 (.txt)</string>
+    <string name="open_copied_hn_story">打开复制的 HN 帖子 #%1$s？</string>
+    <string name="open">打开</string>
+    <string name="share_file">分享文件</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="notification_channel_downloads">下载</string>
+    <string name="reply">回复</string>
+    <string name="hide_comments">收起回复</string>
+    <string name="show_comments">展开回复</string>
+    <string name="jump_parent_comment">跳至父评论</string>
+    <string name="comment_level">第 %1$d 层</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
 
 </resources>
+

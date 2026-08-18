@@ -26,14 +26,19 @@ object UrlSanitizer {
         "yclid", "ymclid",
         // Mailchimp & HubSpot & Marketo
         "mc_cid", "mc_eid", "_hsenc", "_hsmi", "hsctatracking", "mkt_tok",
-        // General / Affiliate / Social Trackers
-        "igshid", "zanpid", "aff_id", "affiliate_id"
+        // General / Affiliate / Social / Video Trackers
+        "igshid", "zanpid", "aff_id", "affiliate_id", "si", "ref_src", "ref_url", "feature",
+        "vero_id", "vero_conv", "wickedid", "spreportid", "spmailingid", "spuserid", "spjobid"
     )
 
     private val TRACKING_PREFIXES = listOf(
         "utm_",
-        "hsa_"
+        "hsa_",
+        "pk_",
+        "matomo_",
+        "piwik_"
     )
+
 
     /**
      * Sanitizes the given URL by removing all known tracking parameters while preserving

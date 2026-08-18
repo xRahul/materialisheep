@@ -165,11 +165,40 @@ public class FavoriteFragment extends BaseListFragment
             return true;
         }
         if (item.getItemId() == R.id.menu_export) {
-            mFavoriteManager.export(getActivity(), mFilter);
+            export();
             return true;
         }
         return super.onMenuItemSelected(item);
     }
+
+    private void export() {
+        if (getActivity() == null) {
+            return;
+        }
+        final CharSequence[] formats = new CharSequence[] {
+                getString(R.string.export_format_markdown),
+                getString(R.string.export_format_html),
+                getString(R.string.export_format_json),
+                getString(R.string.export_format_text)
+        };
+        final FavoriteManager.ExportFormat[] enumFormats = new FavoriteManager.ExportFormat[] {
+                FavoriteManager.ExportFormat.MARKDOWN,
+                FavoriteManager.ExportFormat.HTML,
+                FavoriteManager.ExportFormat.JSON,
+                FavoriteManager.ExportFormat.TEXT
+        };
+        mAlertDialogBuilder
+                .init(getActivity())
+                .setTitle(R.string.export_saved_stories)
+                .setItems(formats, (dialog, which) -> {
+                    if (getActivity() != null && which >= 0 && which < enumFormats.length) {
+                        mFavoriteManager.export(getActivity(), mFilter, enumFormats[which]);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .create().show();
+    }
+
 
     /**
      * Called to ask the fragment to save its current dynamic state, so it
