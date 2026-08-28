@@ -78,3 +78,22 @@ app/.settings/
 docs/superpowers/
 app/benchmark_results.txt
 app/regex_benchmark_results.txt
+# >>> opencode-config auto
+out/
+target/
+dist/
+coverage/
+node_modules/
+kotlin-js-store/
+__pycache__/
+.venv/
+venv/
+.kotlin/
+.dart_tool/
+.flutter-plugins-dependencies
+.idea/
+.vscode/
+.worktrees/
+*.aab
+.ruff_cache/
+# <<< opencode-config auto
