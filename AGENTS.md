@@ -41,7 +41,7 @@ Instructions for agents and automated systems working with this repository.
 
 ### 3. Gradle
 
-- **Gradle Version:** 9.5.1 (wrapper)
+- **Gradle Version:** 9.7.1 (wrapper)
 - **Android Gradle Plugin (AGP):** 9.2.1
 - **Kotlin:** 2.3.21 (KSP 2.3.8; kapt-free — Dagger + Room use KSP)
 - The Gradle wrapper (`./gradlew`) is included and should be used for all build commands.

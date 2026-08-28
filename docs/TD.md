@@ -91,7 +91,7 @@ The project uses **Dagger 2** for dependency injection.
 -   Upstream deprecation migrations (Parcelable, NotificationCompat, LocalBroadcastManager, Vibrator/Display, Preference APIs, etc.) are merged in; deprecated `SystemUiHelper` was replaced with a `WindowInsetsController`-based implementation.
 
 ## 5. Build System
--   **Gradle:** 9.5.1
+-   **Gradle:** 9.7.1
 -   **JDK:** 21 Required.
 -   **Android Gradle Plugin:** 9.2.1
 -   **Kotlin:** 2.3.21 (KSP 2.3.8)

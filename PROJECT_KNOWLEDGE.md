@@ -14,7 +14,7 @@ This document serves as a detailed technical reference for the `materialisheep` 
 - **Minimum SDK:** 31
 - **Compile/Target SDK:** 36
 - **JDK:** Java 21 is required for building.
-- **Build System:** Gradle 9.5.1, Android Gradle Plugin 9.2.1.
+- **Build System:** Gradle 9.7.1, Android Gradle Plugin 9.2.1.
 
 ### Key Libraries
 - **Dependency Injection:** Dagger 2
