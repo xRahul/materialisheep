@@ -33,7 +33,6 @@ android {
         versionName verName
         buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         buildConfigField "int", "LATEST_RELEASE", "${verCode}"
-        buildConfigField "String", "GITHUB_TOKEN", "\"\""
         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                 'proguard-rules.pro',
                 'proguard-square.pro',
