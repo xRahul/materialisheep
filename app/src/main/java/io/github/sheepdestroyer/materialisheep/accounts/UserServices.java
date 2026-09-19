@@ -86,6 +86,16 @@ public interface UserServices {
     boolean voteUp(Context context, String itemId, Callback callback);
 
     /**
+     * Unvotes an item.
+     *
+     * @param context  The context.
+     * @param itemId   The ID of the item to unvote.
+     * @param callback The callback to be invoked when the call is complete.
+     * @return True if request scheduled/sent, false if credentials missing.
+     */
+    boolean unvote(Context context, String itemId, Callback callback);
+
+    /**
      * Replies to an item.
      *
      * @param context  The context.

@@ -40,7 +40,9 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.HapticFeedbackConstants;
 import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -144,6 +146,7 @@ public class StoryRecyclerViewAdapter extends
     private ItemTouchHelper mItemTouchHelper;
     @Synthetic
     ItemTouchHelperCallback mCallback;
+
     @SuppressLint("NotifyDataSetChanged")
     private final Observer<Uri> mObserver = uri -> {
         if (uri == null) {
@@ -213,6 +216,10 @@ public class StoryRecyclerViewAdapter extends
                 Item item = getItem(position);
                 if (item == null) {
                     return;
+                }
+                // Haptic feedback for swipe actions
+                if (action == Preferences.SwipeAction.Vote || action == Preferences.SwipeAction.Save) {
+                    viewHolder.itemView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 }
                 switch (action) {
                     case Save:
@@ -556,10 +563,12 @@ public class StoryRecyclerViewAdapter extends
                         !mCallback.hasAction(Preferences.SwipeAction.Refresh))
                 .setOnMenuItemClickListener(item -> {
                     if (item.getItemId() == R.id.menu_contextual_save) {
+                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                         toggleSave(story);
                         return true;
                     }
                     if (item.getItemId() == R.id.menu_contextual_vote) {
+                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                         vote(story, holder);
                         return true;
                     }
@@ -590,10 +599,20 @@ public class StoryRecyclerViewAdapter extends
 
     @Synthetic
     void toggleSave(final Item story) {
-        if (!story.isFavorite()) {
+        if (mRecyclerView == null) {
+            return;
+        }
+        boolean wasFavorite = story.isFavorite();
+        if (!wasFavorite) {
             mFavoriteManager.add(mContext, story);
+            AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.toast_saved, R.string.undo, () -> {
+                mFavoriteManager.remove(mContext, story.getId());
+            });
         } else {
             mFavoriteManager.remove(mContext, story.getId());
+            AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.toast_removed, R.string.undo, () -> {
+                mFavoriteManager.add(mContext, story);
+            });
         }
     }
 
@@ -609,12 +628,12 @@ public class StoryRecyclerViewAdapter extends
 
     @Synthetic
     void vote(final Item story, final RecyclerView.ViewHolder holder) {
+        int position = holder.getBindingAdapterPosition();
         if (!mUserServices.voteUp(mContext, story.getId(),
                 new VoteCallback(this, story))) {
             AppUtils.showLogin(mContext, mAlertDialogBuilder);
         } else {
             story.incrementScore();
-            int position = holder.getBindingAdapterPosition();
             if (position != NO_POSITION) {
                 notifyItemChanged(position, VOTED);
             }
@@ -622,14 +641,26 @@ public class StoryRecyclerViewAdapter extends
     }
 
     @Synthetic
-    void onVoted(int position, Boolean successful) {
+    void onVoted(final VoteAction voteAction, Boolean successful) {
+        if (mRecyclerView == null) {
+            return;
+        }
+        int position = voteAction != null ? voteAction.position : NO_POSITION;
         if (successful == null || !successful) {
-            Toast.makeText(mContext, R.string.vote_failed, Toast.LENGTH_SHORT).show();
+            AppUtils.showSnackbar(mRecyclerView, R.string.vote_failed, Snackbar.LENGTH_LONG);
             if (position != NO_POSITION && position < getItemCount()) {
                 notifyItemChanged(position);
             }
         } else {
-            Toast.makeText(mContext, R.string.voted, Toast.LENGTH_SHORT).show();
+            AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.voted, R.string.undo, () -> {
+                mUserServices.unvote(mContext, voteAction.itemId, new UserServices.Callback() {});
+                voteAction.item.decrementScore();
+                int currentPos = getPosition(voteAction.item);
+                int posToUpdate = currentPos != NO_POSITION ? currentPos : voteAction.position;
+                if (posToUpdate != NO_POSITION && posToUpdate < getItemCount()) {
+                    notifyItemChanged(posToUpdate, VOTED);
+                }
+            });
         }
     }
 
@@ -717,6 +748,18 @@ public class StoryRecyclerViewAdapter extends
         }
     }
 
+    static class VoteAction {
+        final String itemId;
+        final Item item;
+        final int position;
+
+        VoteAction(String itemId, Item item, int position) {
+            this.itemId = itemId;
+            this.item = item;
+            this.position = position;
+        }
+    }
+
     static class VoteCallback extends UserServices.Callback {
         private final WeakReference<StoryRecyclerViewAdapter> mAdapter;
         private final Item mItem;
@@ -735,7 +778,8 @@ public class StoryRecyclerViewAdapter extends
             }
             StoryRecyclerViewAdapter adapter = mAdapter.get();
             if (adapter != null && adapter.isAttached()) {
-                adapter.onVoted(adapter.getPosition(mItem), successful);
+                int position = adapter.getPosition(mItem);
+                adapter.onVoted(new VoteAction(mItem.getId(), mItem, position), successful);
             }
         }
 
@@ -745,7 +789,8 @@ public class StoryRecyclerViewAdapter extends
             mItem.decrementScore();
             StoryRecyclerViewAdapter adapter = mAdapter.get();
             if (adapter != null && adapter.isAttached()) {
-                adapter.onVoted(adapter.getPosition(mItem), null);
+                int position = adapter.getPosition(mItem);
+                adapter.onVoted(new VoteAction(mItem.getId(), mItem, position), null);
             }
         }
     }

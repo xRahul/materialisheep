@@ -45,6 +45,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.HapticFeedbackConstants;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -490,7 +491,10 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         bindFavorite();
         mSessionManager.view(story.getId());
         mVoteButton.setVisibility(View.VISIBLE);
-        mVoteButton.setOnClickListener(v -> vote(story));
+        mVoteButton.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+            vote(story);
+        });
         final TextView titleTextView = findViewById(android.R.id.text2);
         if (story.isStoryType()) {
             titleTextView.setText(story.getDisplayedTitle());
@@ -639,17 +643,32 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     }
 
     private void vote(final WebItem story) {
-        mUserServices.voteUp(ItemActivity.this, story.getId(), new VoteCallback(this));
+        if (!mUserServices.voteUp(ItemActivity.this, story.getId(), new VoteCallback(this, story))) {
+            AppUtils.showLogin(this, mAlertDialogBuilder);
+        } else {
+            if (story instanceof Item) {
+                ((Item) story).incrementScore();
+            }
+        }
     }
 
     @Synthetic
-    void onVoted(Boolean successful) {
+    void onVoted(final WebItem story, Boolean successful) {
+        View rootView = findViewById(android.R.id.content);
         if (successful == null) {
-            Toast.makeText(this, R.string.vote_failed, Toast.LENGTH_SHORT).show();
+            AppUtils.showSnackbar(rootView, R.string.vote_failed, Snackbar.LENGTH_LONG);
         } else if (successful) {
             Drawable drawable = DrawableCompat.wrap(mVoteButton.getDrawable());
             DrawableCompat.setTint(drawable, ContextCompat.getColor(this, R.color.greenA700));
-            Toast.makeText(this, R.string.voted, Toast.LENGTH_SHORT).show();
+            AppUtils.showSnackbarWithUndo(rootView, R.string.voted, R.string.undo, () -> {
+                mUserServices.unvote(ItemActivity.this, story.getId(), new UserServices.Callback() {});
+                if (story instanceof Item) {
+                    ((Item) story).decrementScore();
+                }
+                Drawable d = DrawableCompat.wrap(mVoteButton.getDrawable());
+                DrawableCompat.setTintList(d, null);
+                mVoteButton.setImageDrawable(mVoteButton.getDrawable());
+            });
         } else {
             AppUtils.showLogin(this, mAlertDialogBuilder);
         }
@@ -689,23 +708,31 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
 
     static class VoteCallback extends UserServices.Callback {
         private final WeakReference<ItemActivity> mItemActivity;
+        private final WebItem mStory;
 
         @Synthetic
-        VoteCallback(ItemActivity itemActivity) {
+        VoteCallback(ItemActivity itemActivity, WebItem story) {
             mItemActivity = new WeakReference<>(itemActivity);
+            mStory = story;
         }
 
         @Override
         public void onDone(boolean successful) {
+            if (!successful && mStory instanceof Item) {
+                ((Item) mStory).decrementScore();
+            }
             if (mItemActivity.get() != null && !mItemActivity.get().isDestroyed()) {
-                mItemActivity.get().onVoted(successful);
+                mItemActivity.get().onVoted(mStory, successful);
             }
         }
 
         @Override
         public void onError(Throwable throwable) {
+            if (mStory instanceof Item) {
+                ((Item) mStory).decrementScore();
+            }
             if (mItemActivity.get() != null && !mItemActivity.get().isDestroyed()) {
-                mItemActivity.get().onVoted(null);
+                mItemActivity.get().onVoted(mStory, null);
             }
         }
     }

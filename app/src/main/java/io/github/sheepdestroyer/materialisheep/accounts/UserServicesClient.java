@@ -67,6 +67,7 @@ public class UserServicesClient implements UserServices {
     private static final String SUBMIT_PARAM_FNID = "fnid";
     private static final String SUBMIT_PARAM_FNOP = "fnop";
     private static final String VOTE_DIR_UP = "up";
+    private static final String VOTE_DIR_UN = "un";
     private static final String DEFAULT_REDIRECT = "news";
     private static final String CREATING_TRUE = "t";
     private static final String DEFAULT_FNOP = "submit-page";
@@ -125,6 +126,23 @@ public class UserServicesClient implements UserServices {
      */
     @Override
     public boolean voteUp(Context context, String itemId, Callback callback) {
+        return vote(context, itemId, callback, VOTE_DIR_UP);
+    }
+
+    /**
+     * Unvotes an item.
+     *
+     * @param context  The context.
+     * @param itemId   The ID of the item to unvote.
+     * @param callback The callback to be invoked when the call is complete.
+     * @return True if request scheduled/sent, false if credentials missing.
+     */
+    @Override
+    public boolean unvote(Context context, String itemId, Callback callback) {
+        return vote(context, itemId, callback, VOTE_DIR_UN);
+    }
+
+    private boolean vote(Context context, String itemId, Callback callback, String how) {
         Pair<String, String> credentials = AppUtils.getCredentials(context);
         if (credentials == null) {
             return false;
@@ -133,7 +151,7 @@ public class UserServicesClient implements UserServices {
         if (mVoteDisposable != null) {
             mVoteDisposable.dispose();
         }
-        mVoteDisposable = execute(postVote(credentials.first, credentials.second, itemId))
+        mVoteDisposable = execute(postVote(credentials.first, credentials.second, itemId, how))
                 .map(response -> {
                     try {
                         return response.code() == HttpURLConnection.HTTP_MOVED_TEMP;
@@ -142,7 +160,17 @@ public class UserServicesClient implements UserServices {
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError);
+                .subscribe(
+                        successful -> {
+                            if (callback != null) {
+                                callback.onDone(successful);
+                            }
+                        },
+                        throwable -> {
+                            if (callback != null) {
+                                callback.onError(throwable);
+                            }
+                        });
         return true;
     }
 
@@ -260,7 +288,7 @@ public class UserServicesClient implements UserServices {
                 .build();
     }
 
-    private Request postVote(String username, String password, String itemId) {
+    private Request postVote(String username, String password, String itemId, String how) {
         return new Request.Builder()
                 .url(HttpUrl.parse(BASE_WEB_URL)
                         .newBuilder()
@@ -270,7 +298,7 @@ public class UserServicesClient implements UserServices {
                         .add(LOGIN_PARAM_ACCT, username)
                         .add(LOGIN_PARAM_PW, password)
                         .add(VOTE_PARAM_ID, itemId)
-                        .add(VOTE_PARAM_HOW, VOTE_DIR_UP)
+                        .add(VOTE_PARAM_HOW, how)
                         .build())
                 .build();
     }
