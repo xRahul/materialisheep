@@ -645,20 +645,21 @@ public class StoryRecyclerViewAdapter extends
         if (mRecyclerView == null) {
             return;
         }
-        int position = voteAction != null ? voteAction.position : NO_POSITION;
         if (successful == null || !successful) {
             AppUtils.showSnackbar(mRecyclerView, R.string.vote_failed, Snackbar.LENGTH_LONG);
-            if (position != NO_POSITION && position < getItemCount()) {
-                notifyItemChanged(position);
+            if (voteAction != null) {
+                int currentPos = getPosition(voteAction.item);
+                if (currentPos != NO_POSITION && currentPos < getItemCount()) {
+                    notifyItemChanged(currentPos);
+                }
             }
         } else {
             AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.voted, R.string.undo, () -> {
                 mUserServices.unvote(mContext, voteAction.itemId, new UserServices.Callback() {});
                 voteAction.item.decrementScore();
                 int currentPos = getPosition(voteAction.item);
-                int posToUpdate = currentPos != NO_POSITION ? currentPos : voteAction.position;
-                if (posToUpdate != NO_POSITION && posToUpdate < getItemCount()) {
-                    notifyItemChanged(posToUpdate, VOTED);
+                if (currentPos != NO_POSITION && currentPos < getItemCount()) {
+                    notifyItemChanged(currentPos, VOTED);
                 }
             });
         }
