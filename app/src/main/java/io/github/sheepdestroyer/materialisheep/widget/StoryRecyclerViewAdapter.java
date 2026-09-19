@@ -595,7 +595,6 @@ public class StoryRecyclerViewAdapter extends
                         !mCallback.hasAction(Preferences.SwipeAction.Refresh))
                 .setOnMenuItemClickListener(item -> {
                     if (item.getItemId() == R.id.menu_contextual_save) {
-                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                         toggleSave(story);
                         return true;
                     }

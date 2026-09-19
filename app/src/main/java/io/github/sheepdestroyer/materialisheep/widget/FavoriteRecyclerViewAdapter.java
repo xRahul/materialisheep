@@ -274,7 +274,6 @@ public class FavoriteRecyclerViewAdapter
 
     @Synthetic
     void dismiss(View view, final int position) {
-        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
         final Favorite item = getItem(position);
         mSelected.put(position, item.getId());
         mFavoriteManager.remove(mContext, mSelected.values());
