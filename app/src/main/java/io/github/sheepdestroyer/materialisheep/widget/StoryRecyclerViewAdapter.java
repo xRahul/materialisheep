@@ -132,7 +132,7 @@ public class StoryRecyclerViewAdapter extends
     @Nullable
     View getSnackbarAnchor() {
         if (mAnchorView != null) {
-            return mAnchorView;
+            return mAnchorView.getVisibility() == View.VISIBLE ? mAnchorView : null;
         }
         if (mRecyclerView != null) {
             View root = mRecyclerView.getRootView();
@@ -153,7 +153,6 @@ public class StoryRecyclerViewAdapter extends
                 if (navButton != null && navButton.getVisibility() == View.VISIBLE) {
                     return navButton;
                 }
-                return bottomNav != null ? bottomNav : fab;
             }
         }
         return null;

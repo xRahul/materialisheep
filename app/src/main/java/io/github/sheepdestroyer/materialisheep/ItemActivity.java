@@ -689,7 +689,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         if (mNavButton != null && mNavButton.getVisibility() == View.VISIBLE) {
             return mNavButton;
         }
-        return bottomNav != null ? bottomNav : (fab != null ? fab : (mReplyButton != null ? mReplyButton : mNavButton));
+        return null;
     }
 
     private void onPreferenceChanged(int key, boolean contextChanged) {
