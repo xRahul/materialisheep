@@ -18,6 +18,7 @@ package io.github.sheepdestroyer.materialisheep.widget;
 
 import androidx.lifecycle.Observer;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -79,6 +80,27 @@ public class StoryRecyclerViewAdapter extends
         ListRecyclerViewAdapter<ListRecyclerViewAdapter.ItemViewHolder, Item> {
     private static final String STATE_SHOW_ALL = "state:showAll";
     private static final String STATE_USERNAME = "state:username";
+    private static final int VIEW_TYPE_SKELETON = 2;
+    public static final int SKELETON_COUNT = 6;
+    private boolean mLoading;
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void setLoading(boolean loading) {
+        if (mLoading != loading) {
+            mLoading = loading;
+            notifyDataSetChanged();
+        }
+    }
+
+    public boolean isLoading() {
+        return mLoading;
+    }
+
+    @Synthetic
+    static int getViewTypeSkeleton() {
+        return VIEW_TYPE_SKELETON;
+    }
+
     private final Object VOTED = new Object();
     private final RecyclerView.OnScrollListener mAutoViewScrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -322,12 +344,45 @@ public class StoryRecyclerViewAdapter extends
     }
 
     @Override
+    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        if (viewType == VIEW_TYPE_SKELETON) {
+            ItemViewHolder holder = new SkeletonViewHolder(
+                    mInflater.inflate(R.layout.item_story_skeleton, parent, false));
+            if (!isCardViewEnabled()) {
+                holder.flatten();
+            }
+            return holder;
+        }
+        return super.onCreateViewHolder(parent, viewType);
+    }
+
+    @Override
     protected ItemViewHolder create(ViewGroup parent, int viewType) {
         return new ItemViewHolder(mInflater.inflate(R.layout.item_story, parent, false));
     }
 
     @Override
+    public void onBindViewHolder(ItemViewHolder holder, int position) {
+        if (holder instanceof SkeletonViewHolder) {
+            ((SkeletonViewHolder) holder).start();
+            Item item = getItem(position);
+            if (item != null && !isItemAvailable(item)) {
+                int adapterPosition = holder.getBindingAdapterPosition();
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    loadItem(adapterPosition);
+                }
+            }
+            return;
+        }
+        super.onBindViewHolder(holder, position);
+    }
+
+    @Override
     public void onBindViewHolder(ItemViewHolder holder, int position, List<Object> payloads) {
+        if (holder instanceof SkeletonViewHolder) {
+            onBindViewHolder(holder, position);
+            return;
+        }
         if (payloads.contains(VOTED)) {
             holder.animateVote(getItem(position).getScore());
         } else {
@@ -336,12 +391,51 @@ public class StoryRecyclerViewAdapter extends
     }
 
     @Override
+    public void onViewAttachedToWindow(ItemViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        if (holder instanceof SkeletonViewHolder) {
+            ((SkeletonViewHolder) holder).start();
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(ItemViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        if (holder instanceof SkeletonViewHolder) {
+            ((SkeletonViewHolder) holder).stop();
+        }
+    }
+
+    @Override
+    public void onViewRecycled(ItemViewHolder holder) {
+        super.onViewRecycled(holder);
+        if (holder instanceof SkeletonViewHolder) {
+            ((SkeletonViewHolder) holder).stop();
+        }
+    }
+
+    @Override
     public int getItemCount() {
+        if (mLoading && (mItems == null || mItems.size() == 0)) {
+            return SKELETON_COUNT;
+        }
         if (mShowAll) {
             return mItems.size();
         } else {
             return mAdded.size();
         }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (mLoading && (mItems == null || mItems.size() == 0)) {
+            return VIEW_TYPE_SKELETON;
+        }
+        Item item = getItem(position);
+        if (!isItemAvailable(item)) {
+            return VIEW_TYPE_SKELETON;
+        }
+        return super.getItemViewType(position);
     }
 
     @Override
@@ -376,6 +470,7 @@ public class StoryRecyclerViewAdapter extends
     }
 
     public void setItems(Item[] items) {
+        mLoading = false;
         if (BuildConfig.DEBUG) {
             android.util.Log.d("StoryRecyclerViewAdapter", "setItems: count=" + (items != null ? items.length : 0));
         }
@@ -910,6 +1005,58 @@ public class StoryRecyclerViewAdapter extends
 
         private String getSaveText() {
             return mSaved ? mUnsaveText : mSaveText;
+        }
+    }
+
+    public static class SkeletonViewHolder extends ItemViewHolder {
+        private ValueAnimator mAnimator;
+
+        public SkeletonViewHolder(View itemView) {
+            super(itemView);
+            itemView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) {
+                    start();
+                }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) {
+                    stop();
+                }
+            });
+        }
+
+        @Override
+        public void clear() {
+            stop();
+            super.clear();
+        }
+
+        public void start() {
+            if (mAnimator == null) {
+                mAnimator = ValueAnimator.ofFloat(0.4f, 0.8f);
+                mAnimator.setDuration(900);
+                mAnimator.setRepeatMode(ValueAnimator.REVERSE);
+                mAnimator.setRepeatCount(ValueAnimator.INFINITE);
+                mAnimator.addUpdateListener(animation ->
+                        itemView.setAlpha((Float) animation.getAnimatedValue()));
+                mAnimator.start();
+            } else if (!mAnimator.isRunning()) {
+                mAnimator.start();
+            }
+        }
+
+        public void stop() {
+            if (mAnimator != null) {
+                mAnimator.cancel();
+                mAnimator = null;
+            }
+            itemView.setAlpha(1.0f);
+        }
+
+        @Synthetic
+        ValueAnimator getAnimator() {
+            return mAnimator;
         }
     }
 }

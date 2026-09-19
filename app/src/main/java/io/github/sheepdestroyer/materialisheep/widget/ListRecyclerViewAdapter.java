@@ -53,8 +53,8 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
         extends RecyclerView.Adapter<VH> {
 
     private static final String STATE_LAST_SELECTION_POSITION = "state:lastSelectedPosition";
-    private static final int VIEW_TYPE_CARD = 0;
-    private static final int VIEW_TYPE_FLAT = 1;
+    protected static final int VIEW_TYPE_CARD = 0;
+    protected static final int VIEW_TYPE_FLAT = 1;
     private CustomTabsDelegate mCustomTabsDelegate;
     protected Context mContext;
     protected RecyclerView mRecyclerView;
@@ -98,7 +98,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     }
 
     @Override
-    public final VH onCreateViewHolder(ViewGroup parent, int viewType) {
+    public VH onCreateViewHolder(ViewGroup parent, int viewType) {
         VH holder = create(parent, viewType);
         if (viewType == VIEW_TYPE_FLAT) {
             holder.flatten();
@@ -107,7 +107,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     }
 
     @Override
-    public final void onBindViewHolder(final VH holder, int position) {
+    public void onBindViewHolder(final VH holder, int position) {
         final T item = getItem(position);
         clearViewHolder(holder);
         if (!isItemAvailable(item)) {
@@ -129,13 +129,14 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     }
 
     @Override
-    public final int getItemViewType(int position) {
+    public int getItemViewType(int position) {
         return mCardViewEnabled ? VIEW_TYPE_CARD : VIEW_TYPE_FLAT;
     }
 
     @Override
-    public final long getItemId(int position) {
-        return getItem(position).getLongId();
+    public long getItemId(int position) {
+        T item = getItem(position);
+        return item != null ? item.getLongId() : position;
     }
 
     public final boolean isCardViewEnabled() {
@@ -279,7 +280,9 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
 
         public void clear() {
             mCardView.setCardElevation(0);
-            mStoryView.reset();
+            if (mStoryView != null) {
+                mStoryView.reset();
+            }
             itemView.setOnClickListener(null);
             itemView.setOnLongClickListener(null);
         }

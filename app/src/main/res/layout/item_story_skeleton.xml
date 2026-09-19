@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2015 Ha Duy Trung
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<io.github.sheepdestroyer.materialisheep.widget.FlatCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/cardview_min_height"
+    style="@style/AppCardView">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/cardview_min_height">
+
+        <!-- Left score block placeholder (40dp x 40dp) -->
+        <View
+            android:id="@+id/skeleton_score"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="@dimen/padding"
+            android:background="@drawable/bg_skeleton_bar" />
+
+        <!-- Title placeholder line 1 (height 16dp, width 85%) -->
+        <LinearLayout
+            android:id="@+id/skeleton_title_container_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/cardview_min_height"
+            android:layout_marginStart="@dimen/cardview_min_height"
+            android:layout_marginRight="@dimen/padding"
+            android:layout_marginEnd="@dimen/padding"
+            android:layout_marginTop="@dimen/padding"
+            android:weightSum="1.0"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/skeleton_title_1"
+                android:layout_width="0dp"
+                android:layout_height="16dp"
+                android:layout_weight="0.85"
+                android:background="@drawable/bg_skeleton_bar" />
+        </LinearLayout>
+
+        <!-- Title placeholder line 2 (height 16dp, width 60%) -->
+        <LinearLayout
+            android:id="@+id/skeleton_title_container_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/skeleton_title_container_1"
+            android:layout_marginLeft="@dimen/cardview_min_height"
+            android:layout_marginStart="@dimen/cardview_min_height"
+            android:layout_marginRight="@dimen/padding"
+            android:layout_marginEnd="@dimen/padding"
+            android:layout_marginTop="6dp"
+            android:weightSum="1.0"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/skeleton_title_2"
+                android:layout_width="0dp"
+                android:layout_height="16dp"
+                android:layout_weight="0.60"
+                android:background="@drawable/bg_skeleton_bar" />
+        </LinearLayout>
+
+        <!-- Subtitle placeholder bar (height 12dp, width 40%) & comment count placeholder -->
+        <RelativeLayout
+            android:id="@+id/skeleton_meta_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/skeleton_title_container_2"
+            android:layout_marginLeft="@dimen/cardview_min_height"
+            android:layout_marginStart="@dimen/cardview_min_height"
+            android:layout_marginRight="@dimen/padding"
+            android:layout_marginEnd="@dimen/padding"
+            android:layout_marginTop="@dimen/padding"
+            android:layout_marginBottom="@dimen/padding">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@+id/skeleton_comment"
+                android:layout_toStartOf="@+id/skeleton_comment"
+                android:layout_centerVertical="true"
+                android:weightSum="1.0"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/skeleton_subtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="12dp"
+                    android:layout_weight="0.40"
+                    android:background="@drawable/bg_skeleton_bar" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/skeleton_comment"
+                android:layout_width="48dp"
+                android:layout_height="16dp"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_skeleton_bar" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</io.github.sheepdestroyer.materialisheep.widget.FlatCardView>

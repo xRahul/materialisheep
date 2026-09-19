@@ -248,6 +248,7 @@ public class ListFragment extends BaseListFragment {
                 return;
             }
             if (state.getError() != null) {
+                getAdapter().setLoading(false);
                 onItemsLoaded(null); // Trigger error view (empty list)
                 if (state.getError().getMessage() != null) {
                     Toast.makeText(getContext(), state.getError().getMessage(), Toast.LENGTH_SHORT).show();
@@ -255,8 +256,12 @@ public class ListFragment extends BaseListFragment {
             } else {
                 if (state.isLoading()) {
                     mSwipeRefreshLayout.setRefreshing(true);
+                    if (getAdapter().getItemCount() == 0) {
+                        getAdapter().setLoading(true);
+                    }
                 } else if (state.getCurrent() != null) {
-                     mSwipeRefreshLayout.setRefreshing(false);
+                    mSwipeRefreshLayout.setRefreshing(false);
+                    getAdapter().setLoading(false);
                 }
 
                 if (state.getPrevious() != null) {
@@ -324,6 +329,9 @@ public class ListFragment extends BaseListFragment {
 
   private void refresh() {
     getAdapter().setShowAll(true);
+    if (getAdapter().getItemCount() == 0) {
+      getAdapter().setLoading(true);
+    }
     mStoryListViewModel.refreshStories(mFilter, mCacheMode);
   }
 
