@@ -242,6 +242,7 @@ public class StoryRecyclerViewAdapter extends
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                viewHolder.itemView.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE);
                 Preferences.SwipeAction action = direction == ItemTouchHelper.LEFT ? getLeftSwipeAction()
                         : getRightSwipeAction();
                 int position = viewHolder.getBindingAdapterPosition();
@@ -251,10 +252,6 @@ public class StoryRecyclerViewAdapter extends
                 Item item = getItem(position);
                 if (item == null) {
                     return;
-                }
-                // Haptic feedback for swipe actions
-                if (action == Preferences.SwipeAction.Vote || action == Preferences.SwipeAction.Save) {
-                    viewHolder.itemView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 }
                 switch (action) {
                     case Save:
@@ -598,12 +595,12 @@ public class StoryRecyclerViewAdapter extends
                         !mCallback.hasAction(Preferences.SwipeAction.Refresh))
                 .setOnMenuItemClickListener(item -> {
                     if (item.getItemId() == R.id.menu_contextual_save) {
-                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                         toggleSave(story);
                         return true;
                     }
                     if (item.getItemId() == R.id.menu_contextual_vote) {
-                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                         vote(story, holder);
                         return true;
                     }
@@ -637,6 +634,7 @@ public class StoryRecyclerViewAdapter extends
         if (mRecyclerView == null) {
             return;
         }
+        mRecyclerView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
         boolean wasFavorite = story.isFavorite();
         View anchor = getSnackbarAnchor();
         if (!wasFavorite) {
@@ -683,6 +681,7 @@ public class StoryRecyclerViewAdapter extends
         }
         View anchor = getSnackbarAnchor();
         if (successful == null || !successful) {
+            mRecyclerView.performHapticFeedback(HapticFeedbackConstants.REJECT);
             AppUtils.showSnackbar(mRecyclerView, anchor, R.string.vote_failed, Snackbar.LENGTH_LONG);
             if (voteAction != null) {
                 int currentPos = getPosition(voteAction.item);

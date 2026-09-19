@@ -455,6 +455,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
 
             @Override
             public void onClick(View v) {
+                v.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                 final int toastMessageResId;
                 if (!mItem.isFavorite()) {
                     mFavoriteManager.add(ItemActivity.this, mItem);
@@ -490,7 +491,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         mSessionManager.view(story.getId());
         mVoteButton.setVisibility(View.VISIBLE);
         mVoteButton.setOnClickListener(v -> {
-            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+            v.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
             vote(story);
         });
         final TextView titleTextView = findViewById(android.R.id.text2);
@@ -655,6 +656,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         View rootView = findViewById(android.R.id.content);
         View anchor = getSnackbarAnchor();
         if (successful == null) {
+            if (rootView != null) {
+                rootView.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            }
             AppUtils.showSnackbar(rootView, anchor, R.string.vote_failed, Snackbar.LENGTH_LONG);
         } else if (successful) {
             Drawable drawable = DrawableCompat.wrap(mVoteButton.getDrawable());
@@ -669,6 +673,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                 mVoteButton.setImageDrawable(mVoteButton.getDrawable());
             });
         } else {
+            if (rootView != null) {
+                rootView.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            }
             AppUtils.showLogin(this, mAlertDialogBuilder);
         }
     }

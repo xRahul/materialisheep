@@ -27,6 +27,7 @@ import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -65,6 +66,8 @@ public class FavoriteRecyclerViewAdapter
         void stopActionMode();
     }
 
+    @Synthetic
+    ItemTouchHelperCallback mCallback;
     private final ItemTouchHelper mItemTouchHelper;
     private final ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         private boolean mPendingClear;
@@ -133,7 +136,7 @@ public class FavoriteRecyclerViewAdapter
         mActionModeDelegate = actionModeDelegate;
         mMenuTintDelegate = new MenuTintDelegate();
         mMenuTintDelegate.onActivityCreated(mContext);
-        mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mContext) {
+        mCallback = new ItemTouchHelperCallback(mContext) {
             @Override
             public int getSwipeDirs(RecyclerView recyclerView,
                     RecyclerView.ViewHolder viewHolder) {
@@ -145,6 +148,7 @@ public class FavoriteRecyclerViewAdapter
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                viewHolder.itemView.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE);
                 int position = viewHolder.getBindingAdapterPosition();
                 if (position == RecyclerView.NO_POSITION) {
                     return;
@@ -159,7 +163,8 @@ public class FavoriteRecyclerViewAdapter
                     notifyItemChanged(position);
                 }
             }
-        });
+        };
+        mItemTouchHelper = new ItemTouchHelper(mCallback);
     }
 
     @Override
@@ -254,6 +259,9 @@ public class FavoriteRecyclerViewAdapter
 
     @Synthetic
     void removeSelection() {
+        if (mRecyclerView != null) {
+            mRecyclerView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+        }
         mFavoriteManager.remove(mContext, mSelected.values());
     }
 
@@ -266,11 +274,13 @@ public class FavoriteRecyclerViewAdapter
 
     @Synthetic
     void dismiss(View view, final int position) {
+        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
         final Favorite item = getItem(position);
         mSelected.put(position, item.getId());
         mFavoriteManager.remove(mContext, mSelected.values());
         Snackbar.make(view, R.string.toast_removed, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, v -> {
+                    v.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                     mPendingAdd = position;
                     mFavoriteManager.add(mContext, item);
                 })
@@ -291,6 +301,7 @@ public class FavoriteRecyclerViewAdapter
                 .inflate(R.menu.menu_contextual_favorite)
                 .setOnMenuItemClickListener(menuItem -> {
                     if (menuItem.getItemId() == R.id.menu_contextual_vote) {
+                        v.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                         vote(item);
                         return true;
                     }
@@ -316,10 +327,19 @@ public class FavoriteRecyclerViewAdapter
     @Synthetic
     void onVoted(Boolean successful) {
         if (successful == null) {
+            if (mRecyclerView != null) {
+                mRecyclerView.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            }
             Toast.makeText(mContext, R.string.vote_failed, Toast.LENGTH_SHORT).show();
         } else if (successful) {
+            if (mRecyclerView != null) {
+                mRecyclerView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+            }
             Toast.makeText(mContext, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
+            if (mRecyclerView != null) {
+                mRecyclerView.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            }
             AppUtils.showLogin(mContext, mAlertDialogBuilder);
         }
     }

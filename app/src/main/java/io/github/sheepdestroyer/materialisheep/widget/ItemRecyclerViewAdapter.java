@@ -33,6 +33,7 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import androidx.core.content.ContextCompat;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -287,6 +288,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
                 .inflate(R.menu.menu_contextual_comment)
                 .setOnMenuItemClickListener(menuItem -> {
                     if (menuItem.getItemId() == R.id.menu_contextual_vote) {
+                        holder.itemView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
                         vote(item);
                         return true;
                     }
@@ -315,10 +317,19 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     @Synthetic
     void onVoted(Boolean successful) {
         if (successful == null) {
+            if (mRecyclerView != null) {
+                mRecyclerView.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            }
             Toast.makeText(mContext, R.string.vote_failed, Toast.LENGTH_SHORT).show();
         } else if (successful) {
+            if (mRecyclerView != null) {
+                mRecyclerView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+            }
             Toast.makeText(mContext, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
+            if (mRecyclerView != null) {
+                mRecyclerView.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            }
             AppUtils.showLogin(mContext, mAlertDialogBuilder);
         }
     }
