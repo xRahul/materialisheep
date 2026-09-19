@@ -23,6 +23,8 @@
     <item type="id" name="web_view" />
     <item type="id" name="progress" />
     <item type="id" name="toolbar" />
+    <item type="id" name="bottom_nav" />
+    <item type="id" name="button_fab" />
 
     <!-- item views -->
     <item type="id" name="rank" />

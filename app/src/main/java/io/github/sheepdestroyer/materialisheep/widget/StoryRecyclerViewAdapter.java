@@ -123,6 +123,42 @@ public class StoryRecyclerViewAdapter extends
     @Synthetic
     final Set<String> mPendingIds = new HashSet<>();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private View mAnchorView;
+
+    public void setAnchorView(@Nullable View anchorView) {
+        mAnchorView = anchorView;
+    }
+
+    @Nullable
+    View getSnackbarAnchor() {
+        if (mAnchorView != null) {
+            return mAnchorView;
+        }
+        if (mRecyclerView != null) {
+            View root = mRecyclerView.getRootView();
+            if (root != null) {
+                View bottomNav = root.findViewById(R.id.bottom_nav);
+                if (bottomNav != null && bottomNav.getVisibility() == View.VISIBLE) {
+                    return bottomNav;
+                }
+                View fab = root.findViewById(R.id.button_fab);
+                if (fab != null && fab.getVisibility() == View.VISIBLE) {
+                    return fab;
+                }
+                View replyButton = root.findViewById(R.id.reply_button);
+                if (replyButton != null && replyButton.getVisibility() == View.VISIBLE) {
+                    return replyButton;
+                }
+                View navButton = root.findViewById(R.id.navigation_button);
+                if (navButton != null && navButton.getVisibility() == View.VISIBLE) {
+                    return navButton;
+                }
+                return bottomNav != null ? bottomNav : fab;
+            }
+        }
+        return null;
+    }
+
     private final Runnable mLoadRunnable = new Runnable() {
         @Override
         public void run() {
@@ -603,14 +639,15 @@ public class StoryRecyclerViewAdapter extends
             return;
         }
         boolean wasFavorite = story.isFavorite();
+        View anchor = getSnackbarAnchor();
         if (!wasFavorite) {
             mFavoriteManager.add(mContext, story);
-            AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.toast_saved, R.string.undo, () -> {
+            AppUtils.showSnackbarWithUndo(mRecyclerView, anchor, R.string.toast_saved, R.string.undo, () -> {
                 mFavoriteManager.remove(mContext, story.getId());
             });
         } else {
             mFavoriteManager.remove(mContext, story.getId());
-            AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.toast_removed, R.string.undo, () -> {
+            AppUtils.showSnackbarWithUndo(mRecyclerView, anchor, R.string.toast_removed, R.string.undo, () -> {
                 mFavoriteManager.add(mContext, story);
             });
         }
@@ -645,8 +682,9 @@ public class StoryRecyclerViewAdapter extends
         if (mRecyclerView == null) {
             return;
         }
+        View anchor = getSnackbarAnchor();
         if (successful == null || !successful) {
-            AppUtils.showSnackbar(mRecyclerView, R.string.vote_failed, Snackbar.LENGTH_LONG);
+            AppUtils.showSnackbar(mRecyclerView, anchor, R.string.vote_failed, Snackbar.LENGTH_LONG);
             if (voteAction != null) {
                 int currentPos = getPosition(voteAction.item);
                 if (currentPos != NO_POSITION && currentPos < getItemCount()) {
@@ -654,7 +692,7 @@ public class StoryRecyclerViewAdapter extends
                 }
             }
         } else {
-            AppUtils.showSnackbarWithUndo(mRecyclerView, R.string.voted, R.string.undo, () -> {
+            AppUtils.showSnackbarWithUndo(mRecyclerView, anchor, R.string.voted, R.string.undo, () -> {
                 mUserServices.unvote(mContext, voteAction.itemId, new UserServices.Callback() {});
                 voteAction.item.decrementScore();
                 int currentPos = getPosition(voteAction.item);

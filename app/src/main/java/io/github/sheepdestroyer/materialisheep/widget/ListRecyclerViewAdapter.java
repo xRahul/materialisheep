@@ -57,6 +57,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     private static final int VIEW_TYPE_FLAT = 1;
     private CustomTabsDelegate mCustomTabsDelegate;
     protected Context mContext;
+    protected RecyclerView mRecyclerView;
     private MultiPaneListener mMultiPaneListener;
     LayoutInflater mInflater;
     @Inject
@@ -83,6 +84,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView = recyclerView;
         mPreferenceObservable.subscribe(mContext,
                 (key, contextChanged) -> mMultiWindowEnabled = Preferences.multiWindowEnabled(mContext),
                 R.string.pref_multi_window);
@@ -91,6 +93,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
+        mRecyclerView = null;
         mPreferenceObservable.unsubscribe(mContext);
     }
 

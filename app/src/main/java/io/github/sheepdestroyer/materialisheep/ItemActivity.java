@@ -231,7 +231,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                     new ItemResponseListener(this)));
         }
         if (!AppUtils.hasConnection(this)) {
-            Snackbar.make(mCoordinatorLayout, R.string.offline_notice, Snackbar.LENGTH_LONG).show();
+            AppUtils.showSnackbar(mCoordinatorLayout, getSnackbarAnchor(), R.string.offline_notice, Snackbar.LENGTH_LONG);
         }
     }
 
@@ -464,12 +464,10 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                     toastMessageResId = R.string.toast_removed;
                 }
                 if (!mUndo) {
-                    Snackbar.make(mCoordinatorLayout, toastMessageResId, Snackbar.LENGTH_SHORT)
-                            .setAction(R.string.undo, v1 -> {
-                                mUndo = true;
-                                mBookmark.performClick();
-                            })
-                            .show();
+                    AppUtils.showSnackbarWithUndo(mCoordinatorLayout, getSnackbarAnchor(), toastMessageResId, R.string.undo, () -> {
+                        mUndo = true;
+                        mBookmark.performClick();
+                    });
                 }
                 mUndo = false;
             }
@@ -655,12 +653,13 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @Synthetic
     void onVoted(final WebItem story, Boolean successful) {
         View rootView = findViewById(android.R.id.content);
+        View anchor = getSnackbarAnchor();
         if (successful == null) {
-            AppUtils.showSnackbar(rootView, R.string.vote_failed, Snackbar.LENGTH_LONG);
+            AppUtils.showSnackbar(rootView, anchor, R.string.vote_failed, Snackbar.LENGTH_LONG);
         } else if (successful) {
             Drawable drawable = DrawableCompat.wrap(mVoteButton.getDrawable());
             DrawableCompat.setTint(drawable, ContextCompat.getColor(this, R.color.greenA700));
-            AppUtils.showSnackbarWithUndo(rootView, R.string.voted, R.string.undo, () -> {
+            AppUtils.showSnackbarWithUndo(rootView, anchor, R.string.voted, R.string.undo, () -> {
                 mUserServices.unvote(ItemActivity.this, story.getId(), new UserServices.Callback() {});
                 if (story instanceof Item) {
                     ((Item) story).decrementScore();
@@ -672,6 +671,25 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         } else {
             AppUtils.showLogin(this, mAlertDialogBuilder);
         }
+    }
+
+    @Nullable
+    View getSnackbarAnchor() {
+        View bottomNav = findViewById(R.id.bottom_nav);
+        if (bottomNav != null && bottomNav.getVisibility() == View.VISIBLE) {
+            return bottomNav;
+        }
+        View fab = findViewById(R.id.button_fab);
+        if (fab != null && fab.getVisibility() == View.VISIBLE) {
+            return fab;
+        }
+        if (mReplyButton != null && mReplyButton.getVisibility() == View.VISIBLE) {
+            return mReplyButton;
+        }
+        if (mNavButton != null && mNavButton.getVisibility() == View.VISIBLE) {
+            return mNavButton;
+        }
+        return bottomNav != null ? bottomNav : (fab != null ? fab : (mReplyButton != null ? mReplyButton : mNavButton));
     }
 
     private void onPreferenceChanged(int key, boolean contextChanged) {

@@ -34,6 +34,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import android.view.ContextThemeWrapper;
+import android.widget.FrameLayout;
+import com.google.android.material.snackbar.Snackbar;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowConnectivityManager;
 import org.robolectric.shadows.ShadowToast;
@@ -267,6 +270,60 @@ public class AppUtilsTest {
     assertNotNull(clipData);
     assertEquals(1, clipData.getItemCount());
     assertEquals(testUri, clipData.getItemAt(0).getUri());
+  }
+
+  @Test
+  public void testShowSnackbar_nullView_returnsNullAndDoesNotThrow() {
+    View anchorView = new View(ApplicationProvider.getApplicationContext());
+
+    assertNull(AppUtils.showSnackbar(null, R.string.voted, Snackbar.LENGTH_SHORT));
+    assertNull(AppUtils.showSnackbar(null, anchorView, R.string.voted, Snackbar.LENGTH_SHORT));
+    assertNull(AppUtils.showSnackbar(null, "Message", Snackbar.LENGTH_SHORT));
+    assertNull(AppUtils.showSnackbar(null, anchorView, "Message", Snackbar.LENGTH_SHORT));
+    assertNull(AppUtils.showSnackbarWithUndo(null, R.string.voted, R.string.undo, () -> {}));
+    assertNull(AppUtils.showSnackbarWithUndo(null, anchorView, R.string.voted, R.string.undo, () -> {}));
+  }
+
+  @Test
+  public void testShowSnackbar_withAnchorView_setsAnchorCorrectly() {
+    Context context = new ContextThemeWrapper(ApplicationProvider.getApplicationContext(), R.style.AppTheme);
+    FrameLayout parent = new FrameLayout(context);
+    View view = new View(context);
+    View anchorView = new View(context);
+    parent.addView(view);
+    parent.addView(anchorView);
+
+    Snackbar snackbarText = AppUtils.showSnackbar(view, anchorView, "Test Message", Snackbar.LENGTH_SHORT);
+    assertNotNull(snackbarText);
+    assertEquals(anchorView, snackbarText.getAnchorView());
+
+    Snackbar snackbarRes = AppUtils.showSnackbar(view, anchorView, R.string.voted, Snackbar.LENGTH_SHORT);
+    assertNotNull(snackbarRes);
+    assertEquals(anchorView, snackbarRes.getAnchorView());
+
+    Snackbar snackbarUndo = AppUtils.showSnackbarWithUndo(view, anchorView, R.string.voted, R.string.undo, () -> {});
+    assertNotNull(snackbarUndo);
+    assertEquals(anchorView, snackbarUndo.getAnchorView());
+  }
+
+  @Test
+  public void testShowSnackbar_withoutAnchorView_anchorIsNull() {
+    Context context = new ContextThemeWrapper(ApplicationProvider.getApplicationContext(), R.style.AppTheme);
+    FrameLayout parent = new FrameLayout(context);
+    View view = new View(context);
+    parent.addView(view);
+
+    Snackbar snackbarText = AppUtils.showSnackbar(view, "Test Message", Snackbar.LENGTH_SHORT);
+    assertNotNull(snackbarText);
+    assertNull(snackbarText.getAnchorView());
+
+    Snackbar snackbarRes = AppUtils.showSnackbar(view, R.string.voted, Snackbar.LENGTH_SHORT);
+    assertNotNull(snackbarRes);
+    assertNull(snackbarRes.getAnchorView());
+
+    Snackbar snackbarUndo = AppUtils.showSnackbarWithUndo(view, R.string.voted, R.string.undo, () -> {});
+    assertNotNull(snackbarUndo);
+    assertNull(snackbarUndo.getAnchorView());
   }
 }
 

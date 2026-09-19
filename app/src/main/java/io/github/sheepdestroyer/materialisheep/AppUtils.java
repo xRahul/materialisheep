@@ -48,6 +48,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
+import com.google.android.material.snackbar.Snackbar;
 import android.view.WindowInsetsController;
 import android.view.WindowMetrics;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -955,6 +956,76 @@ public class AppUtils {
     thisUrl = thisUrl.endsWith("/") ? thisUrl : thisUrl + "/";
     thatUrl = thatUrl.endsWith("/") ? thatUrl : thatUrl + "/";
     return AndroidUtils.TextUtils.equals(thisUrl, thatUrl);
+  }
+
+  @Nullable
+  public static Snackbar showSnackbarWithUndo(
+      @Nullable View view,
+      @Nullable View anchorView,
+      int messageRes,
+      int undoRes,
+      Runnable undoAction) {
+    if (view == null) {
+      return null;
+    }
+    Snackbar snackbar =
+        Snackbar.make(view, messageRes, Snackbar.LENGTH_LONG)
+            .setAction(
+                undoRes,
+                v -> {
+                  if (undoAction != null) {
+                    undoAction.run();
+                  }
+                });
+    if (anchorView != null) {
+      snackbar.setAnchorView(anchorView);
+    }
+    snackbar.show();
+    return snackbar;
+  }
+
+  @Nullable
+  public static Snackbar showSnackbarWithUndo(
+      @Nullable View view, int messageRes, int undoRes, Runnable undoAction) {
+    return showSnackbarWithUndo(view, null, messageRes, undoRes, undoAction);
+  }
+
+  @Nullable
+  public static Snackbar showSnackbar(
+      @Nullable View view, @Nullable View anchorView, int messageRes, int duration) {
+    if (view == null) {
+      return null;
+    }
+    Snackbar snackbar = Snackbar.make(view, messageRes, duration);
+    if (anchorView != null) {
+      snackbar.setAnchorView(anchorView);
+    }
+    snackbar.show();
+    return snackbar;
+  }
+
+  @Nullable
+  public static Snackbar showSnackbar(@Nullable View view, int messageRes, int duration) {
+    return showSnackbar(view, null, messageRes, duration);
+  }
+
+  @Nullable
+  public static Snackbar showSnackbar(
+      @Nullable View view, @Nullable View anchorView, CharSequence message, int duration) {
+    if (view == null) {
+      return null;
+    }
+    Snackbar snackbar = Snackbar.make(view, message, duration);
+    if (anchorView != null) {
+      snackbar.setAnchorView(anchorView);
+    }
+    snackbar.show();
+    return snackbar;
+  }
+
+  @Nullable
+  public static Snackbar showSnackbar(@Nullable View view, CharSequence message, int duration) {
+    return showSnackbar(view, null, message, duration);
   }
 
   static class SystemUiHelper {
