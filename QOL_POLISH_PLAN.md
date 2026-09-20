@@ -111,7 +111,7 @@ gantt
 | **1.2** | **Anchored Snackbar System** | Add `anchorView` support in `AppUtils.java` to prevent FAB/bottom-nav obscuration. Add null-safety guards. | `AppUtils.java`, `ItemActivity.java`, `ListRecyclerViewAdapter.java` | XS | ✅ **Complete** (`6c33e874`, `ad3b4a72`) |
 | **1.3** | **Semantic Haptic Engine** | Replace generic `VIRTUAL_KEY` with API 31+ semantic constants: `CONFIRM` on vote/save, `GESTURE_THRESHOLD_ACTIVATE` on swipe trigger, `REJECT` on network error. | `StoryRecyclerViewAdapter.java`, `ItemRecyclerViewAdapter.java`, `ItemActivity.java`, `FavoriteRecyclerViewAdapter.java` | XS | ✅ **Complete** (`9ebc8204`, `1cb4f8f8`) |
 | **1.4** | **Zero-Jank Skeleton Placeholders** | Add `VIEW_TYPE_SKELETON` to `StoryRecyclerViewAdapter` with pre-measured card bounds and subtle 0.4f–0.8f alpha pulse. | `StoryRecyclerViewAdapter.java`, `res/layout/item_story_skeleton.xml`, `StorySkeletonPlaceholderTest.java` | M | ✅ **Complete** (`8a05ba2d`) |
-| **1.5** | **Material 3 Refresh Indicator** | Theme `SwipeRefreshLayout` using `colorSecondary` and `colorPrimaryContainer` tokens. Rely on Android 12+ native stretch overscroll. | `BaseStoriesActivity.java`, `res/values/styles.xml` | XS | ⏳ **Next Up** |
+| **1.5** | **Material 3 Refresh Indicator** | Theme `SwipeRefreshLayout` using `colorSecondary` and `colorPrimaryContainer` tokens. Rely on Android 12+ native stretch overscroll. | `AppBarSwipeRefreshLayout.java`, `ListFragment.java`, `ItemFragment.java`, `res/values/styles.xml` | XS | ✅ **Complete** |
 
 
 ---

@@ -71,6 +71,10 @@
         <item name="colorAccent">@color/orange400</item>
     </style>
 
+    <style name="Widget.App.SwipeRefreshLayout" parent="">
+        <!-- M3 tokens resolved dynamically in code; defined here for style completeness -->
+    </style>
+
 
     <!-- =========== -->
     <!-- Text styles -->

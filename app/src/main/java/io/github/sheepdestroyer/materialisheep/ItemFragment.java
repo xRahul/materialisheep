@@ -47,6 +47,7 @@ import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 import io.github.sheepdestroyer.materialisheep.data.ResponseListener;
 import io.github.sheepdestroyer.materialisheep.data.WebItem;
+import io.github.sheepdestroyer.materialisheep.widget.AppBarSwipeRefreshLayout;
 import io.github.sheepdestroyer.materialisheep.widget.CommentItemDecoration;
 import io.github.sheepdestroyer.materialisheep.widget.ItemRecyclerViewAdapter;
 import io.github.sheepdestroyer.materialisheep.widget.MultiPageItemRecyclerViewAdapter;
@@ -155,8 +156,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
         mItemDecoration = new CommentItemDecoration(getActivity());
         mRecyclerView.addItemDecoration(mItemDecoration);
         mSwipeRefreshLayout = (SwipeRefreshLayout) mFragmentView.findViewById(R.id.swipe_layout);
-        mSwipeRefreshLayout.setColorSchemeResources(R.color.white);
-        mSwipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.redA200);
+        AppBarSwipeRefreshLayout.applyThemedColors(mSwipeRefreshLayout, requireContext());
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             if (TextUtils.isEmpty(mItemId)) {
                 return;

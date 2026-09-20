@@ -22,6 +22,11 @@ import com.google.android.material.appbar.AppBarLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.util.AttributeSet;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
+import io.github.sheepdestroyer.materialisheep.AppUtils;
 import io.github.sheepdestroyer.materialisheep.R;
 
 /**
@@ -34,10 +39,39 @@ public class AppBarSwipeRefreshLayout extends SwipeRefreshLayout implements AppB
 
     public AppBarSwipeRefreshLayout(Context context) {
         super(context);
+        applyThemedColors(this, context);
     }
 
     public AppBarSwipeRefreshLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        applyThemedColors(this, context);
+    }
+
+    /**
+     * Modernizes SwipeRefreshLayout indicator with Material 3 / themed tokens.
+     * Indicator spinner: colorSecondary -> fallback colorAccent.
+     * Indicator background: colorPrimaryContainer -> fallback colorSurface -> fallback colorCardBackground.
+     */
+    public static void applyThemedColors(@NonNull SwipeRefreshLayout swipeRefreshLayout, @NonNull Context context) {
+        int spinnerColorResId = AppUtils.getThemedResId(context, com.google.android.material.R.attr.colorSecondary);
+        if (spinnerColorResId == 0) {
+            spinnerColorResId = AppUtils.getThemedResId(context, androidx.appcompat.R.attr.colorAccent);
+        }
+
+        int bgColorResId = AppUtils.getThemedResId(context, com.google.android.material.R.attr.colorPrimaryContainer);
+        if (bgColorResId == 0) {
+            bgColorResId = AppUtils.getThemedResId(context, com.google.android.material.R.attr.colorSurface);
+        }
+        if (bgColorResId == 0) {
+            bgColorResId = AppUtils.getThemedResId(context, R.attr.colorCardBackground);
+        }
+
+        if (spinnerColorResId != 0) {
+            swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(context, spinnerColorResId));
+        }
+        if (bgColorResId != 0) {
+            swipeRefreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(context, bgColorResId));
+        }
     }
 
     @Override

@@ -40,6 +40,7 @@ import io.github.sheepdestroyer.materialisheep.data.FavoriteManager;
 import io.github.sheepdestroyer.materialisheep.data.Item;
 import io.github.sheepdestroyer.materialisheep.data.ItemManager;
 import io.github.sheepdestroyer.materialisheep.data.MaterialisticDatabase;
+import io.github.sheepdestroyer.materialisheep.widget.AppBarSwipeRefreshLayout;
 import io.github.sheepdestroyer.materialisheep.widget.StoryRecyclerViewAdapter;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -154,9 +155,7 @@ public class ListFragment extends BaseListFragment {
     mEmptyView = view.findViewById(R.id.empty_search);
     mRecyclerView = view.findViewById(R.id.recycler_view);
     mSwipeRefreshLayout = view.findViewById(R.id.swipe_layout);
-    mSwipeRefreshLayout.setColorSchemeResources(R.color.white);
-    mSwipeRefreshLayout.setProgressBackgroundColorSchemeResource(
-        AppUtils.getThemedResId(getActivity(), androidx.appcompat.R.attr.colorAccent));
+    AppBarSwipeRefreshLayout.applyThemedColors(mSwipeRefreshLayout, requireContext());
     if (savedInstanceState == null) {
       mSwipeRefreshLayout.setRefreshing(true);
     }
