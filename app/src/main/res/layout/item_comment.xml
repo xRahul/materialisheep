@@ -49,10 +49,12 @@
             style="@style/FlatCardView">
 
             <LinearLayout
+                android:id="@+id/comment_header"
                 android:orientation="horizontal"
                 android:layout_gravity="center_vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground">
                 <TextView
                     android:id="@id/posted"
                     tools:text="2 days ago"

@@ -280,6 +280,23 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
         if (mAdapter == null) { // no kids
             return;
         }
+        if (mAdapter instanceof SinglePageItemRecyclerViewAdapter) {
+            SinglePageItemRecyclerViewAdapter singlePageAdapter = (SinglePageItemRecyclerViewAdapter) mAdapter;
+            int currentPos = mScrollableHelper.getCurrentPosition();
+            if (direction == Navigable.DIRECTION_RIGHT) {
+                int nextRoot = singlePageAdapter.findNextRootPosition(currentPos);
+                if (nextRoot >= 0) {
+                    singlePageAdapter.lockBinding(mScrollableHelper.scrollToPosition(nextRoot));
+                    return;
+                }
+            } else if (direction == Navigable.DIRECTION_LEFT) {
+                int prevRoot = singlePageAdapter.findPreviousRootPosition(currentPos);
+                if (prevRoot >= 0) {
+                    singlePageAdapter.lockBinding(mScrollableHelper.scrollToPosition(prevRoot));
+                    return;
+                }
+            }
+        }
         mAdapter.getNextPosition(mScrollableHelper.getCurrentPosition(),
                 direction,
                 position -> mAdapter.lockBinding(mScrollableHelper.scrollToPosition(position)));

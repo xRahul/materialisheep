@@ -94,4 +94,20 @@ class CommentNavigationTest {
         assertEquals(-1, adapter.findParentPosition(-1, item1))
         assertEquals(-1, adapter.findParentPosition(0, null))
     }
+
+    @Test
+    fun testFindNextAndPreviousRootPosition() {
+        // Item 1 (root) is at index 0, Item 2 (level 2) at 1, Item 3 (level 3) at 2, Item 4 (level 2) at 3, Item 5 (root) at 4
+        assertEquals(4, adapter.findNextRootPosition(0))
+        assertEquals(4, adapter.findNextRootPosition(1))
+        assertEquals(4, adapter.findNextRootPosition(2))
+        assertEquals(4, adapter.findNextRootPosition(3))
+        assertEquals(-1, adapter.findNextRootPosition(4))
+
+        assertEquals(-1, adapter.findPreviousRootPosition(0))
+        assertEquals(0, adapter.findPreviousRootPosition(1))
+        assertEquals(0, adapter.findPreviousRootPosition(2))
+        assertEquals(0, adapter.findPreviousRootPosition(3))
+        assertEquals(0, adapter.findPreviousRootPosition(4))
+    }
 }

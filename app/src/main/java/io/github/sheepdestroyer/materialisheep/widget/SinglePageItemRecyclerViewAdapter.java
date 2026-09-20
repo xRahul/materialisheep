@@ -248,6 +248,30 @@ public class SinglePageItemRecyclerViewAdapter
         return -1;
     }
 
+    public int findNextRootPosition(int currentPosition) {
+        int count = getItemCount();
+        for (int i = currentPosition + 1; i < count; i++) {
+            Item item = getItem(i);
+            if (item != null && item.getLevel() <= 1) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int findPreviousRootPosition(int currentPosition) {
+        if (currentPosition <= 0) {
+            return -1;
+        }
+        for (int i = currentPosition - 1; i >= 0; i--) {
+            Item item = getItem(i);
+            if (item != null && item.getLevel() <= 1) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     @Override
     public int getItemViewType(int position) {
         Item item = getItem(position);
@@ -335,7 +359,12 @@ public class SinglePageItemRecyclerViewAdapter
         super.clear(holder);
         holder.mToggleButton.setVisibility(View.GONE);
         holder.mPostedTextView.setOnClickListener(null);
+        if (holder.mCommentHeader != null) {
+            holder.mCommentHeader.setOnClickListener(null);
+        }
         androidx.core.view.ViewCompat.removeAccessibilityAction(holder.itemView, R.id.action_jump_parent);
+        androidx.core.view.ViewCompat.removeAccessibilityAction(holder.itemView, R.id.action_jump_next_root);
+        androidx.core.view.ViewCompat.removeAccessibilityAction(holder.itemView, R.id.action_jump_prev_root);
         androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
                 androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
                 null, null);
@@ -355,10 +384,14 @@ public class SinglePageItemRecyclerViewAdapter
         bindKids(holder, item);
 
         if (item.getKidCount() > 0) {
-            holder.mPostedTextView.setOnClickListener(v -> {
+            View.OnClickListener toggleClickListener = v -> {
                 changeToggleState(holder, item, !mState.isExpanded(item));
                 toggleKids(item);
-            });
+            };
+            holder.mPostedTextView.setOnClickListener(toggleClickListener);
+            if (holder.mCommentHeader != null) {
+                holder.mCommentHeader.setOnClickListener(toggleClickListener);
+            }
             androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
                     androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
                     mContext.getString(mState.isExpanded(item) ? R.string.hide_comments : R.string.show_comments),
@@ -369,6 +402,9 @@ public class SinglePageItemRecyclerViewAdapter
                     });
         } else {
             holder.mPostedTextView.setOnClickListener(null);
+            if (holder.mCommentHeader != null) {
+                holder.mCommentHeader.setOnClickListener(null);
+            }
             androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
                     androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
                     null, null);
@@ -393,6 +429,32 @@ public class SinglePageItemRecyclerViewAdapter
         } else {
             androidx.core.view.ViewCompat.removeAccessibilityAction(holder.itemView, R.id.action_jump_parent);
         }
+
+        androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
+                new androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                        R.id.action_jump_next_root, mContext.getString(R.string.jump_next_root_comment)),
+                mContext.getString(R.string.jump_next_root_comment),
+                (v, arguments) -> {
+                    int nextPos = findNextRootPosition(holder.getBindingAdapterPosition());
+                    if (nextPos >= 0 && mRecyclerView != null) {
+                        mRecyclerView.smoothScrollToPosition(nextPos);
+                        return true;
+                    }
+                    return false;
+                });
+
+        androidx.core.view.ViewCompat.replaceAccessibilityAction(holder.itemView,
+                new androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                        R.id.action_jump_prev_root, mContext.getString(R.string.jump_prev_root_comment)),
+                mContext.getString(R.string.jump_prev_root_comment),
+                (v, arguments) -> {
+                    int prevPos = findPreviousRootPosition(holder.getBindingAdapterPosition());
+                    if (prevPos >= 0 && mRecyclerView != null) {
+                        mRecyclerView.smoothScrollToPosition(prevPos);
+                        return true;
+                    }
+                    return false;
+                });
     }
 
 

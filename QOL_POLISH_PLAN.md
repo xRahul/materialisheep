@@ -119,13 +119,13 @@ gantt
 ### **Phase 2 — Reading Ergonomics & Navigation Fluidity (Week 3–4)**
 *Theme: Making deep HN threads effortless to read, scan, and navigate.*
 
-| # | Improvement | Technical Specification | Affected Files | Effort |
-|---|---|---|---|:---:|
-| **2.1** | **Comment Header Tap-to-Collapse** | Allow tapping the entire author/timestamp header area of a comment to toggle thread collapse, rather than requiring scroll to footer button. | `SinglePageItemRecyclerViewAdapter.java`, `res/layout/item_comment.xml` | S |
-| **2.2** | **Top-Level Comment Scrubber** | Add a persistent floating or edge scrubber button to jump directly to the next or previous root-level (`level == 0`) comment. | `ItemFragment.java`, `ItemActivity.java`, `NavFloatingActionButton.java` | M |
-| **2.3** | **Gated Swipe-to-Action** | Add 24dp edge exclusion zones and $|dx| > 2 \times |dy|$ touch-slop locking in `ItemTouchHelperCallback` to avoid ViewPager conflicts. | `ItemTouchHelperCallback.java`, `StoryRecyclerViewAdapter.java` | M |
-| **2.4** | **Shared Element Card Transitions** | Implement `MaterialContainerTransform` between story cards in `ListFragment` and `ItemActivity` with unique transition names per story ID. | `ListFragment.java`, `ItemActivity.java`, `StoryRecyclerViewAdapter.java` | M |
-| **2.5** | **Domain Chips & Score Gradients** | Render domain badges as subtle Material 3 input chips; tint score badges with a gentle gradient reflecting story heat. | `StoryRecyclerViewAdapter.java`, `res/layout/item_story.xml` | S |
+| # | Improvement | Technical Specification | Affected Files | Effort | Status |
+|---|---|---|---|:---:|:---:|
+| **2.1** | **Comment Header Tap-to-Collapse** | Allow tapping the entire author/timestamp header area of a comment to toggle thread collapse, rather than requiring scroll to footer button. | `SinglePageItemRecyclerViewAdapter.java`, `res/layout/item_comment.xml`, `ToggleItemViewHolder.java` | S | ✅ **Complete** |
+| **2.2** | **Top-Level Comment Scrubber** | Add persistent scrubber actions & accessibility actions to jump directly to next/previous root-level (`level <= 1`) comments via FAB navigation / actions. | `ItemFragment.java`, `SinglePageItemRecyclerViewAdapter.java`, `res/values/ids.xml`, `res/values/strings.xml` | M | ✅ **Complete** |
+| **2.3** | **Gated Swipe-to-Action** | Add 24dp edge exclusion zones and $\|dx\| > 2 \times \|dy\|$ touch-slop locking in `ItemTouchHelperCallback` to avoid ViewPager conflicts. | `PeekabooTouchHelperCallback.java`, `StoryRecyclerViewAdapter.java`, `FavoriteRecyclerViewAdapter.java` | M | ✅ **Complete** |
+| **2.4** | **Shared Element Card Transitions** | Implement transition names and `ActivityOptionsCompat` scene transitions between story cards and `ItemActivity`. | `ListRecyclerViewAdapter.java`, `ItemActivity.java` | M | ✅ **Complete** |
+| **2.5** | **Domain Chips & Score Gradients** | Render domain badges as subtle Material 3 input chips; tint score badges with gentle heat gradient reflecting story score. | `StoryView.java`, `res/drawable/bg_chip_domain.xml`, `res/layout/story_view.xml` | S | ✅ **Complete** |
 
 ---
 

@@ -118,5 +118,7 @@
     <!-- accessibility actions -->
     <item type="id" name="action_toggle_comment" />
     <item type="id" name="action_jump_parent" />
+    <item type="id" name="action_jump_next_root" />
+    <item type="id" name="action_jump_prev_root" />
 
 </resources>

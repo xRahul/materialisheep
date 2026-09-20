@@ -56,6 +56,8 @@ public class StoryView extends RelativeLayout implements Checkable {
     private final int mSecondaryTextColorResId;
     private final int mPromotedColorResId;
     private final int mHotColorResId;
+    private final int mScoreWarmColorResId;
+    private final int mScoreBlazingColorResId;
     private final int mAccentColorResId;
     private final TextView mRankTextView;
     @Synthetic
@@ -97,6 +99,8 @@ public class StoryView extends RelativeLayout implements Checkable {
         mHighlightColor = ContextCompat.getColor(context, a.getResourceId(3, 0));
         mPromotedColorResId = ContextCompat.getColor(context, R.color.greenA700);
         mHotColorResId = ContextCompat.getColor(context, R.color.orange500);
+        mScoreWarmColorResId = ContextCompat.getColor(context, R.color.orange400);
+        mScoreBlazingColorResId = ContextCompat.getColor(context, R.color.red500);
         mAccentColorResId = ContextCompat.getColor(getContext(),
                 AppUtils.getThemedResId(getContext(), androidx.appcompat.R.attr.colorAccent));
         mCommentDrawable = DrawableCompat.wrap(ContextCompat.getDrawable(context,
@@ -146,7 +150,16 @@ public class StoryView extends RelativeLayout implements Checkable {
         if (!mIsLocal && story instanceof Item) {
             Item item = (Item) story;
             boolean hot = item.getScore() >= hotThreshold * AppUtils.HOT_FACTOR;
-            mScoreTextView.setTextColor(hot ? mHotColorResId : mSecondaryTextColorResId);
+            int score = item.getScore();
+            if (score >= 300) {
+                mScoreTextView.setTextColor(mScoreBlazingColorResId);
+            } else if (score >= 100) {
+                mScoreTextView.setTextColor(mHotColorResId);
+            } else if (score >= 40) {
+                mScoreTextView.setTextColor(mScoreWarmColorResId);
+            } else {
+                mScoreTextView.setTextColor(mSecondaryTextColorResId);
+            }
             mRankTextView.setText(String.valueOf(item.getRank()));
             mScoreTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0,
                     hot ? R.drawable.ic_whatshot_orange500_18dp : 0);
@@ -184,15 +197,23 @@ public class StoryView extends RelativeLayout implements Checkable {
                 mSourceTextView.setText(null);
                 mSourceTextView.setCompoundDrawablesWithIntrinsicBounds(
                         R.drawable.ic_work_white_18dp, 0, 0, 0);
+                mSourceTextView.setBackground(null);
                 break;
             case Item.POLL_TYPE:
                 mSourceTextView.setText(null);
                 mSourceTextView.setCompoundDrawablesWithIntrinsicBounds(
                         R.drawable.ic_poll_white_18dp, 0, 0, 0);
+                mSourceTextView.setBackground(null);
                 break;
             default:
-                mSourceTextView.setText(story.getSource());
+                CharSequence source = story.getSource();
+                mSourceTextView.setText(source);
                 mSourceTextView.setCompoundDrawables(null, null, null, null);
+                if (android.text.TextUtils.isEmpty(source)) {
+                    mSourceTextView.setBackground(null);
+                } else {
+                    mSourceTextView.setBackgroundResource(R.drawable.bg_chip_domain);
+                }
                 break;
         }
     }
@@ -208,6 +229,7 @@ public class StoryView extends RelativeLayout implements Checkable {
         mPostedTextView.setText(R.string.loading_text);
         mSourceTextView.setText(R.string.loading_text);
         mSourceTextView.setCompoundDrawables(null, null, null, null);
+        mSourceTextView.setBackground(null);
         mCommentButton.setVisibility(View.INVISIBLE);
     }
 

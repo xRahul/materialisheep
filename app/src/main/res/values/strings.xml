@@ -335,6 +335,8 @@
     <string name="hide_comments">Hide replies</string>
     <string name="show_comments">Show replies</string>
     <string name="jump_parent_comment">Jump to parent comment</string>
+    <string name="jump_next_root_comment">Jump to next top-level comment</string>
+    <string name="jump_prev_root_comment">Jump to previous top-level comment</string>
     <string name="comment_level">Level %1$d</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>

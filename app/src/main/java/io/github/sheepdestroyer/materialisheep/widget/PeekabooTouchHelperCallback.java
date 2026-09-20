@@ -36,6 +36,9 @@ abstract class PeekabooTouchHelperCallback extends ItemTouchHelper.SimpleCallbac
     private final int mPadding;
     private final int mDefaultTextColor;
 
+    private final int mEdgeExclusionPx;
+    private float mLastDownX = -1f;
+
     PeekabooTouchHelperCallback(Context context) {
         super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
         mDefaultTextColor = ContextCompat.getColor(context,
@@ -43,6 +46,7 @@ abstract class PeekabooTouchHelperCallback extends ItemTouchHelper.SimpleCallbac
         mPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.text_size_small));
         mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         mPadding = context.getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin);
+        mEdgeExclusionPx = (int) (24 * context.getResources().getDisplayMetrics().density);
     }
 
     @Override
@@ -52,8 +56,31 @@ abstract class PeekabooTouchHelperCallback extends ItemTouchHelper.SimpleCallbac
     }
 
     @Override
+    public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+        if (mLastDownX >= 0 && recyclerView != null) {
+            int width = recyclerView.getWidth();
+            if (mLastDownX < mEdgeExclusionPx || mLastDownX > (width - mEdgeExclusionPx)) {
+                return 0;
+            }
+        }
+        return super.getSwipeDirs(recyclerView, viewHolder);
+    }
+
+    public void recordTouchDown(float x) {
+        mLastDownX = x;
+    }
+
+    @Override
     public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
                             float dX, float dY, int actionState, boolean isCurrentlyActive) {
+        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+            float absDx = Math.abs(dX);
+            float absDy = Math.abs(dY);
+            // Strict directional touch-slop gating: require |dx| > 2 * |dy|
+            if (absDx > 0 && absDy > 0 && absDx <= 2 * absDy) {
+                dX = 0;
+            }
+        }
         drawPeekingText(c, viewHolder, dX);
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
     }

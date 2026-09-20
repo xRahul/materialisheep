@@ -249,6 +249,9 @@ public class StoryRecyclerViewAdapter extends
                 Preferences.getListSwipePreferences(context)) {
             @Override
             public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                if (super.getSwipeDirs(recyclerView, viewHolder) == 0) {
+                    return 0;
+                }
                 int position = viewHolder.getBindingAdapterPosition();
                 if (position == NO_POSITION) {
                     return 0;
@@ -317,12 +320,26 @@ public class StoryRecyclerViewAdapter extends
         mItemTouchHelper = new ItemTouchHelper(mCallback);
     }
 
+    private RecyclerView.OnItemTouchListener mTouchListener;
+
     @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
         MaterialisticDatabase.getInstance(recyclerView.getContext()).getLiveData().observeForever(mObserver);
         mItemTouchHelper.attachToRecyclerView(recyclerView);
+        if (mTouchListener == null) {
+            mTouchListener = new RecyclerView.SimpleOnItemTouchListener() {
+                @Override
+                public boolean onInterceptTouchEvent(RecyclerView rv, android.view.MotionEvent e) {
+                    if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                        mCallback.recordTouchDown(e.getX());
+                    }
+                    return false;
+                }
+            };
+        }
+        recyclerView.addOnItemTouchListener(mTouchListener);
         toggleAutoMarkAsViewed(recyclerView);
         mPrefObservable.subscribe(recyclerView.getContext(),
                 (key, contextChanged) -> {
@@ -339,6 +356,9 @@ public class StoryRecyclerViewAdapter extends
         super.onDetachedFromRecyclerView(recyclerView);
         mDisposables.clear();
         MaterialisticDatabase.getInstance(recyclerView.getContext()).getLiveData().removeObserver(mObserver);
+        if (mTouchListener != null) {
+            recyclerView.removeOnItemTouchListener(mTouchListener);
+        }
         mItemTouchHelper.attachToRecyclerView(null);
         mPrefObservable.unsubscribe(recyclerView.getContext());
     }

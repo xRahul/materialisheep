@@ -124,7 +124,7 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
                 mCardViewEnabled,
                 isSelected(item.getId()),
                 v -> handleItemClick(item, holder),
-                v -> openItem(item));
+                v -> openItem(item, holder.itemView));
         bindItem(holder, position);
     }
 
@@ -237,12 +237,25 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
     @ItemManager.CacheMode
     protected abstract int getItemCacheMode();
 
-    private void openItem(T item) {
+    private void openItem(T item, View sharedElement) {
         Intent intent = new Intent(mContext, ItemActivity.class)
                 .putExtra(ItemActivity.EXTRA_CACHE_MODE, getItemCacheMode())
                 .putExtra(ItemActivity.EXTRA_ITEM, item)
                 .putExtra(ItemActivity.EXTRA_OPEN_COMMENTS, true);
-        mContext.startActivity(mMultiWindowEnabled ? AppUtils.multiWindowIntent((Activity) mContext, intent) : intent);
+        if (mMultiWindowEnabled) {
+            mContext.startActivity(AppUtils.multiWindowIntent((Activity) mContext, intent));
+        } else if (mContext instanceof Activity && sharedElement != null) {
+            String transitionName = androidx.core.view.ViewCompat.getTransitionName(sharedElement);
+            if (transitionName != null) {
+                androidx.core.app.ActivityOptionsCompat options = androidx.core.app.ActivityOptionsCompat
+                        .makeSceneTransitionAnimation((Activity) mContext, sharedElement, transitionName);
+                mContext.startActivity(intent, options.toBundle());
+                return;
+            }
+            mContext.startActivity(intent);
+        } else {
+            mContext.startActivity(intent);
+        }
     }
 
     /**
@@ -274,6 +287,9 @@ public abstract class ListRecyclerViewAdapter<VH extends ListRecyclerViewAdapter
             mCardView.setCardElevation(selected ? mCardElevation * 2 : (cardViewEnabled ? mCardElevation : 0));
             mStoryView.setStory(item, hotThreshold);
             mStoryView.setChecked(selected);
+            if (item != null) {
+                androidx.core.view.ViewCompat.setTransitionName(itemView, "story_" + item.getId());
+            }
             itemView.setOnClickListener(itemClickListener);
             mStoryView.setOnCommentClickListener(commentClickListener);
         }

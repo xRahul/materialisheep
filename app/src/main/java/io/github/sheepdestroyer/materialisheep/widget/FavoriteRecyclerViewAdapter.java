@@ -167,15 +167,32 @@ public class FavoriteRecyclerViewAdapter
         mItemTouchHelper = new ItemTouchHelper(mCallback);
     }
 
+    private RecyclerView.OnItemTouchListener mTouchListener;
+
     @Override
     public void onAttachedToRecyclerView(final RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
         mItemTouchHelper.attachToRecyclerView(recyclerView);
+        if (mTouchListener == null) {
+            mTouchListener = new RecyclerView.SimpleOnItemTouchListener() {
+                @Override
+                public boolean onInterceptTouchEvent(RecyclerView rv, android.view.MotionEvent e) {
+                    if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                        mCallback.recordTouchDown(e.getX());
+                    }
+                    return false;
+                }
+            };
+        }
+        recyclerView.addOnItemTouchListener(mTouchListener);
     }
 
     @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
+        if (mTouchListener != null) {
+            recyclerView.removeOnItemTouchListener(mTouchListener);
+        }
         mItemTouchHelper.attachToRecyclerView(null);
     }
 
