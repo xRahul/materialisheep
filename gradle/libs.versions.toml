@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.1"
 kotlin = "2.3.21"
-ksp = "2.3.8"
+ksp = "2.3.12"
 desugarJdkLibs = "2.1.5"
 appcompat = "1.8.0"
 recyclerview = "1.4.0"
