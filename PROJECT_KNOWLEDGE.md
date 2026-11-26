@@ -41,7 +41,7 @@ The application follows a mix of **MVVM (Model-View-ViewModel)** and **Clean Arc
 
 The main source code is located in `app/src/main/java/io/github/sheepdestroyer/materialisheep`.
 
-### Root Package (`io.github.sheepdestroyer.materialisheep`)
+### Root Package (`in.rahulja.materialhn`)
 - `MaterialisticApplication.java`: App entry point. Initializes Dagger graph (`ApplicationComponent`).
 - `ApplicationModule.java`, `DataModule.java`, `NetworkModule.java`, `UiModule.java`, `ActivityModule.java`: Dagger modules defining dependency provision.
 - `LauncherActivity.java`: Invisible activity that routes to `ListActivity`.
