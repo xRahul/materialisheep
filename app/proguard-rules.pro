@@ -20,5 +20,5 @@
 -dontoptimize
 -keep class io.github.hidroh.materialistic.** { *; }
 -keep interface io.github.hidroh.materialistic.** { *; }
--keep class io.github.sheepdestroyer.materialisheep.** { *; }
--keep interface io.github.sheepdestroyer.materialisheep.** { *; }
+-keep class in.rahulja.materialhn.** { *; }
+-keep interface in.rahulja.materialhn.** { *; }

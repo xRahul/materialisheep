@@ -1,0 +1,23 @@
+package `in`.rahulja.materialhn.data
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import `in`.rahulja.materialhn.data.MaterialisticDatabase.Readable
+
+/**
+ * A DAO for accessing readable content.
+ */
+@Dao
+interface ReadableDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(readable: Readable)
+
+    @Query("SELECT * FROM readable WHERE itemid = :itemId LIMIT 1")
+    fun selectByItemId(itemId: String?): Readable?
+
+    @Query("DELETE FROM readable WHERE itemid NOT IN (SELECT itemid FROM saved) AND _id NOT IN (SELECT _id FROM readable ORDER BY _id DESC LIMIT :limit)")
+    fun prune(limit: Int = 500): Int
+}
+

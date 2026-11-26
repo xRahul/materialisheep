@@ -1,0 +1,652 @@
+/*
+ * Copyright (c) 2016 Ha Duy Trung
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package in.rahulja.materialhn.data;
+
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.PersistableBundle;
+import android.os.Process;
+import android.text.TextUtils;
+import android.text.format.DateUtils;
+import android.webkit.WebView;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.UiThread;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.app.NotificationCompat;
+import in.rahulja.materialhn.AppUtils;
+import in.rahulja.materialhn.DataModule;
+import in.rahulja.materialhn.data.SyncQueueDao;
+import in.rahulja.materialhn.BuildConfig;
+import in.rahulja.materialhn.ItemActivity;
+import in.rahulja.materialhn.Preferences;
+import in.rahulja.materialhn.R;
+import in.rahulja.materialhn.annotation.Synthetic;
+import in.rahulja.materialhn.widget.AdBlockWebViewClient;
+import in.rahulja.materialhn.widget.CacheableWebView;
+import retrofit2.Call;
+import retrofit2.Callback;
+
+/**
+ * A delegate for syncing data.
+ */
+public class SyncDelegate {
+    private static final String NOTIFICATION_GROUP_KEY = "group";
+    private static final String SYNC_ACCOUNT_NAME = "Materialistic";
+    private static final long TIMEOUT_MILLIS = DateUtils.MINUTE_IN_MILLIS;
+    private static final String DOWNLOADS_CHANNEL_ID = "downloads";
+
+    private final HackerNewsClient.RestService mHnRestService;
+    private final ItemManager mItemManager;
+    private final ReadabilityClient mReadabilityClient;
+    private final SyncQueueDao mSyncQueueDao;
+    private final io.reactivex.rxjava3.core.Scheduler mIoScheduler;
+    private final CompositeDisposable mDisposables = new CompositeDisposable();
+    private final NotificationManager mNotificationManager;
+    private final NotificationCompat.Builder mNotificationBuilder;
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private SyncProgress mSyncProgress;
+    private final Context mContext;
+    private ProgressListener mListener;
+    private Job mJob;
+    private boolean mFinished;
+    @VisibleForTesting
+    CacheableWebView mWebView;
+
+    /**
+     * Constructs a new {@code SyncDelegate}.
+     *
+     * @param context           the application context
+     * @param factory           the {@link RestServiceFactory} to use for creating
+     *                          REST services
+     * @param readabilityClient the {@link ReadabilityClient} to use for fetching
+     *                          readable content
+     * @param syncQueueDao      the {@link SyncQueueDao} to
+     *                          use for managing the sync queue
+     */
+    @Inject
+    SyncDelegate(Context context, RestServiceFactory factory, @Named(DataModule.HN) ItemManager itemManager,
+            ReadabilityClient readabilityClient, SyncQueueDao syncQueueDao,
+            @Named(DataModule.IO_THREAD) io.reactivex.rxjava3.core.Scheduler ioScheduler) {
+        mContext = context;
+        mSyncQueueDao = syncQueueDao;
+        mItemManager = itemManager;
+        mHnRestService = factory.rxEnabled(true).create(HackerNewsClient.BASE_API_URL,
+                HackerNewsClient.RestService.class, new BackgroundThreadExecutor());
+        mReadabilityClient = readabilityClient;
+        mIoScheduler = ioScheduler;
+        mNotificationManager = (NotificationManager) context
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = new NotificationChannel(DOWNLOADS_CHANNEL_ID,
+                context.getString(R.string.notification_channel_downloads),
+                NotificationManager.IMPORTANCE_LOW);
+        mNotificationManager.createNotificationChannel(channel);
+        mNotificationBuilder = new NotificationCompat.Builder(context, DOWNLOADS_CHANNEL_ID);
+        mNotificationBuilder
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
+                        R.mipmap.ic_launcher))
+                .setSmallIcon(R.drawable.ic_notification)
+                .setGroup(NOTIFICATION_GROUP_KEY)
+                .setOnlyAlertOnce(true)
+                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+                .setAutoCancel(true);
+    }
+
+    /**
+     * Schedules a sync job.
+     *
+     * @param context the application context
+     * @param job     the job to schedule
+     */
+    @UiThread
+    static void scheduleSync(Context context, Job job) {
+        if (!Preferences.Offline.isEnabled(context)) {
+            return;
+        }
+        if (!TextUtils.isEmpty(job.id)) {
+            try {
+                JobInfo.Builder builder = new JobInfo.Builder(Long.valueOf(job.id).intValue(),
+                        new ComponentName(context.getPackageName(),
+                                ItemSyncJobService.class.getName()))
+                        .setRequiredNetworkType(Preferences.Offline.isWifiOnly(context) ? JobInfo.NETWORK_TYPE_UNMETERED
+                                : JobInfo.NETWORK_TYPE_ANY)
+                        .setExtras(job.toPersistableBundle());
+                if (Preferences.Offline.currentConnectionEnabled(context)) {
+                    builder.setOverrideDeadline(0);
+                }
+                ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE))
+                        .schedule(builder.build());
+            } catch (NumberFormatException ignored) {
+            }
+        } else {
+            Bundle extras = new Bundle(job.toBundle());
+            extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+            Account syncAccount;
+            AccountManager accountManager = AccountManager.get(context);
+            Account[] accounts = accountManager.getAccountsByType(BuildConfig.APPLICATION_ID);
+            if (accounts.length == 0) {
+                syncAccount = new Account(SYNC_ACCOUNT_NAME, BuildConfig.APPLICATION_ID);
+                accountManager.addAccountExplicitly(syncAccount, null, null);
+            } else {
+                syncAccount = accounts[0];
+            }
+            ContentResolver.requestSync(syncAccount, SyncContentProvider.PROVIDER_AUTHORITY, extras);
+        }
+    }
+
+    void subscribe(ProgressListener listener) {
+        mListener = listener;
+    }
+
+    void performSync(@NonNull Job job) {
+        // assume that connection wouldn't change until we finish syncing
+        mJob = job;
+        if (!TextUtils.isEmpty(mJob.id)) {
+            Message message = Message.obtain(mHandler, this::stopSync);
+            try {
+                message.what = Long.valueOf(mJob.id).intValue();
+            } catch (NumberFormatException ignored) {
+            }
+            mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
+            mSyncProgress = new SyncProgress(mJob);
+            mDisposables.add(syncRx(mJob.id)
+                    .subscribeOn(mIoScheduler)
+                    .subscribe(item -> {}, Throwable::printStackTrace));
+        } else {
+            mDisposables.add(Observable.fromCallable(mSyncQueueDao::getAll)
+                    .flatMapIterable(list -> list)
+                    .concatMap(this::syncRx)
+                    .subscribeOn(mIoScheduler)
+                    .subscribe(item -> {}, Throwable::printStackTrace, this::finish));
+        }
+    }
+
+    private Observable<HackerNewsItem> syncRx(String itemId) {
+        if (!mJob.connectionEnabled) {
+            defer(itemId);
+            return Observable.empty();
+        }
+        return getFromCacheRx(itemId)
+                .onErrorResumeNext(e -> Observable.empty())
+                .switchIfEmpty(Observable.defer(() -> {
+                    if (mSyncProgress != null) {
+                        updateProgress();
+                    }
+                    if (AppUtils.isLowBattery(mContext)) {
+                        defer(itemId);
+                        return Observable.empty();
+                    }
+                    return mHnRestService.networkItemRx(itemId)
+                            .doOnNext(item -> {
+                                if (item == null) {
+                                    notifyItem(itemId, null);
+                                }
+                            })
+                            .doOnError(e -> notifyItem(itemId, null))
+                            .onErrorResumeNext(e -> Observable.empty());
+                }))
+                .doOnNext(this::sync);
+    }
+
+
+    @Synthetic
+    void sync(@NonNull HackerNewsItem item) {
+        mSyncQueueDao.delete(item.getId());
+        notifyItem(item.getId(), item);
+        syncReadability(item);
+        syncArticle(item);
+        syncChildren(item);
+    }
+
+    private void syncReadability(@NonNull HackerNewsItem item) {
+        if (mJob.readabilityEnabled && item.isStoryType()) {
+            final String itemId = item.getId();
+            if (mSyncProgress == null) {
+                CountDownLatch latch = new CountDownLatch(1);
+                mReadabilityClient.parse(itemId, item.getRawUrl(), content -> latch.countDown());
+                try {
+                    latch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } else {
+                mReadabilityClient.parse(itemId, item.getRawUrl(), content -> notifyReadability());
+            }
+        }
+    }
+
+    private void syncArticle(@NonNull HackerNewsItem item) {
+        if (mJob.articleEnabled && item.isStoryType() && !TextUtils.isEmpty(item.getUrl())) {
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                loadArticle(item);
+            } else {
+                mHandler.post(() -> {
+                    try {
+                        loadArticle(item);
+                    } catch (Exception e) {
+                        notifyArticle(100);
+                    }
+                });
+            }
+        }
+    }
+
+    private void loadArticle(@NonNull final HackerNewsItem item) {
+        try {
+            mWebView = new CacheableWebView(mContext);
+            mWebView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(mContext)));
+            mWebView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    super.onProgressChanged(view, newProgress);
+                    notifyArticle(newProgress);
+                    if (newProgress == 100 && mWebView != null) {
+                        mWebView.destroy();
+                        mWebView = null;
+                    }
+                }
+            });
+            notifyArticle(0);
+            mWebView.loadUrl(item.getUrl());
+        } catch (Exception e) {
+            notifyArticle(100);
+        }
+    }
+
+    private void syncChildren(@NonNull HackerNewsItem item) {
+        if (mJob.commentsEnabled && item.getKids() != null) {
+            if (!mJob.connectionEnabled) {
+                for (long id : item.getKids()) {
+                    defer(String.valueOf(id));
+                }
+                return;
+            }
+            long[] kids = item.getKids();
+            String[] ids = new String[kids.length];
+            for (int i = 0; i < kids.length; i++) {
+                ids[i] = String.valueOf(kids[i]);
+            }
+            if (mSyncProgress == null) {
+                Item[] response = mItemManager.getItems(ids, ItemManager.MODE_CACHE);
+                if (response != null) {
+                    for (Item child : response) {
+                        if (child instanceof HackerNewsItem) {
+                            sync((HackerNewsItem) child);
+                        }
+                    }
+                }
+            } else {
+                Disposable disposable = mItemManager.getItems(ids, ItemManager.MODE_CACHE, new ResponseListener<Item[]>() {
+                    @Override
+                    public void onResponse(@Nullable Item[] response) {
+                        mIoScheduler.scheduleDirect(() -> {
+                            Set<String> foundIds = new HashSet<>();
+                            if (response != null) {
+                                for (Item child : response) {
+                                    if (child instanceof HackerNewsItem) {
+                                        sync((HackerNewsItem) child);
+                                        foundIds.add(child.getId());
+                                    }
+                                }
+                            }
+                            for (String id : ids) {
+                                if (!foundIds.contains(id)) {
+                                    notifyItem(id, null);
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        mIoScheduler.scheduleDirect(() -> {
+                            for (String id : ids) {
+                                notifyItem(id, null);
+                            }
+                        });
+                    }
+                });
+                if (disposable != null) {
+                    mDisposables.add(disposable);
+                }
+            }
+        }
+    }
+
+    private void defer(String itemId) {
+        mSyncQueueDao.insert(new MaterialisticDatabase.SyncQueueEntry(itemId));
+    }
+
+
+    private Observable<HackerNewsItem> getFromCacheRx(String itemId) {
+        return mHnRestService.cachedItemRx(itemId);
+    }
+
+    @Synthetic
+    void notifyItem(@NonNull String id, @Nullable HackerNewsItem item) {
+        if (mSyncProgress != null) {
+            mSyncProgress.finishItem(id, item,
+                    mJob.commentsEnabled && mJob.connectionEnabled,
+                    mJob.readabilityEnabled && mJob.connectionEnabled);
+            updateProgress();
+        }
+    }
+
+    private void notifyReadability() {
+        mSyncProgress.finishReadability();
+        updateProgress();
+    }
+
+    @Synthetic
+    void notifyArticle(int newProgress) {
+        mSyncProgress.updateArticle(newProgress, 100);
+        updateProgress();
+    }
+
+    private void updateProgress() {
+        if (mFinished) {
+            return;
+        }
+        if (mSyncProgress.getProgress() >= mSyncProgress.getMax()) {
+            finish();
+        } else if (mJob.notificationEnabled) {
+            showProgress();
+        }
+    }
+
+    private void showProgress() {
+        int id = 0;
+        try {
+            id = Long.valueOf(mJob.id).intValue();
+        } catch (NumberFormatException ignored) {
+        }
+        mNotificationManager.notify(id, mNotificationBuilder
+                .setContentTitle(mSyncProgress.title)
+                .setContentText(mContext.getString(R.string.download_in_progress))
+                .setContentIntent(getItemActivity(mJob.id))
+                .setOnlyAlertOnce(true)
+                .setProgress(mSyncProgress.getMax(), mSyncProgress.getProgress(), false)
+                .setSortKey(mJob.id)
+                .build());
+    }
+
+    private void finish() {
+        if (mFinished) {
+            return;
+        }
+        mFinished = true;
+        if (mListener != null) {
+            mListener.onDone(mJob.id);
+            mListener = null;
+        }
+        stopSync();
+    }
+
+    void stopSync() {
+        mDisposables.clear();
+        if (mJob != null) {
+            mJob.connectionEnabled = false;
+            if (!TextUtils.isEmpty(mJob.id)) {
+                try {
+                    int id = Long.valueOf(mJob.id).intValue();
+                    mNotificationManager.cancel(id);
+                    mHandler.removeMessages(id);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        if (mWebView != null) {
+            mHandler.post(() -> {
+                if (mWebView != null) {
+                    mWebView.destroy();
+                    mWebView = null;
+                }
+            });
+        }
+    }
+
+    private PendingIntent getItemActivity(String itemId) {
+        return PendingIntent.getActivity(mContext, 0,
+                new Intent(Intent.ACTION_VIEW)
+                        .setPackage(mContext.getPackageName())
+                        .setData(AppUtils.createItemUri(itemId))
+                        .putExtra(ItemActivity.EXTRA_CACHE_MODE, ItemManager.MODE_CACHE)
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static class SyncProgress {
+        private final String id;
+        private Boolean self;
+        private int totalKids, finishedKids, webProgress, maxWebProgress;
+        private Boolean readability;
+        String title;
+
+        @Synthetic
+        SyncProgress(Job job) {
+            this.id = job.id;
+            if (job.commentsEnabled) {
+                totalKids = 1;
+            }
+            if (job.articleEnabled) {
+                maxWebProgress = 100;
+            }
+            if (job.readabilityEnabled) {
+                readability = false;
+            }
+        }
+
+        int getMax() {
+            return 1 + totalKids + (readability != null ? 1 : 0) + maxWebProgress;
+        }
+
+        int getProgress() {
+            return (self != null ? 1 : 0) + finishedKids + (readability != null && readability ? 1 : 0) + webProgress;
+        }
+
+        @Synthetic
+        void finishItem(@NonNull String id, @Nullable HackerNewsItem item,
+                boolean kidsEnabled, boolean readabilityEnabled) {
+            if (TextUtils.equals(id, this.id)) {
+                finishSelf(item, kidsEnabled, readabilityEnabled);
+            } else {
+                finishKid();
+            }
+        }
+
+        @Synthetic
+        void finishReadability() {
+            readability = true;
+        }
+
+        @Synthetic
+        void updateArticle(int webProgress, int maxWebProgress) {
+            this.webProgress = webProgress;
+            this.maxWebProgress = maxWebProgress;
+        }
+
+        private void finishSelf(@Nullable HackerNewsItem item, boolean kidsEnabled,
+                boolean readabilityEnabled) {
+            self = item != null;
+            title = item != null ? item.getTitle() : null;
+            if (kidsEnabled && item != null && item.getKids() != null) {
+                // fetch recursively but only notify for immediate children
+                totalKids = item.getKids().length;
+            } else {
+                totalKids = 0;
+            }
+            if (readabilityEnabled) {
+                readability = false;
+            }
+        }
+
+        private void finishKid() {
+            finishedKids++;
+        }
+    }
+
+    private static class BackgroundThreadExecutor implements Executor {
+
+        @Synthetic
+        BackgroundThreadExecutor() {
+        }
+
+        @Override
+        public void execute(@NonNull Runnable r) {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            r.run();
+        }
+    }
+
+    interface ProgressListener {
+        void onDone(String token);
+    }
+
+    static class Job {
+        private static final String EXTRA_ID = "extra:id";
+        private static final String EXTRA_CONNECTION_ENABLED = "extra:connectionEnabled";
+        private static final String EXTRA_READABILITY_ENABLED = "extra:readabilityEnabled";
+        private static final String EXTRA_ARTICLE_ENABLED = "extra:articleEnabled";
+        private static final String EXTRA_COMMENTS_ENABLED = "extra:commentsEnabled";
+        private static final String EXTRA_NOTIFICATION_ENABLED = "extra:notificationEnabled";
+        final String id;
+        boolean connectionEnabled;
+        boolean readabilityEnabled;
+        boolean articleEnabled;
+        boolean commentsEnabled;
+        boolean notificationEnabled;
+
+        Job(String id) {
+            this.id = id;
+        }
+
+        Job(PersistableBundle bundle) {
+            id = bundle.getString(EXTRA_ID);
+            connectionEnabled = bundle.getInt(EXTRA_CONNECTION_ENABLED) == 1;
+            readabilityEnabled = bundle.getInt(EXTRA_READABILITY_ENABLED) == 1;
+            articleEnabled = bundle.getInt(EXTRA_ARTICLE_ENABLED) == 1;
+            commentsEnabled = bundle.getInt(EXTRA_COMMENTS_ENABLED) == 1;
+            notificationEnabled = bundle.getInt(EXTRA_NOTIFICATION_ENABLED) == 1;
+        }
+
+        Job(Bundle bundle) {
+            id = bundle.getString(EXTRA_ID);
+            connectionEnabled = bundle.getBoolean(EXTRA_CONNECTION_ENABLED);
+            readabilityEnabled = bundle.getBoolean(EXTRA_READABILITY_ENABLED);
+            articleEnabled = bundle.getBoolean(EXTRA_ARTICLE_ENABLED);
+            commentsEnabled = bundle.getBoolean(EXTRA_COMMENTS_ENABLED);
+            notificationEnabled = bundle.getBoolean(EXTRA_NOTIFICATION_ENABLED);
+        }
+
+        @Synthetic
+        PersistableBundle toPersistableBundle() {
+            PersistableBundle bundle = new PersistableBundle();
+            bundle.putString(EXTRA_ID, id);
+            bundle.putInt(EXTRA_CONNECTION_ENABLED, connectionEnabled ? 1 : 0);
+            bundle.putInt(EXTRA_READABILITY_ENABLED, readabilityEnabled ? 1 : 0);
+            bundle.putInt(EXTRA_ARTICLE_ENABLED, articleEnabled ? 1 : 0);
+            bundle.putInt(EXTRA_COMMENTS_ENABLED, commentsEnabled ? 1 : 0);
+            bundle.putInt(EXTRA_NOTIFICATION_ENABLED, notificationEnabled ? 1 : 0);
+            return bundle;
+        }
+
+        @Synthetic
+        Bundle toBundle() {
+            Bundle bundle = new Bundle();
+            bundle.putString(EXTRA_ID, id);
+            bundle.putBoolean(EXTRA_CONNECTION_ENABLED, connectionEnabled);
+            bundle.putBoolean(EXTRA_READABILITY_ENABLED, readabilityEnabled);
+            bundle.putBoolean(EXTRA_ARTICLE_ENABLED, articleEnabled);
+            bundle.putBoolean(EXTRA_COMMENTS_ENABLED, commentsEnabled);
+            bundle.putBoolean(EXTRA_NOTIFICATION_ENABLED, notificationEnabled);
+            return bundle;
+        }
+    }
+
+    public static class JobBuilder {
+        private final Job job;
+
+        public JobBuilder(Context context, String id) {
+            job = new Job(id);
+            setConnectionEnabled(Preferences.Offline.currentConnectionEnabled(context));
+            setReadabilityEnabled(Preferences.Offline.isReadabilityEnabled(context));
+            setArticleEnabled(Preferences.Offline.isArticleEnabled(context));
+            setCommentsEnabled(Preferences.Offline.isCommentsEnabled(context));
+            setNotificationEnabled(Preferences.Offline.isNotificationEnabled(context));
+        }
+
+        JobBuilder setConnectionEnabled(boolean connectionEnabled) {
+            job.connectionEnabled = connectionEnabled;
+            return this;
+        }
+
+        JobBuilder setReadabilityEnabled(boolean readabilityEnabled) {
+            job.readabilityEnabled = readabilityEnabled;
+            return this;
+        }
+
+        JobBuilder setArticleEnabled(boolean articleEnabled) {
+            job.articleEnabled = articleEnabled;
+            return this;
+        }
+
+        JobBuilder setCommentsEnabled(boolean commentsEnabled) {
+            job.commentsEnabled = commentsEnabled;
+            return this;
+        }
+
+        public JobBuilder setNotificationEnabled(boolean notificationEnabled) {
+            job.notificationEnabled = notificationEnabled;
+            return this;
+        }
+
+        public Job build() {
+            return job;
+        }
+    }
+}

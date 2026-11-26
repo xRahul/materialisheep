@@ -1,0 +1,127 @@
+package in.rahulja.materialhn.appwidget;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
+
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.content.Context;
+import android.content.Intent;
+import android.view.View;
+import android.widget.ListView;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowAppWidgetManager;
+
+import in.rahulja.materialhn.R;
+import in.rahulja.materialhn.data.Item;
+import in.rahulja.materialhn.data.ItemManager;
+
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = {31, 34})
+public class WidgetHelperTest {
+
+    private Context context;
+    private WidgetHelper widgetHelper;
+    private ItemManager itemManager;
+    private ItemManager searchManager;
+    private AppWidgetManager appWidgetManager;
+
+    @Before
+    public void setUp() {
+        context = ApplicationProvider.getApplicationContext();
+        itemManager = mock(ItemManager.class);
+        searchManager = mock(ItemManager.class);
+        appWidgetManager = AppWidgetManager.getInstance(context);
+        widgetHelper = new WidgetHelper(context);
+        widgetHelper.mItemManager = itemManager;
+        widgetHelper.mSearchManager = searchManager;
+    }
+
+    @Test
+    public void refresh_setsEmptyView() {
+        ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
+        int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
+
+        when(itemManager.getStories(any(), anyInt())).thenReturn(null);
+
+        widgetHelper.refresh(appWidgetId);
+
+        // getViewFor(id) returns the inflated view based on the last update
+        View widgetView = shadowManager.getViewFor(appWidgetId);
+        assertNotNull("Widget view should not be null", widgetView);
+
+        ListView listView = widgetView.findViewById(android.R.id.list);
+        assertNotNull("ListView should be present", listView);
+
+        View emptyView = listView.getEmptyView();
+
+        // Without the fix, this should be null.
+        // With the fix, this should be the view with R.id.empty
+
+        assertNotNull("ListView should have an empty view set", emptyView);
+        assertEquals(R.id.empty, emptyView.getId());
+    }
+
+    @Test
+    public void refresh_fetchesStaleItemsIndividually() {
+        ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
+        int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
+
+        // Setup mock items
+        Item[] stories = new Item[10];
+        for (int i = 0; i < 10; i++) {
+            Item item = mock(Item.class);
+            when(item.getId()).thenReturn(String.valueOf(i));
+            when(item.getLocalRevision()).thenReturn(0); // Ensure it triggers the update logic
+            stories[i] = item;
+        }
+        when(itemManager.getStories(any(), anyInt())).thenReturn(stories);
+        when(itemManager.getItem(anyString(), anyInt())).thenReturn(null);
+
+        widgetHelper.refresh(appWidgetId);
+
+        // Stale items (localRevision <= 0) are fetched individually from the network
+        verify(itemManager, org.mockito.Mockito.times(10)).getItem(anyString(), anyInt());
+    }
+
+    @Test
+    public void refresh_setsPendingIntentTemplateWithMutableFlag() {
+        ShadowAppWidgetManager shadowManager = shadowOf(appWidgetManager);
+        int appWidgetId = shadowManager.createWidget(WidgetProvider.class, R.layout.appwidget);
+
+        when(itemManager.getStories(any(), anyInt())).thenReturn(null);
+
+        widgetHelper.refresh(appWidgetId);
+
+        Intent queryIntent = new Intent(Intent.ACTION_VIEW);
+        queryIntent.setPackage(context.getPackageName());
+        PendingIntent pendingIntent =
+            PendingIntent.getActivity(
+                context,
+                0,
+                queryIntent,
+                PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_MUTABLE);
+        assertNotNull("PendingIntent template should be registered", pendingIntent);
+        assertFalse("PendingIntent should be mutable to allow fill-in intents", pendingIntent.isImmutable());
+
+        int flags = shadowOf(pendingIntent).getFlags();
+        assertTrue("PendingIntent should have FLAG_MUTABLE", (flags & PendingIntent.FLAG_MUTABLE) != 0);
+        assertTrue("PendingIntent should have FLAG_UPDATE_CURRENT", (flags & PendingIntent.FLAG_UPDATE_CURRENT) != 0);
+    }
+}

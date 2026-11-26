@@ -18,7 +18,7 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId "io.github.sheepdestroyer.materialisheep"
+        applicationId "in.rahulja.materialhn"
         minSdk = 31
         targetSdk = 36
         versionCode verCode
@@ -116,7 +116,7 @@ android {
             vendor.set(JvmVendorSpec.ADOPTIUM)
         }
     }
-    namespace 'io.github.sheepdestroyer.materialisheep'
+    namespace 'in.rahulja.materialhn'
 
 }
 

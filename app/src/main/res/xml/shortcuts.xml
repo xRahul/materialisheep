@@ -26,8 +26,8 @@
         >
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="io.github.sheepdestroyer.materialisheep"
-            android:targetClass="io.github.sheepdestroyer.materialisheep.ListActivity" />
+            android:targetPackage="in.rahulja.materialhn"
+            android:targetClass="in.rahulja.materialhn.ListActivity" />
     </shortcut>
     <shortcut
         android:shortcutId="new"
@@ -37,8 +37,8 @@
         >
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="io.github.sheepdestroyer.materialisheep"
-            android:targetClass="io.github.sheepdestroyer.materialisheep.NewActivity" />
+            android:targetPackage="in.rahulja.materialhn"
+            android:targetClass="in.rahulja.materialhn.NewActivity" />
     </shortcut>
     <shortcut
         android:shortcutId="favorite"
@@ -48,8 +48,8 @@
         >
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="io.github.sheepdestroyer.materialisheep"
-            android:targetClass="io.github.sheepdestroyer.materialisheep.FavoriteActivity" />
+            android:targetPackage="in.rahulja.materialhn"
+            android:targetClass="in.rahulja.materialhn.FavoriteActivity" />
     </shortcut>
     <shortcut
         android:shortcutId="compose"
@@ -59,7 +59,7 @@
         >
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="io.github.sheepdestroyer.materialisheep"
-            android:targetClass="io.github.sheepdestroyer.materialisheep.SubmitActivity" />
+            android:targetPackage="in.rahulja.materialhn"
+            android:targetClass="in.rahulja.materialhn.SubmitActivity" />
     </shortcut>
 </shortcuts>

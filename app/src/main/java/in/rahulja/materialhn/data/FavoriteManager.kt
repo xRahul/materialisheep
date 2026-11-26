@@ -1,0 +1,478 @@
+/*
+ * Copyright (c) 2018 Ha Duy Trung
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package `in`.rahulja.materialhn.data
+
+import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.database.CursorWrapper
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.AnyThread
+import androidx.annotation.WorkerThread
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import `in`.rahulja.materialhn.DataModule
+import `in`.rahulja.materialhn.FavoriteActivity
+import `in`.rahulja.materialhn.R
+import `in`.rahulja.materialhn.ktx.closeQuietly
+import `in`.rahulja.materialhn.ktx.getUri
+import `in`.rahulja.materialhn.ktx.setChannel
+import `in`.rahulja.materialhn.ktx.toSendIntentChooser
+import okio.Okio
+import okio.buffer
+import okio.sink
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Singleton
+
+/**
+ * Data repository for {@link Favorite}
+ */
+@Singleton
+class FavoriteManager @Inject constructor(
+    private val cache: LocalCache,
+    @param:Named(DataModule.IO_THREAD) private val ioScheduler: Scheduler,
+    private val savedStoriesDao: SavedStoriesDao) : LocalItemManager<Favorite> {
+
+  companion object {
+    /**
+     * The notification channel ID for export notifications.
+     */
+    private const val CHANNEL_EXPORT = "export"
+    private const val URI_PATH_ADD = "add"
+    private const val URI_PATH_REMOVE = "remove"
+    private const val URI_PATH_CLEAR = "clear"
+    private const val PATH_SAVED = "saved"
+    private const val FILENAME_EXPORT = "materialistic-export.txt"
+    private const val FILE_AUTHORITY = "in.rahulja.materialhn.fileprovider"
+
+    /**
+     * Checks if a URI represents an added favorite.
+     *
+     * @param uri the URI to check
+     * @return `true` if the URI represents an added favorite, `false` otherwise
+     */
+    fun isAdded(uri: Uri) = uri.toString().startsWith(buildAdded().toString())
+
+    /**
+     * Checks if a URI represents a removed favorite.
+     *
+     * @param uri the URI to check
+     * @return `true` if the URI represents a removed favorite, `false` otherwise
+     */
+    fun isRemoved(uri: Uri) = uri.toString().startsWith(buildRemoved().toString())
+
+    /**
+     * Checks if a URI represents cleared favorites.
+     *
+     * @param uri the URI to check
+     * @return `true` if the URI represents cleared favorites, `false` otherwise
+     */
+    fun isCleared(uri: Uri) = uri.toString().startsWith(buildCleared().toString())
+
+    private fun buildAdded(): Uri.Builder =
+        MaterialisticDatabase.getBaseSavedUri().buildUpon().appendPath(URI_PATH_ADD)
+
+    private fun buildCleared(): Uri.Builder =
+        MaterialisticDatabase.getBaseSavedUri().buildUpon().appendPath(URI_PATH_CLEAR)
+
+    private fun buildRemoved(): Uri.Builder =
+        MaterialisticDatabase.getBaseSavedUri().buildUpon().appendPath(URI_PATH_REMOVE)
+  }
+
+  private val notificationId = System.currentTimeMillis().toInt()
+  private val syncScheduler = SyncScheduler()
+  private var cursor: Cursor? = null
+  private var loader: FavoriteRoomLoader? = null
+
+  override fun getSize() = cursor?.count ?: 0
+
+  override fun getItem(position: Int) = if (cursor?.moveToPosition(position) == true) {
+      cursor!!.favorite
+    } else {
+      null
+    }
+
+  override fun attach(observer: LocalItemManager.Observer, filter: String?) {
+    loader = FavoriteRoomLoader(filter, observer)
+    loader!!.load()
+  }
+
+  override fun detach() {
+    cursor?.close()
+    cursor = null
+    loader = null
+  }
+
+  enum class ExportFormat {
+    MARKDOWN, HTML, JSON, TEXT
+  }
+
+  /**
+   * Exports all favorites matched given query to a file in specified format.
+   *
+   * @param context an instance of [Context]
+   * @param query   a query to filter stories to be retrieved
+   * @param format  the export format to use (MARKDOWN, HTML, JSON, TEXT)
+   */
+  @JvmOverloads
+  @SuppressLint("CheckResult")
+  fun export(context: Context, query: String?, format: ExportFormat = ExportFormat.MARKDOWN) {
+    val appContext = context.applicationContext
+    notifyExportStart(appContext)
+    Observable.defer { Observable.just(query ?: "") }
+        .map { filter ->
+          query(filter).use { rawCursor ->
+            if (!rawCursor.moveToFirst()) {
+              emptyList<Uri>()
+            } else {
+              try {
+                val uri = when (format) {
+                  ExportFormat.MARKDOWN -> exportMarkdown(appContext, Cursor(rawCursor))
+                  ExportFormat.HTML -> exportHtml(appContext, Cursor(rawCursor))
+                  ExportFormat.JSON -> exportJson(appContext, Cursor(rawCursor))
+                  ExportFormat.TEXT -> toFile(appContext, Cursor(rawCursor))
+                }
+                uri?.let { u -> listOf(u) } ?: emptyList()
+              } catch (e: IOException) {
+                emptyList()
+              }
+            }
+          }
+        }
+        .onErrorReturn { emptyList() }
+        .defaultIfEmpty(emptyList())
+        .subscribeOn(ioScheduler)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { notifyExportDone(appContext, it.firstOrNull()) }
+  }
+
+
+
+  /**
+   * Adds a story as a favorite.
+   *
+   * @param context an instance of [Context]
+   * @param story   the story to be added as a favorite
+   */
+  @SuppressLint("CheckResult")
+  fun add(context: Context, story: WebItem) {
+    Observable.defer { Observable.just(story) }
+        .doOnNext { insert(it) }
+        .map { it.id }
+        .map { buildAdded().appendPath(story.id).build() }
+        .subscribeOn(ioScheduler)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
+    syncScheduler.scheduleSync(context, story.id)
+  }
+
+  /**
+   * Clears all stories that match a given query from favorites.
+   *
+   * @param context an instance of [Context]
+   * @param query   a query to filter stories to be cleared
+   */
+  @SuppressLint("CheckResult")
+  fun clear(context: Context, query: String?) {
+    Observable.defer { Observable.just(query ?: "") }
+        .map { deleteMultiple(it) }
+        .subscribeOn(ioScheduler)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(buildCleared().build()) }
+  }
+
+  /**
+   * Removes a story with a given ID from favorites.
+   *
+   * @param context an instance of [Context]
+   * @param itemId  the ID of the story to be removed from favorites
+   */
+  @SuppressLint("CheckResult")
+  fun remove(context: Context, itemId: String?) {
+    if (itemId == null) return
+    Observable.defer { Observable.just(itemId) }
+        .doOnNext { delete(it) }
+        .map { buildRemoved().appendPath(it).build() }
+        .subscribeOn(ioScheduler)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
+  }
+
+  /**
+   * Removes multiple stories with given IDs from favorites.
+   *
+   * @param context an instance of [Context]
+   * @param itemIds a collection of story IDs to be removed from favorites
+   */
+  @SuppressLint("CheckResult")
+  fun remove(context: Context, itemIds: Collection<String>?) {
+    if (itemIds.orEmpty().isEmpty()) return
+    Observable.defer { Observable.just(itemIds!!) }
+        .subscribeOn(ioScheduler)
+        .doOnNext { deleteMultiple(it) }
+        .flatMapIterable { it }
+        .map { buildRemoved().appendPath(it).build() }
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
+  }
+
+  /**
+   * Checks if a story is a favorite.
+   *
+   * @param itemId the ID of the story to check
+   * @return an [Observable] that emits `true` if the story is a favorite, `false` otherwise
+   */
+  @WorkerThread
+  fun check(itemId: String?) = Observable.fromCallable {
+    if (itemId.isNullOrEmpty()) {
+      false
+    } else {
+      cache.isFavorite(itemId)
+    }
+  }
+
+  /**
+   * Checks if multiple items are favorites.
+   *
+   * @param itemIds the IDs of the items to check
+   * @return an [Observable] that emits a list of booleans indicating if each item is a favorite
+   */
+  @WorkerThread
+  fun check(itemIds: List<String>) = Observable.fromCallable {
+    if (itemIds.isEmpty()) {
+      emptyList()
+    } else {
+      cache.isFavorite(itemIds)
+    }
+  }
+
+  @WorkerThread
+  private fun toFile(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdirs()) return null
+    val file = File(dir, FILENAME_EXPORT)
+    if (!file.exists() && !file.createNewFile()) return null
+    file.sink().buffer().use { sink ->
+      do {
+        val item = cursor.favorite
+        sink.writeUtf8(item.displayedTitle)
+        sink.writeByte('\n'.code)
+        sink.writeUtf8(item.url)
+        sink.writeByte('\n'.code)
+        sink.writeUtf8(HackerNewsClient.WEB_ITEM_PATH_PREFIX + item.id)
+        if (!cursor.isLast) {
+          sink.writeByte('\n'.code)
+          sink.writeByte('\n'.code)
+        }
+      } while (cursor.moveToNext())
+      sink.flush()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
+  @WorkerThread
+  private fun exportMarkdown(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdirs()) return null
+    val file = File(dir, "materialisheep-bookmarks.md")
+    if (!file.exists() && !file.createNewFile()) return null
+
+    val items = mutableListOf<WebItem>()
+    do {
+      items.add(cursor.favorite)
+    } while (cursor.moveToNext())
+
+    val markdownContent = FavoriteExporter.toMarkdown(items)
+    file.sink().buffer().use { sink ->
+      sink.writeUtf8(markdownContent)
+      sink.flush()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
+  @WorkerThread
+  private fun exportJson(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdirs()) return null
+    val file = File(dir, "materialisheep-bookmarks.json")
+    if (!file.exists() && !file.createNewFile()) return null
+
+    val items = mutableListOf<WebItem>()
+    do {
+      items.add(cursor.favorite)
+    } while (cursor.moveToNext())
+
+    val jsonContent = FavoriteExporter.toJson(items)
+    file.sink().buffer().use { sink ->
+      sink.writeUtf8(jsonContent)
+      sink.flush()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
+  @WorkerThread
+  private fun exportHtml(context: Context, cursor: Cursor): Uri? {
+    if (cursor.count == 0) return null
+    val dir = File(context.filesDir, PATH_SAVED)
+    if (!dir.exists() && !dir.mkdirs()) return null
+    val file = File(dir, "materialisheep-bookmarks.html")
+    if (!file.exists() && !file.createNewFile()) return null
+
+    val items = mutableListOf<WebItem>()
+    do {
+      items.add(cursor.favorite)
+    } while (cursor.moveToNext())
+
+    val htmlContent = FavoriteExporter.toNetscapeHtml(items)
+    file.sink().buffer().use { sink ->
+      sink.writeUtf8(htmlContent)
+      sink.flush()
+    }
+    return file.getUri(context, FILE_AUTHORITY)
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun notifyExportStart(context: Context) {
+    NotificationManagerCompat.from(context)
+      .notify(
+        notificationId, createNotificationBuilder(context)
+          .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+          .setProgress(0, 0, true)
+          .setContentIntent(
+            PendingIntent.getActivity(
+              context, 0,
+              Intent(context, FavoriteActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+              PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+          )
+          .build()
+      )
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun notifyExportDone(context: Context, uri: Uri?) {
+    val manager = NotificationManagerCompat.from(context)
+    with(manager) {
+      cancel(notificationId)
+      if (uri == null) return
+      notify(
+        notificationId, createNotificationBuilder(context)
+          .setPriority(NotificationCompat.PRIORITY_HIGH)
+          .setVibrate(longArrayOf(0L))
+          .setContentText(context.getString(R.string.export_notification))
+          .setContentIntent(
+            PendingIntent.getActivity(
+              context, 0,
+              uri.toSendIntentChooser(context).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+              PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+          )
+          .build()
+      )
+    }
+  }
+
+
+  private fun createNotificationBuilder(context: Context) =
+      NotificationCompat.Builder(context, CHANNEL_EXPORT)
+          .setChannel(context, CHANNEL_EXPORT, context.getString(R.string.export_saved_stories))
+          .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
+          .setSmallIcon(R.drawable.ic_notification)
+          .setContentTitle(context.getString(R.string.export_saved_stories))
+          .setAutoCancel(true)
+
+  @WorkerThread
+  private fun query(filter: String?): android.database.Cursor = if (filter.isNullOrEmpty()) {
+    savedStoriesDao.selectAllToCursor()
+  } else {
+    savedStoriesDao.searchToCursor(filter)
+  }
+
+  @WorkerThread
+  private fun insert(story: WebItem) {
+    savedStoriesDao.insert(MaterialisticDatabase.SavedStory.from(story))
+    loader?.load()
+  }
+
+  @WorkerThread
+  private fun delete(itemId: String?) {
+    if (itemId == null) return
+    savedStoriesDao.deleteByItemId(itemId)
+    loader?.load()
+  }
+
+  @WorkerThread
+  private fun deleteMultiple(query: String?): Int {
+    val deleted = if (query.isNullOrEmpty()) savedStoriesDao.deleteAll() else savedStoriesDao.deleteByTitle(query)
+    loader?.load()
+    return deleted
+  }
+
+  @WorkerThread
+  private fun deleteMultiple(itemIds: Collection<String>) {
+    savedStoriesDao.deleteByItemIds(itemIds.toList())
+    loader?.load()
+  }
+
+  /**
+   * A cursor wrapper to retrieve associated {@link Favorite}
+   */
+  private class Cursor(cursor: android.database.Cursor) : CursorWrapper(cursor) {
+    private val idxId = cursor.getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_ITEM_ID)
+    private val idxUrl = cursor.getColumnIndexOrThrow(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_URL)
+    private val idxTitle = cursor.getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TITLE)
+    private val idxTime = cursor.getColumnIndex(MaterialisticDatabase.FavoriteEntry.COLUMN_NAME_TIME)
+
+    val favorite: Favorite
+      get() = Favorite(
+          getString(idxId),
+          getString(idxUrl),
+          if (idxTitle >= 0 && !isNull(idxTitle)) getString(idxTitle) else null,
+          if (idxTime >= 0 && !isNull(idxTime)) getString(idxTime)?.toLongOrNull() ?: 0L else 0L)
+  }
+
+  inner class FavoriteRoomLoader(private val filter: String?,
+                                 private val observer: LocalItemManager.Observer) {
+    @AnyThread
+    @SuppressLint("CheckResult")
+    fun load() {
+      Observable.defer { Observable.just(filter ?: "") }
+          .map { query(it) }
+          .subscribeOn(ioScheduler)
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribe {
+            val oldCursor = cursor
+            cursor = Cursor(it)
+            oldCursor?.close()
+            observer.onChanged()
+          }
+    }
+  }
+}

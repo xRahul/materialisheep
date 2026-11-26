@@ -92,7 +92,7 @@
             tools:ignore="RtlHardcoded"
             >
 
-            <io.github.sheepdestroyer.materialisheep.widget.TintableTextView
+            <in.rahulja.materialhn.widget.TintableTextView
                 android:id="@+id/toggle"
                 style="@style/textTitleStyle"
                 android:enabled="false"

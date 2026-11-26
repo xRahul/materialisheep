@@ -205,10 +205,10 @@
     <string name="comment_failed">Envío de comentario fallido</string>
     <string name="comment_successful">Comentario añadido. Por favor actualiza para verlo.</string>
     <string name="confirm_no_waiting">Salir sin esperar?</string>
-    <string name="rate_app">Puntúa la app</string>
+    <string name="rate_app">Ver página del proyecto</string>
     <string name="or">o</string>
     <string name="leave_feedback">Dar tu opinion</string>
-    <string name="no_playstore">No se ha encontrado la aplicación en Googe Play</string>
+    <string name="no_browser">No se ha encontrado ninguna aplicación de navegador</string>
     <string name="submit_content_hint">Dirección URL o texto</string>
     <string name="title_activity_submit">Enviar a HN</string>
     <string name="url_text_required">La dirección URL o el texto son obligatorios</string>

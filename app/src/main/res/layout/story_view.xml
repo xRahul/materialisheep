@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <io.github.sheepdestroyer.materialisheep.widget.TextView
+    <in.rahulja.materialhn.widget.TextView
         android:id="@id/title"
         android:text="@string/loading_text"
         style="@style/textTitleStyle"
@@ -44,7 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <io.github.sheepdestroyer.materialisheep.widget.TintableTextView
+    <in.rahulja.materialhn.widget.TintableTextView
         android:id="@id/source"
         android:text="@string/loading_text"
         android:layout_below="@id/title"

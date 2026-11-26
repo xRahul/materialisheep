@@ -78,6 +78,6 @@
         </html>
         ]]>
     </string>
-    <string name="fab_scrolling_view_behavior" translatable="false">io.github.sheepdestroyer.materialisheep.FabAwareScrollBehavior</string>
+    <string name="fab_scrolling_view_behavior" translatable="false">in.rahulja.materialhn.FabAwareScrollBehavior</string>
 
 </resources>

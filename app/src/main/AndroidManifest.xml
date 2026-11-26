@@ -27,12 +27,12 @@
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <permission android:name="io.github.sheepdestroyer.materialisheep.permission.SYNC_ITEM"
+    <permission android:name="in.rahulja.materialhn.permission.SYNC_ITEM"
         android:protectionLevel="signature" />
-    <permission android:name="io.github.sheepdestroyer.materialisheep.permission.AUTHENTICATE_ACCOUNTS"
+    <permission android:name="in.rahulja.materialhn.permission.AUTHENTICATE_ACCOUNTS"
         android:protectionLevel="signature" />
-    <uses-permission android:name="io.github.sheepdestroyer.materialisheep.permission.SYNC_ITEM" />
-    <uses-permission android:name="io.github.sheepdestroyer.materialisheep.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="in.rahulja.materialhn.permission.SYNC_ITEM" />
+    <uses-permission android:name="in.rahulja.materialhn.permission.AUTHENTICATE_ACCOUNTS" />
 
     <uses-sdk tools:overrideLibrary="androidx.browser" />
 
@@ -367,7 +367,7 @@
             </intent-filter>
         </activity>
         <service android:name=".accounts.AuthenticatorService"
-            android:permission="io.github.sheepdestroyer.materialisheep.permission.AUTHENTICATE_ACCOUNTS"
+            android:permission="in.rahulja.materialhn.permission.AUTHENTICATE_ACCOUNTS"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
@@ -378,7 +378,7 @@
         </service>
         <service android:name=".data.ItemSyncService"
             android:process=":sync"
-            android:permission="io.github.sheepdestroyer.materialisheep.permission.SYNC_ITEM"
+            android:permission="in.rahulja.materialhn.permission.SYNC_ITEM"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -398,15 +398,15 @@
             android:name=".data.WebCacheService"
             android:exported="false" />
         <provider
-            android:authorities="io.github.sheepdestroyer.materialisheep.syncprovider"
+            android:authorities="in.rahulja.materialhn.syncprovider"
             android:name=".data.SyncContentProvider"
             android:exported="false" />
         <provider
-            android:authorities="io.github.sheepdestroyer.materialisheep.recentprovider"
+            android:authorities="in.rahulja.materialhn.recentprovider"
             android:name=".data.SearchRecentSuggestionsProvider"
             android:exported="false" />
         <provider
-            android:authorities="io.github.sheepdestroyer.materialisheep.fileprovider"
+            android:authorities="in.rahulja.materialhn.fileprovider"
             android:name="androidx.core.content.FileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -419,7 +419,7 @@
             tools:ignore="ExportedReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="io.github.sheepdestroyer.materialisheep.ACTION_REFRESH_WIDGET" />
+                <action android:name="in.rahulja.materialhn.ACTION_REFRESH_WIDGET" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

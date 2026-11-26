@@ -1,0 +1,119 @@
+package `in`.rahulja.materialhn.widget
+
+import android.content.Intent
+import android.text.TextUtils
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
+import `in`.rahulja.materialhn.AlertDialogBuilder
+import `in`.rahulja.materialhn.AppUtils
+import `in`.rahulja.materialhn.ItemActivity
+import `in`.rahulja.materialhn.R
+import `in`.rahulja.materialhn.accounts.UserServices
+import `in`.rahulja.materialhn.data.Item
+import `in`.rahulja.materialhn.data.ItemManager
+
+class ThreadPreviewAdapter(
+    itemManager: ItemManager,
+    userServices: UserServices,
+    popupMenu: PopupMenu,
+    alertDialogBuilder: AlertDialogBuilder<*>,
+    private val targetAuthor: String?
+) : ItemRecyclerViewAdapter<SubmissionViewHolder>(itemManager) {
+
+    private val items = mutableListOf<Item>()
+    private var levelIndicatorWidth: Int = 0
+
+    init {
+        this.mUserServices = userServices
+        this.mPopupMenu = popupMenu
+        this.mAlertDialogBuilder = alertDialogBuilder
+    }
+
+    fun submitList(newItems: List<Item>) {
+        val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = items.size
+            override fun getNewListSize(): Int = newItems.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return items[oldItemPosition].longId == newItems[newItemPosition].longId
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return items[oldItemPosition].displayedTitle == newItems[newItemPosition].displayedTitle
+            }
+        })
+        items.clear()
+        items.addAll(newItems)
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    override fun getItem(position: Int): Item? {
+        return if (position in items.indices) items[position] else null
+    }
+
+    override fun getItemCount(): Int = items.size
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SubmissionViewHolder {
+        val view = mLayoutInflater.inflate(R.layout.item_submission, parent, false)
+        val holder = SubmissionViewHolder(view)
+
+        // Default margin is handled in bind now to allow recycling
+        holder.mCommentButton.visibility = View.GONE
+
+        // Initialize level indicator width if not set
+        if (levelIndicatorWidth == 0) {
+            levelIndicatorWidth = AppUtils.getDimensionInDp(mContext, R.dimen.level_indicator_width)
+        }
+
+        return holder
+    }
+
+    override fun bind(holder: SubmissionViewHolder, item: Item) {
+        super.bind(holder, item)
+
+        // Handle Indentation (Level)
+        // In the original code, viewType was position, and margin was width * viewType.
+        // So indentation corresponds to position in the list.
+        val position = holder.bindingAdapterPosition
+        val effectiveLevel = if (position >= 0) position.coerceAtMost(SinglePageItemRecyclerViewAdapter.MAX_INDENT_LEVEL) else 0
+        val params = holder.itemView.layoutParams as RecyclerView.LayoutParams
+        params.leftMargin = levelIndicatorWidth * effectiveLevel
+        holder.itemView.layoutParams = params
+
+        // Bind Data
+        holder.mPostedTextView.text = item.getDisplayedTime(mContext)
+        holder.mPostedTextView.append(
+            item.getDisplayedAuthor(
+                mContext,
+                !TextUtils.equals(item.by, targetAuthor),
+                0
+            )
+        )
+        holder.mMoreButton.visibility = View.GONE
+
+        if (TextUtils.equals(item.type, Item.COMMENT_TYPE)) {
+            holder.mTitleTextView.text = null
+            holder.itemView.setOnClickListener(null)
+            holder.mCommentButton.visibility = View.GONE
+        } else {
+            holder.mTitleTextView.text = item.displayedTitle
+            holder.mCommentButton.visibility = View.VISIBLE
+            holder.mCommentButton.setOnClickListener { openItem(item) }
+        }
+
+        val hasTitle = (holder.mTitleTextView.length() > 0)
+        holder.mTitleTextView.visibility = if (hasTitle) View.VISIBLE else View.GONE
+
+        val hasContent = (holder.mContentTextView.length() > 0)
+        holder.mContentTextView.visibility = if (hasContent) View.VISIBLE else View.GONE
+    }
+
+    private fun openItem(item: Item) {
+        mContext.startActivity(
+            Intent(mContext, ItemActivity::class.java)
+                .putExtra(ItemActivity.EXTRA_ITEM, item)
+        )
+    }
+}

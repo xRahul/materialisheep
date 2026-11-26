@@ -238,10 +238,10 @@
     <string name="comment_failed">发送评论失败</string>
     <string name="comment_successful">评论已添加，请刷新后查看</string>
     <string name="confirm_no_waiting">立即退出？</string>
-    <string name="rate_app">给应用打分</string>
+    <string name="rate_app">查看项目页面</string>
     <string name="or">或</string>
     <string name="leave_feedback">反馈</string>
-    <string name="no_playstore">无相关应用程序</string>
+    <string name="no_browser">未找到浏览器应用</string>
     <string name="submit_content_hint">链接或文本</string>
     <string name="title_activity_submit">提交到 HN</string>
     <string name="url_text_required">链接或文本不能为空</string>
