@@ -299,7 +299,7 @@ class FavoriteManager @Inject constructor(
     if (cursor.count == 0) return null
     val dir = File(context.filesDir, PATH_SAVED)
     if (!dir.exists() && !dir.mkdirs()) return null
-    val file = File(dir, "materialisheep-bookmarks.md")
+    val file = File(dir, "material-hn-bookmarks.md")
     if (!file.exists() && !file.createNewFile()) return null
 
     val items = mutableListOf<WebItem>()
@@ -320,7 +320,7 @@ class FavoriteManager @Inject constructor(
     if (cursor.count == 0) return null
     val dir = File(context.filesDir, PATH_SAVED)
     if (!dir.exists() && !dir.mkdirs()) return null
-    val file = File(dir, "materialisheep-bookmarks.json")
+    val file = File(dir, "material-hn-bookmarks.json")
     if (!file.exists() && !file.createNewFile()) return null
 
     val items = mutableListOf<WebItem>()
@@ -341,7 +341,7 @@ class FavoriteManager @Inject constructor(
     if (cursor.count == 0) return null
     val dir = File(context.filesDir, PATH_SAVED)
     if (!dir.exists() && !dir.mkdirs()) return null
-    val file = File(dir, "materialisheep-bookmarks.html")
+    val file = File(dir, "material-hn-bookmarks.html")
     if (!file.exists() && !file.createNewFile()) return null
 
     val items = mutableListOf<WebItem>()

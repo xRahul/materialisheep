@@ -110,7 +110,7 @@ public class AdBlockerTest {
         assertFalse("google.com should NOT be blocked",
                 AdBlocker.isAd("https://google.com/search?q=test"));
         assertFalse("github.com should NOT be blocked",
-                AdBlocker.isAd("https://github.com/sheepdestroyer/materialisheep"));
+                AdBlocker.isAd("https://github.com/xRahul/materialisheep"));
         assertFalse("android.com should NOT be blocked",
                 AdBlocker.isAd("https://developer.android.com/reference"));
         assertFalse("wikipedia.org should NOT be blocked",

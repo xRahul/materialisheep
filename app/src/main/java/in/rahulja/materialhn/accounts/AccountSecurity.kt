@@ -27,7 +27,7 @@ import javax.crypto.spec.GCMParameterSpec
 object AccountSecurity {
     private const val TAG = "AccountSecurity"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-    private const val KEY_ALIAS = "materialisheep_master_auth_key"
+    private const val KEY_ALIAS = "materialhn_master_auth_key"
     private const val PREFS_NAME = "auth_secure_store"
     private const val GCM_IV_LENGTH = 12
     private const val GCM_TAG_LENGTH = 128
