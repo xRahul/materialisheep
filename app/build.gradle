@@ -137,6 +137,7 @@ dependencies {
     implementation libs.material
     implementation libs.androidx.preference.ktx
     implementation libs.androidx.browser
+    implementation libs.androidx.webkit
     implementation libs.jsoup
     implementation libs.dagger
     implementation libs.retrofit

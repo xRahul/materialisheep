@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.preference.PreferenceManager;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Before;
@@ -341,6 +342,40 @@ public class WebFragmentTest {
                 "a fresh WebView replaces the dead one", old, fragment.mWebView);
         org.junit.Assert.assertNotNull(fragment.mWebView.getParent());
         assertEquals(View.VISIBLE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
+    @Test
+    public void testFontPreferenceDoesNotReloadLivePage() {
+        WebFragment fragment = attachFragment();
+        View webView = fragment.mWebView;
+        int visibility = webView.getVisibility();
+
+        fragment.onPreferenceChanged(R.string.pref_readability_font, false);
+
+        assertEquals("live page must not reload on a font change", visibility, webView.getVisibility());
+        org.mockito.Mockito.verify(mockReadabilityClient, never()).parse(any(), any(), any());
+    }
+
+    @Test
+    public void testFontPreferenceReloadsReaderContent() {
+        PreferenceManager.getDefaultSharedPreferences(
+                        ApplicationProvider.getApplicationContext())
+                .edit()
+                .putString(
+                        ApplicationProvider.getApplicationContext()
+                                .getString(R.string.pref_story_display),
+                        ApplicationProvider.getApplicationContext()
+                                .getString(R.string.pref_story_display_value_readability))
+                .commit();
+
+        WebFragment fragment = attachFragment();
+
+        fragment.onPreferenceChanged(R.string.pref_readability_font, false);
+
+        org.mockito.Mockito.verify(mockReadabilityClient)
+                .parse(org.mockito.ArgumentMatchers.eq("1"),
+                        org.mockito.ArgumentMatchers.eq("https://example.com"),
+                        any());
     }
 
     private WebResourceError webResourceError() {

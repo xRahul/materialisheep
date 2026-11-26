@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,6 +31,7 @@ import android.widget.ViewSwitcher;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.BundleCompat;
 import in.rahulja.materialhn.annotation.Synthetic;
 import in.rahulja.materialhn.data.FileDownloader;
@@ -684,13 +686,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       container.addView(replacement, 0);
     }
     bindWebView(replacement);
-    if (mIsRemoteContent) {
-      WebViewSettingsPolicy.applyRemote(replacement.getSettings());
-      replacement.setBackgroundColor(Color.WHITE);
-    } else {
-      WebViewSettingsPolicy.applyLocal(replacement.getSettings());
-      replacement.setBackgroundColor(Color.TRANSPARENT);
-    }
+    applySettingsTo(replacement, mIsRemoteContent);
     showError(R.string.web_error_crashed);
   }
 
@@ -772,17 +768,32 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   private void setWebSettings(boolean isRemote) {
     mIsRemoteContent = isRemote;
     if (mWebView != null) {
-      if (isRemote) {
-        WebViewSettingsPolicy.applyRemote(mWebView.getSettings());
-        mWebView.setBackgroundColor(Color.WHITE);
-      } else {
-        WebViewSettingsPolicy.applyLocal(mWebView.getSettings());
-        mWebView.setBackgroundColor(Color.TRANSPARENT);
-      }
+      applySettingsTo(mWebView, isRemote);
     }
     if (getActivity() != null) {
       getActivity().invalidateOptionsMenu();
     }
+  }
+
+  private void applySettingsTo(MaterialWebView webView, boolean isRemote) {
+    if (isRemote) {
+      WebViewSettingsPolicy.applyRemote(webView.getSettings(), isDarkTheme());
+      webView.setBackgroundColor(
+          ContextCompat.getColor(
+              requireContext(),
+              AppUtils.getThemedResId(requireContext(), R.attr.colorCardBackground)));
+    } else {
+      WebViewSettingsPolicy.applyLocal(webView.getSettings());
+      webView.setBackgroundColor(Color.TRANSPARENT);
+    }
+  }
+
+  private boolean isDarkTheme() {
+    TypedValue value = new TypedValue();
+    boolean resolved = requireContext()
+        .getTheme()
+        .resolveAttribute(android.R.attr.isLightTheme, value, true);
+    return resolved && value.data == 0;
   }
 
   @Synthetic
@@ -810,8 +821,13 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     fragment.show(getParentFragmentManager(), PopupSettingsFragment.class.getName());
   }
 
-  private void onPreferenceChanged(int key, boolean contextChanged) {
-    if (!contextChanged) {
+  @Synthetic
+  void onPreferenceChanged(int key, boolean contextChanged) {
+    if (contextChanged) {
+      return;
+    }
+    boolean localContent = mIsHackerNewsUrl || (mReadability && !mEmpty);
+    if (localContent) {
       load();
     }
   }

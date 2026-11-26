@@ -4,6 +4,7 @@ import android.os.Build
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -83,5 +84,47 @@ class WebViewSettingsPolicyTest {
         assertFalse(settings.displayZoomControls)
         assertFalse(settings.allowFileAccess)
         assertFalse(settings.allowContentAccess)
+    }
+
+    @Test
+    fun darkThemeAllowsAlgorithmicDarkening() {
+        var allowed: Boolean? = null
+
+        WebViewSettingsPolicy.applyAlgorithmicDarkening(
+            settings,
+            allow = true,
+            isSupported = { true },
+            setAllowed = { _, value -> allowed = value }
+        )
+
+        assertEquals(true, allowed)
+    }
+
+    @Test
+    fun lightThemeDisallowsAlgorithmicDarkening() {
+        var allowed: Boolean? = null
+
+        WebViewSettingsPolicy.applyAlgorithmicDarkening(
+            settings,
+            allow = false,
+            isSupported = { true },
+            setAllowed = { _, value -> allowed = value }
+        )
+
+        assertEquals(false, allowed)
+    }
+
+    @Test
+    fun unsupportedFeatureDoesNothing() {
+        var called = false
+
+        WebViewSettingsPolicy.applyAlgorithmicDarkening(
+            settings,
+            allow = true,
+            isSupported = { false },
+            setAllowed = { _, _ -> called = true }
+        )
+
+        assertFalse(called)
     }
 }

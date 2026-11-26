@@ -1,6 +1,8 @@
 package `in`.rahulja.materialhn.widget
 
 import android.webkit.WebSettings
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 
 /**
  * Single source of truth for the WebView settings the app applies to remote and
@@ -9,12 +11,14 @@ import android.webkit.WebSettings
 object WebViewSettingsPolicy {
 
     @JvmStatic
-    fun applyRemote(settings: WebSettings) {
+    @JvmOverloads
+    fun applyRemote(settings: WebSettings, darkTheme: Boolean = false) {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
         applySharedFlags(settings)
+        applyAlgorithmicDarkening(settings, allow = darkTheme)
     }
 
     @JvmStatic
@@ -32,6 +36,26 @@ object WebViewSettingsPolicy {
         settings.displayZoomControls = false
         settings.allowFileAccess = false
         settings.allowContentAccess = false
+    }
+
+    /** Seam around the androidx.webkit feature check so tests can assert the call. */
+    internal fun applyAlgorithmicDarkening(
+        settings: WebSettings,
+        allow: Boolean,
+        isSupported: () -> Boolean = {
+            WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)
+        },
+        setAllowed: (WebSettings, Boolean) -> Unit = { target, value ->
+            try {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(target, value)
+            } catch (e: UnsupportedOperationException) {
+                // Some WebView builds advertise the feature and then refuse it.
+            }
+        }
+    ) {
+        if (isSupported()) {
+            setAllowed(settings, allow)
+        }
     }
 
     /**
