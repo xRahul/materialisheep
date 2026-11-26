@@ -72,6 +72,16 @@ public class AppUtilsTest {
   }
 
   @Test
+  public void testWrapHtmlUpgradesInsecureRequests() {
+    String html = AppUtils.wrapHtml(
+        ApplicationProvider.getApplicationContext(), "<p>reader</p>");
+
+    assertTrue(
+        "reader HTML must declare upgrade-insecure-requests",
+        html.contains("upgrade-insecure-requests"));
+  }
+
+  @Test
   @SuppressWarnings("deprecation")
   public void testIsLowBattery() {
     Context context = ApplicationProvider.getApplicationContext();
