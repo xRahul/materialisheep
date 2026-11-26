@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Base64;
 import java.io.File;
@@ -88,14 +89,15 @@ public class WebFragmentTest {
 
     @Test
     public void testPdfAndroidJavascriptBridge_getChunk() throws IOException {
-        File tempFile = File.createTempFile("test_pdf", ".pdf");
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        File tempFile = File.createTempFile("test_pdf", ".pdf", context.getCacheDir());
         tempFile.deleteOnExit();
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
             fos.write("Hello World PDF Content".getBytes());
         }
 
         WebFragment.PdfAndroidJavascriptBridge bridge =
-                new WebFragment.PdfAndroidJavascriptBridge(tempFile.getAbsolutePath(), null);
+                new WebFragment.PdfAndroidJavascriptBridge(context, tempFile.getAbsolutePath(), null);
 
         // Valid chunk read
         String expectedBase64 = Base64.encodeToString("Hello".getBytes(), Base64.DEFAULT);
@@ -112,6 +114,21 @@ public class WebFragmentTest {
 
         // Reading past EOF triggers EOFException internally and returns empty string
         assertEquals("", bridge.getChunk(0, 1000));
+
+        bridge.cleanUp();
+    }
+
+    @Test
+    public void testPdfAndroidJavascriptBridge_rejectsFileOutsideCache() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        WebFragment.PdfAndroidJavascriptBridge bridge =
+                new WebFragment.PdfAndroidJavascriptBridge(
+                        context,
+                        new File(context.getFilesDir(), "private.txt").getAbsolutePath(),
+                        null);
+        assertEquals("", bridge.getChunk(0, 5));
+        assertEquals(0L, bridge.getSize());
+        bridge.cleanUp();
     }
 
     @Test

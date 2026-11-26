@@ -41,6 +41,28 @@ public class FileDownloader {
     }
 
     /**
+     * Returns the canonical file only when {@code filePath} resolves inside the app
+     * cache directory, the single place this downloader writes to. Used to keep the
+     * PDF.js bridge from serving arbitrary files.
+     *
+     * @param context  any context of the app
+     * @param filePath the path requested by the caller
+     * @return the canonical file, or null when the path escapes the cache directory
+     */
+    public static File confineToCache(Context context, String filePath) {
+        if (filePath == null) {
+            return null;
+        }
+        try {
+            File candidate = new File(filePath).getCanonicalFile();
+            String root = context.getCacheDir().getCanonicalPath() + File.separator;
+            return candidate.getPath().startsWith(root) ? candidate : null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
      * Downloads a file from the given URL.
      *
      * @param url      the URL of the file to download

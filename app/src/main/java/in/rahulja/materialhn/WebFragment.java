@@ -420,6 +420,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mIsPdf = true;
       mPdfAndroidJavascriptBridge =
           new PdfAndroidJavascriptBridge(
+              getActivity().getApplicationContext(),
               pdfFilePath,
               new PdfAndroidJavascriptBridge.Callbacks() {
                 @Override
@@ -868,20 +869,29 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   static class PdfAndroidJavascriptBridge {
-    private File mFile;
+    private @Nullable File mFile;
     private @Nullable RandomAccessFile mRandomAccessFile;
     private @Nullable Callbacks mCallback;
     private Handler mHandler;
 
-    PdfAndroidJavascriptBridge(String filePath, @Nullable Callbacks callback) {
-      mFile = new File(filePath);
+    PdfAndroidJavascriptBridge(Context context, String filePath, @Nullable Callbacks callback) {
       mCallback = callback;
       mHandler = new Handler(Looper.getMainLooper());
+      mFile = FileDownloader.confineToCache(context, filePath);
+      if (mFile == null) {
+        // Refuse to serve anything outside the app cache.
+        mHandler.post(
+            () -> {
+              if (mCallback != null) {
+                mCallback.onFailure();
+              }
+            });
+      }
     }
 
     @JavascriptInterface
     public String getChunk(long begin, long end) {
-      if (begin < 0 || end < begin || (end - begin) > 10 * 1024 * 1024) {
+      if (mFile == null || begin < 0 || end < begin || (end - begin) > 10 * 1024 * 1024) {
         return "";
       }
       try {
@@ -908,7 +918,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
     @JavascriptInterface
     public long getSize() {
-      return mFile.length();
+      return mFile == null ? 0 : mFile.length();
     }
 
     @JavascriptInterface
