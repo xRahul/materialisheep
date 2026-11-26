@@ -20,13 +20,11 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import androidx.annotation.IntDef;
 import com.google.android.material.appbar.AppBarLayout;
-import androidx.core.widget.NestedScrollView;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.KeyEvent;
-import android.view.View;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -340,29 +338,29 @@ public class KeyDelegate {
     }
 
     /**
-     * Helper class to navigate vertical NestedScrollView
+     * Helper class to navigate a WebView that owns its own scrolling.
      */
-    static class NestedScrollViewHelper implements Scrollable {
+    static class WebViewHelper implements Scrollable {
 
-        private final NestedScrollView mScrollView;
+        private final android.webkit.WebView mWebView;
 
-        NestedScrollViewHelper(NestedScrollView nestedScrollView) {
-            mScrollView = nestedScrollView;
+        WebViewHelper(android.webkit.WebView webView) {
+            mWebView = webView;
         }
 
         @Override
         public void scrollToTop() {
-            mScrollView.smoothScrollTo(0, 0);
+            mWebView.pageUp(true);
         }
 
         @Override
         public boolean scrollToNext() {
-            return mScrollView.pageScroll(View.FOCUS_DOWN);
+            return mWebView.canScrollVertically(1) && mWebView.pageDown(false);
         }
 
         @Override
         public boolean scrollToPrevious() {
-            return mScrollView.pageScroll(View.FOCUS_UP);
+            return mWebView.canScrollVertically(-1) && mWebView.pageUp(false);
         }
     }
 

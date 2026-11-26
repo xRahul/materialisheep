@@ -24,7 +24,6 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
@@ -41,12 +40,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import in.rahulja.materialhn.DataModule;
+import in.rahulja.materialhn.AppUtils;
+import in.rahulja.materialhn.Preferences;
+import in.rahulja.materialhn.widget.AdBlockWebViewClient;
+import in.rahulja.materialhn.widget.ArticleUrlPolicy;
 import okio.Okio;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -147,77 +150,134 @@ public interface ReadabilityClient {
         @NonNull
         @android.annotation.SuppressLint("SetJavaScriptEnabled")
         private Observable<String> fromNetwork(String itemId, String url) {
+            String targetUrl = ArticleUrlPolicy.upgradeToHttps(url);
             return Observable.<String>create(emitter -> new Handler(Looper.getMainLooper()).post(() -> {
                 WebView webView = new WebView(mContext);
-                emitter.setCancellable(() -> AndroidSchedulers.mainThread()
-                        .createWorker().schedule(webView::destroy));
+                Handler handler = new Handler(Looper.getMainLooper());
+                SettleTracker settleTracker = new SettleTracker();
+                long startedAt = android.os.SystemClock.elapsedRealtime();
                 final AtomicBoolean isFinished = new AtomicBoolean(false);
-                webView.setWebViewClient(new WebViewClient() {
+                final AtomicBoolean polling = new AtomicBoolean(false);
+                final Runnable[] poller = new Runnable[1];
+                emitter.setCancellable(() -> {
+                    isFinished.set(true);
+                    Runnable pending = poller[0];
+                    if (pending != null) {
+                        handler.removeCallbacks(pending);
+                    }
+                    handler.post(webView::destroy);
+                });
+                webView.setWebViewClient(
+                        new AdBlockWebViewClient(Preferences.adBlockEnabled(mContext)) {
                     @Override
-                    public void onPageFinished(WebView view, String url) {
-                        super.onPageFinished(view, url);
-                        if (mReadabilityJs == null) {
-                            if (isFinished.compareAndSet(false, true)) {
-                                emitter.onComplete();
-                            }
+                    public void onPageFinished(WebView view, String finishedUrl) {
+                        super.onPageFinished(view, finishedUrl);
+                        if (!polling.compareAndSet(false, true)) {
                             return;
                         }
-                        String script = mReadabilityJs
-                                + "; (function () { try { return new Readability(document.cloneNode(true)).parse(); }"
-                                + " catch (e) { return null; } })();";
-                        view.evaluateJavascript(script, value -> {
-                            if (isFinished.compareAndSet(false, true)) {
-                                String content = null;
-                                if (value != null && !value.equalsIgnoreCase("null")) {
-                                    try {
-                                        JSONObject json = new JSONObject(value);
-                                        content = json.getString("content");
-                                        final String savedContent = content;
-                                        mDisposables.add(Completable
-                                                .fromAction(() -> mCache.putReadability(itemId, savedContent))
-                                                .subscribeOn(mIoScheduler)
-                                                .subscribe(() -> {
-                                                }, error -> Log.e(TAG, "Failed to cache content",
-                                                        error)));
-                                    } catch (JSONException e) {
-                                        Log.w(TAG, "Failed to parse Readability output", e);
-                                        // content will be null
-                                    }
+                        final Runnable poll = new Runnable() {
+                            @Override
+                            public void run() {
+                                if (isFinished.get()) {
+                                    return;
                                 }
-                                if (content != null) {
-                                    emitter.onNext(content);
-                                }
-                                emitter.onComplete();
+                                view.evaluateJavascript(
+                                        "document.body ? document.body.innerText.length : 0",
+                                        value -> {
+                                            if (isFinished.get()) {
+                                                return;
+                                            }
+                                            int length = parseInt(value);
+                                            long elapsed =
+                                                    android.os.SystemClock.elapsedRealtime() - startedAt;
+                                            if (settleTracker.record(length, elapsed)) {
+                                                parsePage(view, itemId, emitter, isFinished);
+                                            } else if (!isFinished.get()) {
+                                                handler.postDelayed(
+                                                        this, SettleTracker.DEFAULT_INTERVAL_MS);
+                                            }
+                                        });
                             }
-                        });
-                    }
-
-                    @SuppressWarnings("deprecation")
-                    @Override
-                    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                        super.onReceivedError(view, errorCode, description, failingUrl);
-                        if (url.equals(failingUrl) && isFinished.compareAndSet(false, true)) {
-                            emitter.onComplete();
-                        }
+                        };
+                        poller[0] = poll;
+                        handler.post(poll);
                     }
 
                     @Override
                     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                         super.onReceivedError(view, request, error);
-                        if (request.isForMainFrame() && isFinished.compareAndSet(false, true)) {
+                        if (request.isForMainFrame()
+                                && !AppUtils.isAbortedError(error)
+                                && isFinished.compareAndSet(false, true)) {
                             emitter.onComplete();
                         }
+                    }
+
+                    @Override
+                    public boolean onRenderProcessGone(
+                            WebView view, android.webkit.RenderProcessGoneDetail detail) {
+                        if (isFinished.compareAndSet(false, true)) {
+                            emitter.onComplete();
+                        }
+                        return true;
                     }
                 });
                 WebSettings settings = webView.getSettings();
                 settings.setJavaScriptEnabled(true);
+                settings.setDomStorageEnabled(true);
                 settings.setBlockNetworkImage(true);
                 settings.setLoadsImagesAutomatically(false);
                 settings.setAllowFileAccess(false);
                 settings.setAllowContentAccess(false);
                 settings.setGeolocationEnabled(false);
-                webView.loadUrl(url);
-            })).timeout(30, TimeUnit.SECONDS);
+                webView.loadUrl(targetUrl);
+            })).timeout(20, TimeUnit.SECONDS);
+        }
+
+        private static int parseInt(String value) {
+            try {
+                return Integer.parseInt(value.trim());
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+
+        private void parsePage(
+                WebView view, String itemId, ObservableEmitter<String> emitter, AtomicBoolean isFinished) {
+            if (mReadabilityJs == null) {
+                if (isFinished.compareAndSet(false, true)) {
+                    emitter.onComplete();
+                }
+                return;
+            }
+            String script = mReadabilityJs
+                    + "; (function () { try { return new Readability(document.cloneNode(true)).parse(); }"
+                    + " catch (e) { return null; } })();";
+            view.evaluateJavascript(script, value -> {
+                if (isFinished.compareAndSet(false, true)) {
+                    String content = null;
+                    if (value != null && !value.equalsIgnoreCase("null")) {
+                        try {
+                            JSONObject json = new JSONObject(value);
+                            content = json.getString("content");
+                            final String savedContent = content;
+                            mDisposables.add(Completable
+                                    .fromAction(() -> mCache.putReadability(itemId, savedContent))
+                                    .subscribeOn(mIoScheduler)
+                                    .subscribe(() -> {
+                                    }, error -> Log.e(TAG, "Failed to cache content",
+                                            error)));
+                        } catch (JSONException e) {
+                            Log.w(TAG, "Failed to parse Readability output", e);
+                            // content will be null
+                        }
+                    }
+                    if (content != null) {
+                        emitter.onNext(content);
+                    }
+                    emitter.onComplete();
+                }
+            });
         }
 
         @Override

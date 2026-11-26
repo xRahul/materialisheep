@@ -22,31 +22,24 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.annotation.Nullable;
 import in.rahulja.materialhn.AdBlocker;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AdBlockWebViewClient extends WebViewClient {
   private final boolean mAdBlockEnabled;
-  private final Map<String, Boolean> mLoadedUrls = new HashMap<>();
 
   public AdBlockWebViewClient(boolean adBlockEnabled) {
     mAdBlockEnabled = adBlockEnabled;
   }
 
-@Nullable
+  @Nullable
   @Override
   public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-    if (!mAdBlockEnabled) {
+    // The article itself must never be blocked; a listed host can still be a
+    // legitimate page a reader opened.
+    if (!mAdBlockEnabled || request.isForMainFrame()) {
       return super.shouldInterceptRequest(view, request);
     }
-    boolean ad;
-    String url = request.getUrl().toString();
-    if (!mLoadedUrls.containsKey(url)) {
-      ad = AdBlocker.isAd(url);
-      mLoadedUrls.put(url, ad);
-    } else {
-      ad = mLoadedUrls.get(url);
-    }
-    return ad ? AdBlocker.createEmptyResource() : super.shouldInterceptRequest(view, request);
+    return AdBlocker.isAd(request.getUrl().toString())
+        ? AdBlocker.createEmptyResource()
+        : super.shouldInterceptRequest(view, request);
   }
 }

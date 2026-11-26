@@ -695,6 +695,27 @@ public class AppUtils {
   }
 
   /**
+   * True when a WebView load was cancelled rather than failed. A superseded
+   * navigation reports net::ERR_ABORTED, which must not surface as an error.
+   *
+   * @param error The error delivered by the WebView client.
+   * @return True when the load was cancelled.
+   */
+  public static boolean isAbortedError(android.webkit.WebResourceError error) {
+    if (error == null) {
+      return false;
+    }
+    if (error.getErrorCode() == ERROR_ABORTED) {
+      return true;
+    }
+    CharSequence description = error.getDescription();
+    return description != null && description.toString().contains("ERR_ABORTED");
+  }
+
+  /** net::ERR_ABORTED; WebViewClient exposes no constant for it. */
+  private static final int ERROR_ABORTED = -3;
+
+  /**
    * Toggles zooming in a WebView.
    *
    * @param webSettings The WebSettings to modify.

@@ -19,6 +19,11 @@ Store readiness and security hardening — see
   `security-extended`; OSV dependency scan; release guards.
 - Security fixes: fail-closed Keystore handling, WebView scheme allowlist,
   PDF bridge confinement, exported-component audit.
+- Article tab loading rework — see
+  `docs/plans/2026-11-26-article-loading-rework.md`: WebView-owned scrolling,
+  central settings policy, commit-driven visibility, in-tab error panel and
+  renderer-crash recovery, https upgrade, Readability settle polling, dark web
+  content. Device smoke pass outstanding.
 
 ## Next
 

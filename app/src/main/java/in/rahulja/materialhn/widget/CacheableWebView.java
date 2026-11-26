@@ -16,7 +16,6 @@
 
 package in.rahulja.materialhn.widget;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
@@ -95,29 +94,9 @@ public class CacheableWebView extends MaterialWebView {
   }
 
   private void init() {
-    enableCache();
-    setLoadSettings();
+    WebViewSettingsPolicy.applyRemote(getSettings());
     setWebViewClient(new WebViewClient());
     setWebChromeClient(mArchiveClient);
-  }
-
-  private void enableCache() {
-    WebSettings webSettings = getSettings();
-    webSettings.setAllowFileAccess(false);
-    webSettings.setAllowContentAccess(false);
-    setCacheModeInternal();
-  }
-
-  private void setCacheModeInternal() {
-    getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-  }
-
-  @SuppressLint("SetJavaScriptEnabled")
-  private void setLoadSettings() {
-    WebSettings webSettings = getSettings();
-    webSettings.setLoadWithOverviewMode(true);
-    webSettings.setUseWideViewPort(true);
-    webSettings.setJavaScriptEnabled(true);
   }
 
   private String getCacheableUrl(String url) {
@@ -128,11 +107,16 @@ public class CacheableWebView extends MaterialWebView {
       mArchiveClient.cacheFileName = null;
       return url;
     }
+    if (url.startsWith("file://") && url.endsWith(CACHE_EXTENSION)) {
+      // Already resolved to an archive by the first pass; keep its cache mode.
+      return url;
+    }
     mArchiveClient.cacheFileName = generateCacheFilename(url);
-    setCacheModeInternal();
+    boolean online = AppUtils.hasConnection(getContext());
     File cacheFile = new File(mArchiveClient.cacheFileName);
-    if (cacheFile.exists() && !AppUtils.hasConnection(getContext())) {
-      getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
+    boolean archiveExists = cacheFile.exists();
+    getSettings().setCacheMode(WebViewSettingsPolicy.cacheModeFor(online, archiveExists));
+    if (!online && archiveExists) {
       return Uri.fromFile(cacheFile).toString();
     }
     return url;

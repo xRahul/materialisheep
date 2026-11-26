@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -24,13 +25,14 @@ import android.webkit.JavascriptInterface;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.BundleCompat;
-import androidx.core.widget.NestedScrollView;
 import in.rahulja.materialhn.annotation.Synthetic;
 import in.rahulja.materialhn.data.FileDownloader;
 import in.rahulja.materialhn.data.Item;
@@ -39,10 +41,13 @@ import in.rahulja.materialhn.data.ReadabilityClient;
 import in.rahulja.materialhn.data.ResponseListener;
 import in.rahulja.materialhn.data.WebItem;
 import in.rahulja.materialhn.widget.AdBlockWebViewClient;
+import in.rahulja.materialhn.widget.ArticleUrlPolicy;
+import in.rahulja.materialhn.widget.AppBarScrollSync;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import in.rahulja.materialhn.widget.CacheableWebView;
 import in.rahulja.materialhn.widget.MaterialWebView;
 import in.rahulja.materialhn.widget.PopupMenu;
+import in.rahulja.materialhn.widget.WebViewSettingsPolicy;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
@@ -67,7 +72,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   public static final String PDF_LOADER_URL = "file:///android_asset/pdf/index.html";
   private static final String PDF_MIME_TYPE = "application/pdf";
   @Synthetic MaterialWebView mWebView;
-  private NestedScrollView mScrollView;
   @Synthetic boolean mExternalRequired = false;
 
   @Inject
@@ -75,11 +79,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   ItemManager mItemManager;
 
   @Inject PopupMenu mPopupMenu;
-  private KeyDelegate.NestedScrollViewHelper mScrollableHelper;
+  private KeyDelegate.WebViewHelper mScrollableHelper;
   private final CompositeDisposable mDisposables = new CompositeDisposable();
   private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
-  private ViewGroup mFullscreenView;
-  private ViewGroup mScrollViewContent;
   @Synthetic ImageButton mButtonRefresh;
   private ViewSwitcher mControls;
   private EditText mEditText;
@@ -92,12 +94,17 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   private AppUtils.SystemUiHelper mSystemUiHelper;
   private View mFragmentView;
   private FullscreenViewModel mFullscreenViewModel;
+  private AppBarScrollSync mAppBarScrollSync;
   @Inject ReadabilityClient mReadabilityClient;
   @Inject FileDownloader mFileDownloader;
   private WebItem mItem;
   private boolean mIsHackerNewsUrl, mEmpty, mReadability;
   private PdfAndroidJavascriptBridge mPdfAndroidJavascriptBridge;
   @Synthetic OnBackPressedCallback mBackPressedCallback;
+  private View mErrorPanel;
+  private TextView mErrorMessage;
+  private boolean mUpgradedFromHttp;
+  private boolean mIsRemoteContent = true;
 
   @Override
   public void onAttach(Context context) {
@@ -136,11 +143,19 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
     mFragmentView = inflater.inflate(R.layout.fragment_web, container, false);
-    mFullscreenView = (ViewGroup) mFragmentView.findViewById(R.id.fullscreen);
-    mScrollViewContent = (ViewGroup) mFragmentView.findViewById(R.id.scroll_view_content);
-    mScrollView = (NestedScrollView) mFragmentView.findViewById(R.id.nested_scroll_view);
     mControls = (ViewSwitcher) mFragmentView.findViewById(R.id.control_switcher);
     mWebView = (MaterialWebView) mFragmentView.findViewById(R.id.web_view);
+    mErrorPanel = mFragmentView.findViewById(R.id.web_error);
+    mErrorMessage = (TextView) mFragmentView.findViewById(R.id.web_error_message);
+    mFragmentView.findViewById(R.id.web_error_retry).setOnClickListener(v -> {
+      hideError();
+      load();
+      if (mWebView == null) {
+        // The replacement WebView could not be attached; keep the panel up.
+        showError(R.string.web_error_generic);
+      }
+    });
+    mFragmentView.findViewById(R.id.web_error_open).setOnClickListener(v -> openInBrowser());
     mButtonRefresh = (ImageButton) mFragmentView.findViewById(R.id.button_refresh);
     mButtonMore = mFragmentView.findViewById(R.id.button_more);
     mButtonNext = mFragmentView.findViewById(R.id.button_next);
@@ -156,7 +171,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mScrollableHelper = new KeyDelegate.NestedScrollViewHelper(mScrollView);
+    mAppBarScrollSync = new AppBarScrollSync(
+        requireActivity().findViewById(R.id.appbar),
+        Math.round(8 * getResources().getDisplayMetrics().density));
     mSystemUiHelper = new AppUtils.SystemUiHelper(getActivity().getWindow());
     mSystemUiHelper.setEnabled(!getResources().getBoolean(R.bool.multi_pane));
     if (mFullscreen) {
@@ -236,7 +253,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     super.onResume();
     if (mWebView != null) {
       mWebView.onResume();
-      mWebView.resumeTimers();
     }
     updateBackPressedCallback();
   }
@@ -247,12 +263,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mBackPressedCallback != null) {
       mBackPressedCallback.setEnabled(false);
     }
-  }
-
-  @Override
-  public void onStop() {
-    super.onStop();
-    pauseWebView();
+    if (mWebView != null) {
+      mWebView.onPause();
+    }
   }
 
   @Override
@@ -290,17 +303,17 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mWebView.destroy();
       mWebView = null;
     }
-    mScrollView = null;
-    mFullscreenView = null;
-    mScrollViewContent = null;
+    mScrollableHelper = null;
+    mAppBarScrollSync = null;
+    mErrorPanel = null;
+    mErrorMessage = null;
+    mSystemUiHelper = null;
     mControls = null;
     mButtonRefresh = null;
     mButtonMore = null;
     mButtonNext = null;
     mEditText = null;
     mProgressBar = null;
-    mScrollableHelper = null;
-    mSystemUiHelper = null;
     mFragmentView = null;
     super.onDestroyView();
   }
@@ -329,39 +342,19 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Override
   public void scrollToTop() {
-    if (mFullscreen) {
-      if (mWebView != null) {
-        mWebView.pageUp(true);
-      }
-    } else if (mScrollableHelper != null) {
+    if (mScrollableHelper != null) {
       mScrollableHelper.scrollToTop();
     }
   }
 
   @Override
   public boolean scrollToNext() {
-    if (mFullscreen) {
-      if (mWebView != null) {
-        mWebView.pageDown(false);
-        return true;
-      }
-      return false;
-    } else {
-      return mScrollableHelper != null && mScrollableHelper.scrollToNext();
-    }
+    return mScrollableHelper != null && mScrollableHelper.scrollToNext();
   }
 
   @Override
   public boolean scrollToPrevious() {
-    if (mFullscreen) {
-      if (mWebView != null) {
-        mWebView.pageUp(false);
-        return true;
-      }
-      return false;
-    } else {
-      return mScrollableHelper != null && mScrollableHelper.scrollToPrevious();
-    }
+    return mScrollableHelper != null && mScrollableHelper.scrollToPrevious();
   }
 
   @Override
@@ -378,6 +371,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mWebView == null) {
       return;
     }
+    if (mAppBarScrollSync != null) {
+      mAppBarScrollSync.expand();
+    }
+    hideError();
     mWebView.setVisibility(View.INVISIBLE);
     if (mIsHackerNewsUrl) {
       bindContent();
@@ -394,7 +391,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   private void loadUrl() {
     setWebSettings(true);
-    reloadUrl(mItem.getUrl());
+    String original = mItem == null ? null : mItem.getUrl();
+    String upgraded = ArticleUrlPolicy.upgradeToHttps(original);
+    if (upgraded == null) {
+      showError(R.string.web_error_generic);
+      return;
+    }
+    mUpgradedFromHttp = original != null && !upgraded.equals(original);
+    reloadUrl(upgraded);
   }
 
   private void reloadUrl(String url) {
@@ -409,6 +413,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (url != null && !TextUtils.equals(PDF_LOADER_URL, url)) {
       url = UrlSanitizer.sanitizeUrl(url);
     }
+    mWebView.setInitialScale(0);
     mIsPdf = false;
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();
@@ -461,18 +466,12 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void bindContent() {
+    mReadability = true;
     if (mItem instanceof Item) {
       mContent = ((Item) mItem).getText();
       loadContent();
     } else {
       AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItem.getId(), ItemManager.MODE_DEFAULT, new ItemResponseListener(this)));
-    }
-  }
-
-  private void pauseWebView() {
-    if (mWebView != null) {
-      mWebView.onPause();
-      mWebView.pauseTimers();
     }
   }
 
@@ -571,8 +570,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   private void setUpWebView(View view) {
     mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
-    mWebView.setBackgroundColor(Color.TRANSPARENT);
-    mWebView.setWebViewClient(
+    bindWebView(mWebView);
+  }
+
+  /** Wires a WebView instance; also runs for the replacement after a renderer crash. */
+  private void bindWebView(MaterialWebView webView) {
+    mWebView = webView;
+    webView.setBackgroundColor(Color.TRANSPARENT);
+    webView.setWebViewClient(
         new AdBlockWebViewClient(Preferences.adBlockEnabled(getActivity())) {
           @Override
           public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon) {
@@ -597,8 +602,45 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             super.doUpdateVisitedHistory(view, url, isReload);
             updateBackPressedCallback();
           }
+
+          @Override
+          public void onPageCommitVisible(android.webkit.WebView view, String url) {
+            super.onPageCommitVisible(view, url);
+            hideError();
+          }
+
+          @Override
+          public void onReceivedError(
+              android.webkit.WebView view,
+              android.webkit.WebResourceRequest request,
+              android.webkit.WebResourceError error) {
+            super.onReceivedError(view, request, error);
+            if (!request.isForMainFrame() || AppUtils.isAbortedError(error)) {
+              return;
+            }
+            showError(
+                mUpgradedFromHttp
+                    ? R.string.web_error_https_only
+                    : R.string.web_error_generic);
+          }
+
+          @Override
+          public void onReceivedSslError(
+              android.webkit.WebView view,
+              android.webkit.SslErrorHandler handler,
+              android.net.http.SslError error) {
+            handler.cancel();
+            showError(R.string.web_error_ssl);
+          }
+
+          @Override
+          public boolean onRenderProcessGone(
+              android.webkit.WebView view, android.webkit.RenderProcessGoneDetail detail) {
+            replaceCrashedWebView(view);
+            return true;
+          }
         });
-    mWebView.setWebChromeClient(
+    webView.setWebChromeClient(
         new CacheableWebView.ArchiveClient() {
           @Override
           public void onProgressChanged(android.webkit.WebView view, int newProgress) {
@@ -608,27 +650,84 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             }
           }
         });
-    mWebView.setDownloadListener(
+    webView.setDownloadListener(
         (url, userAgent, contentDisposition, mimetype, contentLength) -> {
           if (getActivity() == null) {
             return;
           }
-          if (mimetype.equals(PDF_MIME_TYPE)) {
+          if (isPdf(mimetype, url)) {
             setProgress(10);
             mIsPdf = true;
-            downloadFileAndRenderPdf();
+            downloadFileAndRenderPdf(url);
           } else {
-            offerExternalApp();
+            offerExternalApp(url);
           }
         });
-    AppUtils.toggleWebViewZoom(mWebView.getSettings(), false);
+    attachScrollListener(webView);
+    mScrollableHelper = new KeyDelegate.WebViewHelper(webView);
+  }
+
+  private void attachScrollListener(MaterialWebView webView) {
+    webView.setOnScrollChangeListener(
+        (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+          if (!mFullscreen && mAppBarScrollSync != null) {
+            mAppBarScrollSync.onScroll(scrollY - oldScrollY, scrollY == 0);
+          }
+        });
+  }
+
+  private void replaceCrashedWebView(android.webkit.WebView deadView) {
+    if (mPdfAndroidJavascriptBridge != null) {
+      mPdfAndroidJavascriptBridge.cleanUp();
+      mPdfAndroidJavascriptBridge = null;
+    }
+    mIsPdf = false;
+    if (getActivity() == null || mFragmentView == null) {
+      deadView.destroy();
+      mWebView = null;
+      return;
+    }
+    ViewGroup container = mFragmentView.findViewById(R.id.web_view_container);
+    ViewGroup parent =
+        deadView.getParent() instanceof ViewGroup
+            ? (ViewGroup) deadView.getParent()
+            : container;
+    if (parent == null) {
+      deadView.setWebViewClient(null);
+      deadView.setWebChromeClient(null);
+      deadView.setDownloadListener(null);
+      deadView.destroy();
+      mWebView = null;
+      showError(R.string.web_error_crashed);
+      return;
+    }
+    parent.removeView(deadView);
+    deadView.setWebViewClient(null);
+    deadView.setWebChromeClient(null);
+    deadView.setDownloadListener(null);
+    deadView.destroy();
+
+    CacheableWebView replacement = new CacheableWebView(requireContext());
+    replacement.setId(R.id.web_view);
+    replacement.setLayoutParams(
+        new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    parent.addView(replacement, 0);
+    bindWebView(replacement);
+    applySettingsTo(replacement, mIsRemoteContent);
+    showError(R.string.web_error_crashed);
   }
 
   private void offerExternalApp() {
+    offerExternalApp(null);
+  }
+
+  private void offerExternalApp(@Nullable String targetUrl) {
     if (getActivity() == null || mItem == null) {
       return;
     }
-    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mItem.getUrl()));
+    String url = targetUrl != null ? targetUrl : mItem.getUrl();
+    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
     if (intent.resolveActivity(getActivity().getPackageManager()) == null) {
       return;
     }
@@ -636,14 +735,56 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mWebView != null) {
       mWebView.setVisibility(GONE);
     }
-    View emptyView = getActivity().findViewById(R.id.empty);
+    View emptyView = mFragmentView == null ? null : mFragmentView.findViewById(R.id.empty);
     if (emptyView != null) {
       emptyView.setVisibility(VISIBLE);
     }
-    View downloadButton = getActivity().findViewById(R.id.download_button);
+    View downloadButton = mFragmentView == null ? null : mFragmentView.findViewById(R.id.download_button);
     if (downloadButton != null) {
       downloadButton.setOnClickListener(v -> startActivity(intent));
     }
+  }
+
+  private void showError(int messageRes) {
+    if (mWebView != null) {
+      mWebView.setVisibility(GONE);
+    }
+    if (mErrorPanel != null) {
+      mErrorPanel.setVisibility(VISIBLE);
+    }
+    if (mErrorMessage != null) {
+      mErrorMessage.setText(messageRes);
+    }
+    setProgress(100);
+  }
+
+  private void hideError() {
+    if (mErrorPanel != null) {
+      mErrorPanel.setVisibility(GONE);
+    }
+  }
+
+  private void openInBrowser() {
+    if (getActivity() == null || mItem == null) {
+      return;
+    }
+    AppUtils.openWebUrlExternal(getActivity(), mItem, mItem.getUrl(), null);
+  }
+
+  @Synthetic
+  static boolean isPdf(String mimetype, String url) {
+    if (mimetype == null || url == null) {
+      return false;
+    }
+    String type = mimetype.toLowerCase(java.util.Locale.ROOT);
+    if (type.startsWith(PDF_MIME_TYPE)) {
+      return true;
+    }
+    if (!type.equals("application/octet-stream")) {
+      return false;
+    }
+    String path = Uri.parse(url).getPath();
+    return path != null && path.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf");
   }
 
   private void setProgress(int progress) {
@@ -657,67 +798,50 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     }
   }
 
-  @SuppressLint("SetJavaScriptEnabled")
   private void setWebSettings(boolean isRemote) {
-    mReadability = !isRemote;
+    mIsRemoteContent = isRemote;
     if (mWebView != null) {
-      mWebView.setBackgroundColor(isRemote ? Color.WHITE : Color.TRANSPARENT);
-      mWebView.getSettings().setLoadWithOverviewMode(isRemote);
-      mWebView.getSettings().setUseWideViewPort(isRemote);
-      mWebView.getSettings().setJavaScriptEnabled(isRemote);
+      applySettingsTo(mWebView, isRemote);
     }
     if (getActivity() != null) {
       getActivity().invalidateOptionsMenu();
     }
   }
 
+  private void applySettingsTo(MaterialWebView webView, boolean isRemote) {
+    if (isRemote) {
+      WebViewSettingsPolicy.applyRemote(webView.getSettings(), isDarkTheme());
+      webView.setBackgroundColor(
+          ContextCompat.getColor(
+              requireContext(),
+              AppUtils.getThemedResId(requireContext(), R.attr.colorCardBackground)));
+    } else {
+      WebViewSettingsPolicy.applyLocal(webView.getSettings());
+      webView.setBackgroundColor(Color.TRANSPARENT);
+    }
+  }
+
+  private boolean isDarkTheme() {
+    TypedValue value = new TypedValue();
+    boolean resolved = requireContext()
+        .getTheme()
+        .resolveAttribute(android.R.attr.isLightTheme, value, true);
+    return resolved && value.data == 0;
+  }
+
   @Synthetic
   void setFullscreen(boolean isFullscreen) {
-    if (getView() == null || mWebView == null || mControls == null || mScrollViewContent == null) {
+    if (getView() == null || mWebView == null || mControls == null) {
       return;
     }
     mFullscreen = isFullscreen;
     mControls.setVisibility(isFullscreen ? VISIBLE : View.GONE);
-    AppUtils.toggleWebViewZoom(mWebView.getSettings(), isFullscreen);
-    ViewGroup.LayoutParams params = mWebView.getLayoutParams();
-    if (isFullscreen) {
-      if (mScrollViewContent.getParent() != mFullscreenView) {
-        if (mScrollViewContent.getParent() != null) {
-          ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
-        }
-        if (mFullscreenView != null) {
-          mFullscreenView.addView(mScrollViewContent);
-        }
-      }
-      if (mScrollView != null) {
-        mWebView.scrollTo(mScrollView.getScrollX(), mScrollView.getScrollY());
-      }
-      params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-    } else {
-      reset();
-      // We'll zoom out until it returns false, which means it has min zoom level.
-      // It's quite dangerous piece of code - potentially could lead to infinite loop,
-      // so let's add some reasonable limit just in case
-      int i = 0;
-      while (mWebView.zoomOut() && i < 30) {
-        i++;
-      }
-      if (mScrollView != null && mScrollViewContent.getParent() != mScrollView) {
-        if (mScrollViewContent.getParent() != null) {
-          ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
-        }
-        mScrollView.addView(mScrollViewContent);
-      }
-      if (mScrollView != null) {
-        mScrollView.post(() -> {
-          if (mScrollView != null && mWebView != null) {
-            mScrollView.scrollTo(mWebView.getScrollX(), mWebView.getScrollY());
-          }
-        });
-      }
-      params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+    if (mSystemUiHelper != null) {
+      mSystemUiHelper.setFullscreen(isFullscreen);
     }
-    mWebView.setLayoutParams(params);
+    if (!isFullscreen) {
+      reset();
+    }
   }
 
   private void showPreferences() {
@@ -730,8 +854,13 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     fragment.show(getParentFragmentManager(), PopupSettingsFragment.class.getName());
   }
 
-  private void onPreferenceChanged(int key, boolean contextChanged) {
-    if (!contextChanged) {
+  @Synthetic
+  void onPreferenceChanged(int key, boolean contextChanged) {
+    if (contextChanged) {
+      return;
+    }
+    boolean localContent = mIsHackerNewsUrl || (mReadability && !mEmpty);
+    if (localContent) {
       load();
     }
   }
@@ -806,6 +935,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
         if (mReadability) {
           Toast.makeText(getActivity(), R.string.readability_failed, Toast.LENGTH_SHORT).show();
         }
+        mReadability = false;
         loadUrl();
       }
     }
@@ -818,14 +948,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     bindContent();
   }
 
-  private void downloadFileAndRenderPdf() {
+  private void downloadFileAndRenderPdf(String url) {
     mFileDownloader.downloadFile(
-        mItem.getUrl(),
+        url,
         PDF_MIME_TYPE,
         new FileDownloader.FileDownloaderCallback() {
           @Override
           public void onFailure(Call call, IOException e) {
-            offerExternalApp();
+            offerExternalApp(url);
           }
 
           @Override

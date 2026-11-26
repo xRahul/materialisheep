@@ -16,21 +16,27 @@
 
 package in.rahulja.materialhn.widget;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
+import android.view.ViewParent;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebViewClient;
-import in.rahulja.materialhn.AppUtils;
 import in.rahulja.materialhn.annotation.Synthetic;
 
 public class MaterialWebView extends android.webkit.WebView {
   static final String BLANK = "about:blank";
   static final String FILE = "file:///";
   private final HistoryWebViewClient mClient = new HistoryWebViewClient();
-  @Synthetic String mPendingUrl, mPendingHtml;
+  @Synthetic boolean mClearHistoryOnCommit;
+  @Synthetic String mPendingUrl;
+  private final int mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+  private float mDownX, mDownY;
 
   public MaterialWebView(Context context) {
     this(context, null);
@@ -52,20 +58,61 @@ public class MaterialWebView extends android.webkit.WebView {
 
   @Override
   public boolean canGoBack() {
-    return TextUtils.isEmpty(mPendingUrl) && super.canGoBack();
+    return !mClearHistoryOnCommit && super.canGoBack();
   }
 
   public void reloadUrl(String url) {
     if (getProgress() < 100) {
-      stopLoading(); // this will fire onPageFinished for current URL
+      stopLoading(); // this fires onPageFinished for the current URL
     }
+    mClearHistoryOnCommit = true;
     mPendingUrl = url;
-    loadUrl(BLANK); // clear current web resources, load pending URL upon onPageFinished
+    loadUrl(url);
   }
 
   public void reloadHtml(String html) {
-    mPendingHtml = html;
-    reloadUrl(FILE);
+    stopLoading();
+    mClearHistoryOnCommit = true;
+    mPendingUrl = FILE;
+    loadDataWithBaseURL(FILE, html, "text/html", "UTF-8", null);
+  }
+
+  @SuppressLint("ClickableViewAccessibility") // the WebView handles clicks itself
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+    ViewParent parent = getParent();
+    switch (event.getActionMasked()) {
+      case MotionEvent.ACTION_DOWN:
+        mDownX = event.getX();
+        mDownY = event.getY();
+        // ViewPager2 intercepts on the same event once slop is passed, so a
+        // pannable page must claim the gesture before that happens.
+        if (parent != null) {
+          parent.requestDisallowInterceptTouchEvent(
+              canScrollHorizontally(-1) || canScrollHorizontally(1));
+        }
+        break;
+      case MotionEvent.ACTION_MOVE:
+        if (parent != null
+            && GestureIntent.claimsHorizontal(
+                event.getX() - mDownX,
+                event.getY() - mDownY,
+                canScrollHorizontally(-1),
+                canScrollHorizontally(1),
+                mTouchSlop)) {
+          parent.requestDisallowInterceptTouchEvent(true);
+        }
+        break;
+      case MotionEvent.ACTION_UP:
+      case MotionEvent.ACTION_CANCEL:
+        if (parent != null) {
+          parent.requestDisallowInterceptTouchEvent(false);
+        }
+        break;
+      default:
+        break;
+    }
+    return super.onTouchEvent(event);
   }
 
   protected WebResourceResponse interceptRequest(WebResourceRequest request) {
@@ -133,8 +180,25 @@ public class MaterialWebView extends android.webkit.WebView {
     }
 
     @Override
+    public boolean onRenderProcessGone(
+        android.webkit.WebView view, android.webkit.RenderProcessGoneDetail detail) {
+      if (mClient != null) {
+        return mClient.onRenderProcessGone(view, detail);
+      }
+      return super.onRenderProcessGone(view, detail);
+    }
+
+    @Override
     public boolean shouldOverrideUrlLoading(
         android.webkit.WebView view, WebResourceRequest request) {
+      if (request.isForMainFrame() && "GET".equalsIgnoreCase(request.getMethod())) {
+        String url = request.getUrl().toString();
+        String upgraded = ArticleUrlPolicy.upgradeToHttps(url);
+        if (upgraded != null && !upgraded.equals(url)) {
+          view.loadUrl(upgraded);
+          return true;
+        }
+      }
       if (handleNavigation(view, request.getUrl().toString())) {
         return true;
       }
@@ -145,34 +209,105 @@ public class MaterialWebView extends android.webkit.WebView {
     public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon) {
       super.onPageStarted(view, url, favicon);
       view.pageUp(true);
-      MaterialWebView webView = (MaterialWebView) view;
-      if (AppUtils.urlEquals(url, webView.mPendingUrl)) {
-        view.setVisibility(VISIBLE);
-      }
       if (mClient != null) {
         mClient.onPageStarted(view, url, favicon);
       }
     }
 
     @Override
+    public void onPageCommitVisible(android.webkit.WebView view, String url) {
+      super.onPageCommitVisible(view, url);
+      view.setVisibility(VISIBLE);
+      if (view instanceof MaterialWebView) {
+        ((MaterialWebView) view).mPendingUrl = null;
+      }
+      clearPendingHistory(view);
+      if (mClient != null) {
+        mClient.onPageCommitVisible(view, url);
+      }
+    }
+
+    @Override
     public void onPageFinished(android.webkit.WebView view, String url) {
       super.onPageFinished(view, url);
-      MaterialWebView webView = (MaterialWebView) view;
-      if (TextUtils.equals(url, BLANK)) { // has pending reload, open corresponding URL
-        if (!TextUtils.isEmpty(webView.mPendingHtml)) {
-          view.loadDataWithBaseURL(
-              webView.mPendingUrl, webView.mPendingHtml, "text/html", "UTF-8", webView.mPendingUrl);
-        } else {
-          view.loadUrl(webView.mPendingUrl);
+      // Fallback for pages where onPageCommitVisible never fires (data: documents),
+      // without revealing a page that a newer load has already superseded.
+      if (view instanceof MaterialWebView) {
+        MaterialWebView webView = (MaterialWebView) view;
+        // Only local documents need this fallback; remote pages are revealed by
+        // onPageCommitVisible, so a late finish for the same URL cannot flash.
+        if (TextUtils.equals(webView.mPendingUrl, FILE)
+            && (url == null
+                || TextUtils.equals(url, FILE)
+                || url.startsWith("data:"))) {
+          view.setVisibility(VISIBLE);
+          webView.mPendingUrl = null;
         }
-      } else if (!TextUtils.isEmpty(webView.mPendingUrl)
-          && TextUtils.equals(url, webView.mPendingUrl)) { // reload done, clear history
-        webView.mPendingUrl = null;
-        webView.mPendingHtml = null;
-        view.clearHistory();
       }
+      clearPendingHistory(view);
       if (mClient != null) {
         mClient.onPageFinished(view, url);
+      }
+    }
+
+    @Override
+    public void doUpdateVisitedHistory(
+        android.webkit.WebView view, String url, boolean isReload) {
+      super.doUpdateVisitedHistory(view, url, isReload);
+      if (mClient != null) {
+        mClient.doUpdateVisitedHistory(view, url, isReload);
+      }
+    }
+
+    @Override
+    public void onReceivedError(
+        android.webkit.WebView view,
+        WebResourceRequest request,
+        android.webkit.WebResourceError error) {
+      if (request.isForMainFrame()
+          && !in.rahulja.materialhn.AppUtils.isAbortedError(error)
+          && view instanceof MaterialWebView) {
+        // A load that never commits must not keep back navigation disabled, and
+        // its late onPageFinished must not reveal the failed page.
+        MaterialWebView webView = (MaterialWebView) view;
+        webView.mClearHistoryOnCommit = false;
+        webView.mPendingUrl = null;
+      }
+      if (mClient != null) {
+        mClient.onReceivedError(view, request, error);
+      }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onReceivedError(
+        android.webkit.WebView view,
+        int errorCode,
+        String description,
+        String failingUrl) {
+      if (mClient != null) {
+        mClient.onReceivedError(view, errorCode, description, failingUrl);
+      } else {
+        super.onReceivedError(view, errorCode, description, failingUrl);
+      }
+    }
+
+    @Override
+    public void onReceivedSslError(
+        android.webkit.WebView view,
+        android.webkit.SslErrorHandler handler,
+        android.net.http.SslError error) {
+      if (mClient != null) {
+        mClient.onReceivedSslError(view, handler, error);
+      } else {
+        super.onReceivedSslError(view, handler, error);
+      }
+    }
+
+    private static void clearPendingHistory(android.webkit.WebView view) {
+      if (view instanceof MaterialWebView && ((MaterialWebView) view).mClearHistoryOnCommit) {
+        ((MaterialWebView) view).mClearHistoryOnCommit = false;
+        view.clearHistory();
       }
     }
 

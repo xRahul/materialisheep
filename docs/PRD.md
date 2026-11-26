@@ -83,7 +83,14 @@ Material HN (`in.rahulja.materialhn`) is a robust, feature-rich, and open-source
     *   Hardware-backed AES-256 GCM encryption for user credentials via `AndroidKeyStore`.
     *   **Universal Privacy Shield (`UrlSanitizer.kt`):** Strips marketing trackers and campaign attribution IDs (`utm_*`, `fbclid`, `gclid`, etc.) before launching Custom Tabs or opening WebViews.
     *   JavaScript is disabled for local (offline/readability) content and only enabled for remote pages and the bundled PDF viewer, mitigating XSS via injected content.
-    *   Ad and tracker blocking powered by synchronized `AdBlocker` trie.
+    *   Ad and tracker blocking powered by synchronized `AdBlocker` trie; the article's own main frame is never blocked.
+    *   Cleartext stays banned: `http://` articles are retried over https, and failures show an in-tab panel with Retry and Open in browser.
+    *   SSL errors are always cancelled; a WebView renderer crash is recovered in place instead of killing the app.
+*   **Article rendering:**
+    *   The page scrolls itself; sticky headers, `100vh` heroes, lazy images and infinite scroll behave as in Chrome.
+    *   DOM storage is available to remote pages, so SPAs and consent banners render.
+    *   Reader mode waits for the page to settle before Readability.js runs, yielding complete text on JS-rendered pages.
+    *   Dark and AMOLED themes darken light-only pages through `androidx.webkit` algorithmic darkening; reader colours are unchanged.
     *   Backend API endpoints enforce HTTPS.
     *   Automated CodeQL analysis runs on every push/PR (Advanced Setup; GitHub Default Setup must stay disabled — see `docs/CODEQL_SETUP.md`).
 
