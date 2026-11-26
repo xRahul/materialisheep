@@ -1,99 +1,106 @@
-# Materialisheep Technical Documentation
+# Material HN — Technical Design
 
-## 1. Architecture Overview
+Package `in.rahulja.materialhn`. Android Hacker News client, MVVM, Java + Kotlin,
+minSdk 31, targetSdk/compileSdk 36.
 
-Materialisheep follows a **Model-View-ViewModel (MVVM)** architecture, transitioning from a legacy MVP/Clean-ish structure. The app is a hybrid of Java and Kotlin.
+## 1. Layers
 
-### Layers
+- **UI** — Activities and Fragments (`ListFragment`, `ItemFragment`, `WebFragment`,
+  `SearchActivity`, `ThreadPreviewActivity`), RecyclerView adapters in `widget/`.
+- **View models** — Kotlin `ViewModel` + `StateFlow`/`LiveData` (`StoryListViewModel`,
+  `FullscreenViewModel`).
+- **Domain/data** — `ItemManager` interface, `HackerNewsClient` (official Firebase API),
+  `AlgoliaClient` (search), `FavoriteManager`, `SessionManager`, `ReadabilityManager`,
+  `LocalCache` (Room-backed).
+- **Platform** — sync adapter stack, JobScheduler refresh, home-screen widget, WebView.
 
-1.  **Presentation Layer (UI):**
-    -   **Activities/Fragments:** Handle UI rendering and user input. (e.g., `ListActivity`, `ItemActivity`, `ListFragment`).
-    -   **ViewModels:** Manage UI state and business logic integration. (e.g., `StoryListViewModel`).
-    -   **Pattern:** MVVM. ViewModels expose state via `StateFlow` (Kotlin) or `LiveData` (Java bridge).
-    -   **Language:** Mixed. New components are Kotlin.
+## 2. Dependency injection
 
-2.  **Domain/Data Layer:**
-    -   **Repositories/Managers:** Abstract data sources. `ItemManager` is the core interface.
-    -   **Clients:** Implementations of `ItemManager`.
-        -   `HackerNewsClient`: Retrofit/RxJava client for Firebase API.
-        -   `AlgoliaClient`: Client for Search API.
-    -   **Database:** Room (`MaterialisticDatabase`) for caching and user preferences.
-    -   **Concurrency:**
-        -   **RxJava 3:** Used heavily in `HackerNewsClient` for chaining API calls (e.g., fetching story + user session + favorite status).
-        -   **Coroutines:** Used in ViewModels (`viewModelScope`) to call blocking Data Layer APIs on IO threads.
+Dagger 2 with KSP. `ApplicationComponent` (singleton) composed from
+`ApplicationModule`, `DataModule`, `NetworkModule`, `UiModule`, `ActivityModule`.
+Schedulers are injected by name (`DataModule.IO_THREAD`, `MAIN_THREAD`).
 
-## 2. Dependency Injection
+## 3. Flows
 
-The project uses **Dagger 2** for dependency injection.
+### Story list
 
--   **Components:** `ApplicationComponent` (Singleton).
--   **Modules:**
-    -   `ApplicationModule`: Context, SharedPreferences.
-    -   `DataModule`: Network clients, Database, Gson.
-    -   `NetworkModule`: OkHttp, Retrofit, Interceptors.
-    -   `UiModule`: UI helpers (Toast, Dialogs).
-    -   `ActivityModule`: Activity-scoped bindings.
+`ListFragment` → `StoryListViewModel` (`viewModelScope`, `Dispatchers.IO`) →
+`ItemManager.getStories()` → `HackerNewsClient` → batched `getItems()` → `StateFlow`
+→ adapter. Blocking Retrofit `.execute()` inside the IO dispatcher.
 
-## 3. Key Components & Flows
+### Networking and caching
 
-### Story Loading Flow
-1.  `ListActivity` initializes `ListFragment`.
-2.  `ListFragment` obtains `StoryListViewModel` (via `Factory`).
-3.  `StoryListViewModel.getStories()` is called.
-    -   Checks `isLoading` state.
-    -   Updates state to `isLoading = true`.
-    -   Launches Coroutine on `IO` dispatcher.
-    -   Calls `ItemManager.getStories()` (Blocking).
-4.  `HackerNewsClient.getStories()` (Blocking):
-    -   Executes Retrofit call synchronously (`.execute()`).
-    -   Returns list of `Item` (IDs only).
-5.  `StoryListViewModel` updates `StateFlow` with new items.
-6.  `ListFragment` observes state change and updates `StoryRecyclerViewAdapter`.
-7.  `StoryRecyclerViewAdapter` batches item IDs and calls `ItemManager.getItems()` (Async) to fetch details.
+`NetworkModule` builds one OkHttp client: HTTPS only, `followRedirects(false)`,
+`CacheOverrideNetworkInterceptor` (1 min feeds, 5 min users, 30 min items, with
+error shielding), logging interceptor at `NONE` for release.
 
-### Web Content Rendering
--   `WebFragment` hosts a `MaterialWebView` (extends `WebView`; package `widget/`) for article rendering.
--   **Security hardening (fork):** `setJavaScriptEnabled(isRemote)` — JavaScript is disabled for local/offline content and only enabled for remote pages and the bundled PDF.js viewer. A `WebFragmentSecurityTest` enforces this contract.
--   **Universal Privacy Shield:** `UrlSanitizer.kt` strips tracking query parameters (`utm_*`, `fbclid`, `gclid`, `mc_eid`, `hsa_*`, etc.) before URLs are dispatched to Custom Tabs or loaded in `WebFragment`.
--   **Discussion Hierarchy & Author Badges:** `ItemRecyclerViewAdapter`, `SinglePageItemRecyclerViewAdapter`, and `MultiPageItemRecyclerViewAdapter` dynamically bind `[OP]` (submitter in accent color) and `[YOU]` (current user in link color) badges to comment headers.
--   **Code Block Formatting:** `CodeBlockFormatter.kt` preprocesses `<pre><code>` HTML tags into `<tt>` spans and applies monospace typefaces, subtle container background shading, and keyword syntax highlighting.
--   **Credential Security:** `AccountSecurity.kt` implements hardware-backed `AndroidKeyStore` AES-256 GCM encryption for user passwords, eliminating plaintext credential persistence in `AccountManager`.
--   **Network Cache Hierarchy:** `CacheOverrideNetworkInterceptor` in `NetworkModule` applies path-based cache expiration: 1-minute TTL for feeds (`*stories.json`), 5-minute TTL for users, and 30-minute TTL for story/comment items; preserves explicit `no-cache` requests and bypasses caching HTTP error responses.
--   **Ad blocking:** `AdBlockWebViewClient` + synchronized `AdBlocker` trie intercept and drop known ad/tracker requests with safe initialization locks.
--   **Theming Engine:** Dynamic overlay theming via `ThemePreference` with Pure Black AMOLED (`#000000`) tokens and high-contrast typography.
--   **Fullscreen:** `FullscreenViewModel` exposes a `LiveData<Boolean>` `fullscreenEvent()`; `WebFragment`/`ItemActivity`/`BaseListActivity` observe it to expand/collapse the reading view.
+### Web content and reader
 
-### Widgets
--   `WidgetProvider` (app widget) delegates to `WidgetHelper` (`@Inject` HN + Algolia `ItemManager`s).
--   `WidgetHelper` builds `RemoteViews.RemoteCollectionItems`, fetches stories via `getStories(...)`, and refreshes stale items individually via `getItem(...)`.
--   `WidgetRefreshJobService` (JobScheduler) drives periodic refreshes based on the configured widget frequency.
--   App widgets use `appwidget` (default), `appwidget_dark`, or `appwidget_light` layouts.
+`WebFragment` + `MaterialWebView`. JavaScript is enabled only for remote content
+(`isRemote`), disabled for local content; the PDF.js viewer is a separate local
+document with a JS bridge. `AdBlockWebViewClient` drops requests matching the
+bundled blocklist through the synchronized `AdBlocker`. `ReadabilityManager`
+injects Readability.js for reader mode. `UrlSanitizer` strips tracking parameters
+before a link leaves the app.
 
-### Error Handling & Observability
--   **Error Handling:**
-    -   `HackerNewsClient` and `AlgoliaClient` catch network exceptions in async callbacks and pass them to `ResponseListener.onError`.
-    -   Sync methods log errors to `Log.e`.
-    -   `StoryListViewModel` catches exceptions, logs them, and updates `UiState.error`.
--   **Logging:**
-    -   **Debug Builds:** Full `HttpLoggingInterceptor` (Headers/Body).
-    -   **Application Logs:** Critical flows (ViewModel fetch, Adapter updates) are logged via `android.util.Log` in Debug builds.
--   **Crash Reporting (fork):** Debug builds install a default uncaught-exception handler that launches `CrashActivity`; the handler is bypassed under Robolectric (`Build.FINGERPRINT == "robolectric"`) so unit tests do not self-terminate.
+### Credentials
 
-## 4. Known Technical Debt & Risks
+`LoginActivity` → `AccountSecurity` (AES-256-GCM under an `AndroidKeyStore` key,
+IV prefixed to the ciphertext, stored in `auth_secure_store` preferences). The
+`AccountManager` entry carries the username only. Legacy plaintext passwords are
+migrated on first read and then cleared.
 
-### Concurrency & Lifecycle
--   **RxJava Subscriptions:** `ItemManager` methods return active `Disposable` instances. ViewModels and Fragments bind disposables to lifecycle scopes (`CompositeDisposable`, `viewModelScope`) to cancel pending requests when views detach.
--   **Blocking Calls:** `StoryListViewModel` relies on blocking calls (`execute()`) within `Dispatchers.IO` coroutines.
+### Sync and background work
 
-### Refactoring Status
--   `StoryListViewModel` was hardened to handle errors and state explicitly.
--   `HackerNewsClient` was patched to prevent swallowed exceptions.
--   Upstream deprecation migrations (Parcelable, NotificationCompat, LocalBroadcastManager, Vibrator/Display, Preference APIs, etc.) are merged in; deprecated `SystemUiHelper` was replaced with a `WindowInsetsController`-based implementation.
+`ItemSyncAdapter` + `SyncDelegate` (RxJava, DB-deferred) with `SyncQueueDao` for
+offline vote/save actions; `ItemSyncJobService` schedules periodic refresh;
+`ItemSyncNetworkCallback` triggers on connectivity change. Widget refresh uses
+`WidgetRefreshJobService`.
 
-## 5. Build System
--   **Gradle:** 9.7.1
--   **JDK:** 21 Required.
--   **Android Gradle Plugin:** 9.2.1
--   **Kotlin:** 2.3.21 (KSP 2.3.8)
--   **Min SDK:** 31.
--   **Dependencies:** Dagger 2.59, OkHttp 5.3.2, Retrofit 3.0.0, Room 2.8.4, Material 1.14.0, Browser 1.10.0, Mockito 5.23.0.
+### Persistence
+
+Room database `MaterialisticDatabase` v6 (`saved`, `read`, `readable`, `syncqueue`),
+schema exported to `app/schemas/`. Writes publish a `SharedFlow`, exposed to the UI
+as `LiveData`.
+
+## 4. Security controls
+
+| Area | Control |
+|---|---|
+| Transport | HTTPS only; cleartext disabled in `network_security_config.xml`; no redirects |
+| Credentials | Keystore AES-GCM; ciphertext excluded from backup; `AccountManager` holds username only |
+| WebView | JS gated by remote/local; file and content access disabled; cache reads restricted to the app cache directory |
+| Links | Tracking parameters stripped; external opens go through Custom Tabs with a validated URL |
+| Ads/trackers | Bundled domain blocklist, request interception |
+| Backup | `data_extraction_rules.xml` excludes `auth_secure_store` and `app_webview/` |
+| Release build | R8 shrinking; signing keys from CI secrets only |
+| Telemetry | None. No analytics or crash-upload SDK |
+
+Component exposure (exported components and why) is recorded in
+`docs/STORE_SUBMISSION.md` once the audit lands.
+
+## 5. Build
+
+- Gradle 9.7.1 wrapper, AGP 9.2.1, JDK 21 toolchain, Kotlin 2.3.21 / KSP 2.3.8.
+- Versions in `version.properties`; overridable with `-PversionCode` and
+  `-PversionName` (used by F-Droid).
+- Release signing from `KEY_STORE_BASE64`, `KEY_STORE_PASSWORD`, `KEY_ALIAS`,
+  `KEY_PASSWORD`; unsigned when absent.
+- `resConfigs en, zh-rCN, es`.
+
+## 6. Testing
+
+Robolectric unit tests in `app/src/test` (`@Config(sdk = S)` or newer). The debug
+build installs an uncaught-exception handler that starts `CrashActivity`; it is
+skipped when `Build.FINGERPRINT == "robolectric"`. Instrumented tests live in
+`app/src/androidTest`.
+
+## 7. Known technical debt
+
+- `HackerNewsClient` async APIs return no `Disposable`, so callers cannot cancel
+  work after the UI dies.
+- `StoryListViewModel` logs fetch failures without surfacing an error state.
+- RxJava 3 and coroutines coexist.
+- `Preferences.java` is a monolith over `SharedPreferences`.
+- Google Gson reflects over `HackerNewsItem` fields; renaming a field without
+  `@SerializedName` breaks parsing.

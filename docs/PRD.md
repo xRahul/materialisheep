@@ -1,7 +1,7 @@
-# Materialisheep Product Requirements Document (PRD)
+# Material HN Product Requirements Document (PRD)
 
 ## 1. Executive Summary
-Materialisheep is a robust, feature-rich, and open-source Android client for Hacker News. It is designed to provide the best reading experience for the HN community by combining the principles of Material Design with a suite of power-user features. The app emphasizes performance, offline capability, and deep customization to cater to both casual readers and heavy consumers of tech news.
+Material HN (`in.rahulja.materialhn`) is a robust, feature-rich, and open-source Android client for Hacker News. It is designed to provide the best reading experience for the HN community by combining the principles of Material Design with a suite of power-user features. The app emphasizes performance, offline capability, and deep customization to cater to both casual readers and heavy consumers of tech news.
 
 ## 2. Objectives
 *   **User Experience:** Provide a clean, distraction-free, and intuitive interface for browsing and interacting with Hacker News.
@@ -104,22 +104,8 @@ Materialisheep is a robust, feature-rich, and open-source Android client for Hac
     *   **Concurrency:** Hybrid: RxJava 3 (Data Layer) and Kotlin Coroutines (ViewModel).
     *   **Observability:** Comprehensive logging of user flows, errors, and UI states (Debug builds).
 
-## 6. Future Roadmap & Product Review
-*See [`docs/PRODUCT_REVIEW.md`](PRODUCT_REVIEW.md) for the complete tri-perspective Product Management review and gap analysis.*
-
-*   **P0 / Near-Term Milestones:**
-    *   Multi-format PKM bookmark exporter dialog (Obsidian Markdown, Netscape HTML, JSON).
-    *   Accessibility compliance (48dp touch targets, TalkBack tree navigation, WCAG AA contrast).
-    *   Room DB cache auto-pruning for `readable` table.
-    *   Expanded privacy tracker blacklist (`UrlSanitizer.kt`).
-    *   Full HN deep link route map in `AndroidManifest.xml`.
-*   **P1 / Fast Follows:**
-    *   Algolia comment search & story-type filters.
-    *   Clipboard HN link detection on app resume.
-    *   Comment header tap-to-collapse and inline voting gestures.
-*   **P2 / Strategic Upgrades:**
-    *   Migration of background sync to AndroidX `WorkManager`.
-    *   Material 3 DayNight and Dynamic Color (Material You).
-    *   Responsive tablet/foldable multi-pane layouts via `WindowSizeClass`.
-    *   PKM 2.0 with tags, annotations, and FTS5 search.
+## 6. Future Roadmap
+See [`docs/ROADMAP.md`](ROADMAP.md) for the maintained list of next work. Items
+previously listed here are folded into that file; anything not there was either
+shipped or dropped.
 

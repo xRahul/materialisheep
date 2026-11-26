@@ -2,11 +2,13 @@
 
 Instructions for agents and automated systems working with this repository.
 
-**Materialisheep** is an open-source Android Hacker News client (MVVM, Java + Kotlin). This fork (`xRahul/materialisheep`) is synced with upstream `sheepdestroyer/materialisheep` and adds its own security, performance, CI, and quality features on top.
+**Material HN** (package `in.rahulja.materialhn`) is an open-source Android Hacker News client (MVVM, Java + Kotlin). It is a fork of `sheepdestroyer/materialisheep` (`xRahul/materialisheep`), which descends from `hidroh/materialistic`. The fork adds its own security, performance, CI and store-distribution work on top.
+
+**Kotlin package names need escaping.** Because `in` is a Kotlin keyword, Kotlin sources declare ``package `in`.rahulja.materialhn...`` and import with the same backticks. Java and XML use the plain dotted name.
 
 ## Project Layout
 
-- `app/src/main/java/io/github/sheepdestroyer/materialisheep/` — application code
+- `app/src/main/java/in/rahulja/materialhn/` — application code (Kotlin files escape the leading `in`)
   - `*Activity.java/.kt`, `*Fragment.java` — UI layer (MVVM)
   - `accounts/` — HN account login + session
   - `annotation/`, `ktx/` — annotations and Kotlin extensions
@@ -92,12 +94,26 @@ Test classes to be aware of: `AppUtilsTest`, `AccountSecurityTest`, `NetworkModu
 
 Workflows in `.github/workflows/`:
 
-- `ci.yml` — build + unit tests on push/PR
-- `release.yml` — automated one-click release with semantic version bumping (patch/minor/major), signing via env (`KEY_STORE_BASE64`, `KEY_STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), categorized changelog generation, and GitHub Release publish
-- `debug.yml` — debug APK artifact build on manual trigger (workflow_dispatch)
-- `codeql.yml` — CodeQL Advanced Setup (see above)
-- `gemini-review.yml` — AI-assisted PR review (upstream)
-- `gradle.yml` — additional Gradle wrapper validation (upstream)
+- `ci.yml` — unit tests, lint and debug build on every push and pull request
+- `release.yml` — tagged release: version guard, signed APK with `apksigner verify`, SHA-256, `mapping.txt`, GitHub Release
+- `debug.yml` — debug APK artifact build on manual trigger
+- `codeql.yml` — CodeQL Advanced Setup with `security-extended` queries (see above)
+- `osv.yml` — dependency vulnerability scan (OSV)
+- `store.yml` — validates fastlane metadata and the F-Droid recipe on release
+
+All actions are pinned to commit SHAs. Dependabot covers `github-actions` and
+`gradle`.
+
+## Store distribution
+
+- Application id: `in.rahulja.materialhn`. Display name: Material HN.
+- Licence: GPL-3.0-or-later. Upstream Apache-2.0 portions are recorded in `NOTICE`.
+- `fastlane/metadata/android/en-US/` holds listing text and images.
+- `metadata/in.rahulja.materialhn.yml` is the F-Droid recipe; `docs/STORE_SUBMISSION.md`
+  holds the submission steps.
+- Version bumps live in `version.properties` and must match the release tag.
+- `docs/ROADMAP.md` is the only roadmap. `docs/specs/` and `docs/plans/` hold design
+  and execution records for work in flight.
 
 ## Fork Sync Workflow
 
