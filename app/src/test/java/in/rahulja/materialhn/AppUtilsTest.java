@@ -211,6 +211,31 @@ public class AppUtilsTest {
   }
 
   @Test
+  public void testGetDataUriId_acceptsHackerNewsLinks() {
+    Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://news.ycombinator.com/item?id=42"));
+    assertEquals("42", AppUtils.getDataUriId(intent, "id"));
+  }
+
+  @Test
+  public void testGetDataUriId_rejectsForeignHosts() {
+    Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://evil.example/?id=42"));
+    assertNull(AppUtils.getDataUriId(intent, "id"));
+  }
+
+  @Test
+  public void testGetDataUriId_rejectsNonWebSchemes() {
+    Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("javascript:alert(1)//?id=42"));
+    assertNull(AppUtils.getDataUriId(intent, "id"));
+  }
+
+  @Test
+  public void testGetDataUriId_acceptsOwnScheme() {
+    Intent intent = new Intent(Intent.ACTION_VIEW,
+        android.net.Uri.parse("in.rahulja.materialhn://item/42"));
+    assertEquals("42", AppUtils.getDataUriId(intent, "id"));
+  }
+
+  @Test
   public void testGetCredentials_noUsername_returnsNull() {
     Context context = ApplicationProvider.getApplicationContext();
     Preferences.setUsername(context, null);

@@ -226,12 +226,16 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         if (mItem != null) {
             androidx.core.view.ViewCompat.setTransitionName(findViewById(R.id.header_card_view), "story_" + mItem.getId());
             bindData(mItem);
-        } else if (!TextUtils.isEmpty(mItemId)) {
-            androidx.core.view.ViewCompat.setTransitionName(findViewById(R.id.header_card_view), "story_" + mItemId);
-            AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItemId,
-                    getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT),
-                    new ItemResponseListener(this)));
-        }
+    } else if (!TextUtils.isEmpty(mItemId)) {
+      androidx.core.view.ViewCompat.setTransitionName(findViewById(R.id.header_card_view), "story_" + mItemId);
+      AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItemId,
+              getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT),
+              new ItemResponseListener(this)));
+    } else {
+      // No item id and no item payload: nothing to show.
+      finish();
+      return;
+    }
         if (!AppUtils.hasConnection(this)) {
             AppUtils.showSnackbar(mCoordinatorLayout, getSnackbarAnchor(), R.string.offline_notice, Snackbar.LENGTH_LONG);
         }

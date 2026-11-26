@@ -832,19 +832,27 @@ public class AppUtils {
   /**
    * Gets the ID from a data URI.
    *
+   * Only this app's own scheme and Hacker News web links are accepted, so a link
+   * from any other site cannot be used to open an arbitrary item or user.
+   *
    * @param intent The intent to get the URI from.
    * @param altParamId The alternate parameter ID to use.
-   * @return The ID from the URI.
+   * @return The ID from the URI, or null when the URI is not a Hacker News link.
    */
   public static String getDataUriId(@NonNull Intent intent, String altParamId) {
     if (intent.getData() == null) {
       return null;
     }
-    if (TextUtils.equals(intent.getData().getScheme(), BuildConfig.APPLICATION_ID)) {
-      return intent.getData().getLastPathSegment();
-    } else { // web URI
-      return intent.getData().getQueryParameter(altParamId);
+    Uri data = intent.getData();
+    String scheme = data.getScheme();
+    if (TextUtils.equals(scheme, BuildConfig.APPLICATION_ID)) {
+      return data.getLastPathSegment();
     }
+    boolean webScheme = TextUtils.equals(scheme, "https") || TextUtils.equals(scheme, "http");
+    if (webScheme && TextUtils.equals(data.getHost(), "news.ycombinator.com")) {
+      return data.getQueryParameter(altParamId);
+    }
+    return null;
   }
 
   /**

@@ -37,6 +37,10 @@ public class WidgetProvider extends AppWidgetProvider {
       int appWidgetId =
           intent.getIntExtra(
               AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+      if (!isKnownWidget(context, appWidgetId)) {
+        // Ignore ids this provider does not own; any app can send this broadcast.
+        return;
+      }
       final PendingResult pendingResult = goAsync();
       new Thread(
               () -> {
@@ -61,6 +65,24 @@ public class WidgetProvider extends AppWidgetProvider {
     } else {
       super.onReceive(context, intent);
     }
+  }
+
+  /**
+   * True when the widget id belongs to an instance of this provider.
+   */
+  static boolean isKnownWidget(Context context, int appWidgetId) {
+    if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+      return false;
+    }
+    int[] ids =
+        AppWidgetManager.getInstance(context)
+            .getAppWidgetIds(new android.content.ComponentName(context, WidgetProvider.class));
+    for (int id : ids) {
+      if (id == appWidgetId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override

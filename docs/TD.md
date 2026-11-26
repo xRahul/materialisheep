@@ -76,8 +76,23 @@ as `LiveData`.
 | Release build | R8 shrinking; signing keys from CI secrets only |
 | Telemetry | None. No analytics or crash-upload SDK |
 
-Component exposure (exported components and why) is recorded in
-`docs/STORE_SUBMISSION.md` once the audit lands.
+Component exposure (exported components and why) is recorded in the table below;
+anything not listed is `android:exported="false"`.
+
+| Component | Exported for | Input handling |
+|---|---|---|
+| `LauncherActivity` | launcher | none |
+| `ItemActivity` | Hacker News item links, app scheme | `AppUtils.getDataUriId` accepts only `https`/`http` on `news.ycombinator.com` or this app's scheme; otherwise finishes |
+| `UserActivity` | Hacker News user links | same validation; finishes without a username |
+| `NewActivity`, `ShowActivity`, `AskActivity`, `JobsActivity`, `BestActivity`, `PopularActivity` | Hacker News feed links | intent data is not read; the feed is fixed per activity |
+| `FavoriteActivity`, `SearchActivity` | `ACTION_SEARCH` from system search | query string only |
+| `SettingsActivity` | `ACTION_APPLICATION_PREFERENCES` | none |
+| `SubmitActivity` | `ACTION_SEND` share target | subject and text pre-fill the submit form, user confirms |
+| `WidgetConfigActivity`, `WidgetProvider` | widget host | refresh broadcast accepted only for widget ids this provider owns |
+| `accounts.AuthenticatorService` | `AccountManager` | `signature` permission `in.rahulja.materialhn.permission.AUTHENTICATE_ACCOUNTS` |
+| `data.ItemSyncService` | sync framework | `signature` permission `in.rahulja.materialhn.permission.SYNC_ITEM` |
+| `data.ItemSyncJobService`, `appwidget.WidgetRefreshJobService` | job scheduler | `android.permission.BIND_JOB_SERVICE` |
+
 
 ## 5. Build
 
