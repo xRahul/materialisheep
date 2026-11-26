@@ -480,11 +480,11 @@ git commit -m "ci(security): pin actions to commit SHAs and add dependabot"
 
 **Files:**
 - Modify: `.github/workflows/codeql.yml`
-- Create: `.github/workflows/osv.yml`, `.github/workflows/release.yml` (guard)
+- Modify: `.github/workflows/release.yml` (guard)
 
 - [ ] **Step 1: CodeQL** — add `queries: security-extended` to the `init` step; keep `build-mode: manual` and `./gradlew assembleDebug`.
 
-- [ ] **Step 2: OSV workflow** — `google/osv-scanner-action` on `push`, `pull_request`, weekly cron; fail on `HIGH`/`CRITICAL` runtime findings.
+- [ ] **Step 2: Dependency graph** — add a `submit-dependencies` job to `ci.yml` on push to master using `gradle/actions/dependency-submission`, so Dependabot advisories cover Gradle dependencies. (OSV scanning was dropped: without lockfiles it cannot read a version catalog.)
 
 - [ ] **Step 3: Release guard** — in `release.yml`, before `assembleRelease`, assert `git describe --tags --exact-match` equals `v$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)` from `version.properties`; fail otherwise. Rename the asset to `in.rahulja.materialhn-${TAG}.apk`. Add `apksigner verify --print-certs` and upload `app/build/outputs/mapping/release/mapping.txt` as an artifact.
 

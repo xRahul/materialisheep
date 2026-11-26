@@ -98,11 +98,12 @@ Workflows in `.github/workflows/`:
 - `release.yml` — tagged release: version guard, signed APK with `apksigner verify`, SHA-256, `mapping.txt`, GitHub Release
 - `debug.yml` — debug APK artifact build on manual trigger
 - `codeql.yml` — CodeQL Advanced Setup with `security-extended` queries (see above)
-- `osv.yml` — dependency vulnerability scan (OSV)
 - `store.yml` — validates fastlane metadata and the F-Droid recipe on release
 
-All actions are pinned to commit SHAs. Dependabot covers `github-actions` and
-`gradle`.
+Dependencies reach GitHub's advisory database through
+`gradle/actions/dependency-submission` in `ci.yml` (OSV cannot read a Gradle
+version catalog, so there is no separate scanner). All actions are pinned to
+commit SHAs. Dependabot covers `github-actions` and `gradle`.
 
 ## Store distribution
 

@@ -158,7 +158,7 @@ Risks to record in the MR:
 - `permissions:` least privilege on every workflow (`contents: read` unless releasing).
 - Drop `gemini-review.yml` and `.github/commands/gemini-*` — third-party AI automation with repo write access on PRs.
 - CodeQL: `security-extended` queries, keep the weekly schedule.
-- Add `osv-scanner` on push + weekly; fail on `HIGH`/`CRITICAL` in runtime dependencies.
+- Feed GitHub's dependency graph from CI (`gradle/actions/dependency-submission`) so Dependabot advisories cover Gradle dependencies. A separate OSV scan was dropped: it cannot read a version catalog without lockfiles.
 
 ### 6.5 Not doing
 
@@ -186,7 +186,6 @@ Consolidate docs:
 ```
 push / PR  -> ci.yml        : testDebugUnitTest, lintDebug, assembleDebug, reports on failure
 weekly     -> codeql.yml    : security-extended (java-kotlin, manual build)
-weekly     -> osv.yml       : dependency vulnerabilities
 tag v*     -> release.yml   : verify version.properties == tag, build signed, apksigner verify,
                               sha256, release assets in.rahulja.materialhn-v<tag>.apk
 release    -> store.yml     : validate fastlane metadata + recipe, print submission checklist
