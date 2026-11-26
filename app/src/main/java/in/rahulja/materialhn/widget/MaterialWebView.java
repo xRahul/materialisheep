@@ -23,14 +23,13 @@ import android.util.AttributeSet;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebViewClient;
-import in.rahulja.materialhn.AppUtils;
 import in.rahulja.materialhn.annotation.Synthetic;
 
 public class MaterialWebView extends android.webkit.WebView {
   static final String BLANK = "about:blank";
   static final String FILE = "file:///";
   private final HistoryWebViewClient mClient = new HistoryWebViewClient();
-  @Synthetic String mPendingUrl, mPendingHtml;
+  @Synthetic boolean mClearHistoryOnCommit;
 
   public MaterialWebView(Context context) {
     this(context, null);
@@ -52,20 +51,21 @@ public class MaterialWebView extends android.webkit.WebView {
 
   @Override
   public boolean canGoBack() {
-    return TextUtils.isEmpty(mPendingUrl) && super.canGoBack();
+    return !mClearHistoryOnCommit && super.canGoBack();
   }
 
   public void reloadUrl(String url) {
     if (getProgress() < 100) {
-      stopLoading(); // this will fire onPageFinished for current URL
+      stopLoading(); // this fires onPageFinished for the current URL
     }
-    mPendingUrl = url;
-    loadUrl(BLANK); // clear current web resources, load pending URL upon onPageFinished
+    mClearHistoryOnCommit = true;
+    loadUrl(url);
   }
 
   public void reloadHtml(String html) {
-    mPendingHtml = html;
-    reloadUrl(FILE);
+    stopLoading();
+    mClearHistoryOnCommit = true;
+    loadDataWithBaseURL(FILE, html, "text/html", "UTF-8", null);
   }
 
   protected WebResourceResponse interceptRequest(WebResourceRequest request) {
@@ -145,8 +145,7 @@ public class MaterialWebView extends android.webkit.WebView {
     public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon) {
       super.onPageStarted(view, url, favicon);
       view.pageUp(true);
-      MaterialWebView webView = (MaterialWebView) view;
-      if (AppUtils.urlEquals(url, webView.mPendingUrl)) {
+      if (!TextUtils.isEmpty(url) && !TextUtils.equals(url, BLANK)) {
         view.setVisibility(VISIBLE);
       }
       if (mClient != null) {
@@ -155,24 +154,29 @@ public class MaterialWebView extends android.webkit.WebView {
     }
 
     @Override
+    public void onPageCommitVisible(android.webkit.WebView view, String url) {
+      super.onPageCommitVisible(view, url);
+      view.setVisibility(VISIBLE);
+      clearPendingHistory(view);
+      if (mClient != null) {
+        mClient.onPageCommitVisible(view, url);
+      }
+    }
+
+    @Override
     public void onPageFinished(android.webkit.WebView view, String url) {
       super.onPageFinished(view, url);
-      MaterialWebView webView = (MaterialWebView) view;
-      if (TextUtils.equals(url, BLANK)) { // has pending reload, open corresponding URL
-        if (!TextUtils.isEmpty(webView.mPendingHtml)) {
-          view.loadDataWithBaseURL(
-              webView.mPendingUrl, webView.mPendingHtml, "text/html", "UTF-8", webView.mPendingUrl);
-        } else {
-          view.loadUrl(webView.mPendingUrl);
-        }
-      } else if (!TextUtils.isEmpty(webView.mPendingUrl)
-          && TextUtils.equals(url, webView.mPendingUrl)) { // reload done, clear history
-        webView.mPendingUrl = null;
-        webView.mPendingHtml = null;
-        view.clearHistory();
-      }
+      // Covers pages where onPageCommitVisible never fires.
+      clearPendingHistory(view);
       if (mClient != null) {
         mClient.onPageFinished(view, url);
+      }
+    }
+
+    private static void clearPendingHistory(android.webkit.WebView view) {
+      if (view instanceof MaterialWebView && ((MaterialWebView) view).mClearHistoryOnCommit) {
+        ((MaterialWebView) view).mClearHistoryOnCommit = false;
+        view.clearHistory();
       }
     }
 
