@@ -1,22 +1,64 @@
-Privacy Policy
+Privacy Policy — Material HN (in.rahulja.materialhn)
 
-This Privacy Policy explains how personal data might be collected from users of Materialistic - Hacker News (https://play.google.com/store/apps/details?id=io.github.hidroh.materialistic) - from now on referred to as the app - how they are stored, processed and used by the app.
+Material HN is a Hacker News client. It has no analytics, no advertising, no
+crash-reporting service and no third-party SDKs. Nothing you do in the app is
+reported to the app's authors.
 
-1. Your provided data
-As a Hacker News (https://news.ycombinator.com) user, one may optionally provide login credentials to the app. Once provided, your login credentials will be used by the app for the sole purpose of connecting to Hacker News on your behalf, and only when your explicit interactions within the app require such credentials.
+1. Data you provide
 
-Your login credentials if provided will be stored securely under your device's Accounts, and remain there until you explicitly remove them via device's Settings, or when you uninstall the app.
+Logging in to Hacker News is optional. If you log in, the username is kept in
+app preferences and the password is stored encrypted with a key held by the
+Android Keystore; that key never leaves your device. Credentials are sent only
+to news.ycombinator.com, and only when you perform an action that requires
+them (voting, replying, submitting, saving).
 
-2. Required permission
-Due to platform limitation, Android 5.1 and lower device users will see an extra permission called "Identity", or "Accounts", requested by the app. This permission allows an app to:
-- create accounts and set passwords
-- find accounts on the device
+You can remove the stored credentials at any time by uninstalling the app or
+clearing its storage. Uninstalling removes all local data.
 
-This permission is required for the purpose of integrating with device's Accounts for your Hacker News login credentials explained above. The app does not have access or attempt to manipulate any other accounts on your device.
+2. Data stored on your device
 
-Identity/Acount permission is not required for Android 6 and above.
+Reading history, saved stories, drafts, cached readability articles, cached
+web pages and the sync queue are stored locally in an app-private database,
+private preferences and the app cache. They are not transmitted anywhere.
+Credentials and WebView data are excluded from Android's cloud backup and
+device-transfer features.
 
-3. Collection of anonymous data for analytics
-While you are interacting with the app, anonymous information regarding your device might be collected for the purpose of crash reporting and usage monitoring related to the app. The information collected helps identify app defects and popular features, that would serve as guidelines for the app's future improvements.
+3. Network connections
 
-Analytics data collected includes solely those permitted by Android platform without any extra permissions, and are not shared with any other third party services except the ones that the app relies on for data collection.
+The app contacts the following services, and only these, plus the article site
+you open:
+
+- hacker-news.firebaseio.com — official Hacker News API
+- hn.algolia.com — Algolia Hacker News search
+- news.ycombinator.com — login and authenticated actions
+
+Article URLs are opened through the platform browser or the in-app reader.
+Links are stripped of common tracking parameters before they are opened. The
+app blocks known advertising and tracker domains with a locally bundled
+blocklist.
+
+All connections use HTTPS. Cleartext HTTP is disabled in the app's network
+security configuration.
+
+4. Permissions
+
+- Internet and network state: to fetch Hacker News content.
+- Accounts (AUTHENTICATE_ACCOUNTS, GET_ACCOUNTS): to let you choose a saved
+  account. The app cannot read or modify accounts that belong to other apps.
+- Notifications: for background sync results and replies, only if you enable
+  them.
+- Sync settings: to schedule background sync of saved items.
+- Vibrate: for haptic feedback.
+
+5. Children
+
+The app is not directed at children and collects no personal data from anyone.
+
+6. Changes
+
+This policy is part of the source repository. Any change ships with the app
+version that changes the behaviour.
+
+7. Contact
+
+Report issues at https://github.com/xRahul/materialisheep/issues.
