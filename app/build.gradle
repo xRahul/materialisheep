@@ -8,11 +8,16 @@ def versionProps = new Properties()
 if (versionPropsFile.canRead()) {
     versionPropsFile.withInputStream { is -> versionProps.load(is) }
 }
+// Gradle properties win over version.properties so store builders can override
+// them without editing tracked files: ./gradlew -PversionCode=102 -PversionName=4.6.0
+def propOr = { String name, String fallback ->
+    (project.findProperty(name) ?: fallback).toString()
+}
 def verMajor = versionProps['VERSION_MAJOR'] ?: "3"
 def verMinor = versionProps['VERSION_MINOR'] ?: "4"
 def verPatch = versionProps['VERSION_PATCH'] ?: "13"
-def verCode = (versionProps['VERSION_CODE'] ?: "93").toInteger()
-def verName = "${verMajor}.${verMinor}.${verPatch}"
+def verCode = propOr('versionCode', versionProps['VERSION_CODE'] ?: "93").toInteger()
+def verName = propOr('versionName', "${verMajor}.${verMinor}.${verPatch}")
 
 android {
     compileSdk 36
@@ -22,15 +27,15 @@ android {
         minSdk = 31
         targetSdk = 36
         versionCode verCode
-        def gitHash = { ->
+        versionName verName
+        def gitHash = propOr('gitHash', {
             try {
                 def hash = "git rev-parse --short HEAD".execute().text.trim()
                 return hash.isEmpty() ? "unknown" : hash
             } catch (Exception e) {
                 "unknown"
             }
-        }()
-        versionName verName
+        }())
         buildConfigField "String", "GIT_HASH", "\"${gitHash}\""
         buildConfigField "int", "LATEST_RELEASE", "${verCode}"
         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
