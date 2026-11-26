@@ -24,6 +24,7 @@ import android.webkit.JavascriptInterface;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 import androidx.activity.OnBackPressedCallback;
@@ -38,6 +39,7 @@ import in.rahulja.materialhn.data.ReadabilityClient;
 import in.rahulja.materialhn.data.ResponseListener;
 import in.rahulja.materialhn.data.WebItem;
 import in.rahulja.materialhn.widget.AdBlockWebViewClient;
+import in.rahulja.materialhn.widget.ArticleUrlPolicy;
 import in.rahulja.materialhn.widget.AppBarScrollSync;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import in.rahulja.materialhn.widget.CacheableWebView;
@@ -97,6 +99,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   private boolean mIsHackerNewsUrl, mEmpty, mReadability;
   private PdfAndroidJavascriptBridge mPdfAndroidJavascriptBridge;
   @Synthetic OnBackPressedCallback mBackPressedCallback;
+  private View mErrorPanel;
+  private TextView mErrorMessage;
+  private boolean mUpgradedFromHttp;
 
   @Override
   public void onAttach(Context context) {
@@ -137,6 +142,13 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     mFragmentView = inflater.inflate(R.layout.fragment_web, container, false);
     mControls = (ViewSwitcher) mFragmentView.findViewById(R.id.control_switcher);
     mWebView = (MaterialWebView) mFragmentView.findViewById(R.id.web_view);
+    mErrorPanel = mFragmentView.findViewById(R.id.web_error);
+    mErrorMessage = (TextView) mFragmentView.findViewById(R.id.web_error_message);
+    mFragmentView.findViewById(R.id.web_error_retry).setOnClickListener(v -> {
+      hideError();
+      load();
+    });
+    mFragmentView.findViewById(R.id.web_error_open).setOnClickListener(v -> openInBrowser());
     mButtonRefresh = (ImageButton) mFragmentView.findViewById(R.id.button_refresh);
     mButtonMore = mFragmentView.findViewById(R.id.button_more);
     mButtonNext = mFragmentView.findViewById(R.id.button_next);
@@ -293,6 +305,8 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     }
     mScrollableHelper = null;
     mAppBarScrollSync = null;
+    mErrorPanel = null;
+    mErrorMessage = null;
     mSystemUiHelper = null;
     mControls = null;
     mButtonRefresh = null;
@@ -360,6 +374,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mAppBarScrollSync != null) {
       mAppBarScrollSync.expand();
     }
+    hideError();
     mWebView.setVisibility(View.INVISIBLE);
     if (mIsHackerNewsUrl) {
       bindContent();
@@ -376,7 +391,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   private void loadUrl() {
     setWebSettings(true);
-    reloadUrl(mItem.getUrl());
+    String original = mItem.getUrl();
+    String upgraded = ArticleUrlPolicy.upgradeToHttps(original);
+    mUpgradedFromHttp = upgraded != null && original != null && !upgraded.equals(original);
+    reloadUrl(upgraded);
   }
 
   private void reloadUrl(String url) {
@@ -574,6 +592,29 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             super.doUpdateVisitedHistory(view, url, isReload);
             updateBackPressedCallback();
           }
+
+          @Override
+          public void onReceivedError(
+              android.webkit.WebView view,
+              android.webkit.WebResourceRequest request,
+              android.webkit.WebResourceError error) {
+            super.onReceivedError(view, request, error);
+            if (request.isForMainFrame()) {
+              showError(
+                  mUpgradedFromHttp
+                      ? R.string.web_error_https_only
+                      : R.string.web_error_generic);
+            }
+          }
+
+          @Override
+          public void onReceivedSslError(
+              android.webkit.WebView view,
+              android.webkit.SslErrorHandler handler,
+              android.net.http.SslError error) {
+            handler.cancel();
+            showError(R.string.web_error_ssl);
+          }
         });
     mWebView.setWebChromeClient(
         new CacheableWebView.ArchiveClient() {
@@ -590,7 +631,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
           if (getActivity() == null) {
             return;
           }
-          if (mimetype.equals(PDF_MIME_TYPE)) {
+          if (isPdf(mimetype, url)) {
             setProgress(10);
             mIsPdf = true;
             downloadFileAndRenderPdf();
@@ -612,14 +653,56 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mWebView != null) {
       mWebView.setVisibility(GONE);
     }
-    View emptyView = getActivity().findViewById(R.id.empty);
+    View emptyView = mFragmentView == null ? null : mFragmentView.findViewById(R.id.empty);
     if (emptyView != null) {
       emptyView.setVisibility(VISIBLE);
     }
-    View downloadButton = getActivity().findViewById(R.id.download_button);
+    View downloadButton = mFragmentView == null ? null : mFragmentView.findViewById(R.id.download_button);
     if (downloadButton != null) {
       downloadButton.setOnClickListener(v -> startActivity(intent));
     }
+  }
+
+  private void showError(int messageRes) {
+    if (mWebView != null) {
+      mWebView.setVisibility(GONE);
+    }
+    if (mErrorPanel != null) {
+      mErrorPanel.setVisibility(VISIBLE);
+    }
+    if (mErrorMessage != null) {
+      mErrorMessage.setText(messageRes);
+    }
+    setProgress(100);
+  }
+
+  private void hideError() {
+    if (mErrorPanel != null) {
+      mErrorPanel.setVisibility(GONE);
+    }
+  }
+
+  private void openInBrowser() {
+    if (getActivity() == null || mItem == null) {
+      return;
+    }
+    AppUtils.openWebUrlExternal(getActivity(), mItem, mItem.getUrl(), null);
+  }
+
+  @Synthetic
+  static boolean isPdf(String mimetype, String url) {
+    if (mimetype == null || url == null) {
+      return false;
+    }
+    String type = mimetype.toLowerCase(java.util.Locale.ROOT);
+    if (type.startsWith(PDF_MIME_TYPE)) {
+      return true;
+    }
+    if (!type.equals("application/octet-stream")) {
+      return false;
+    }
+    String path = Uri.parse(url).getPath();
+    return path != null && path.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf");
   }
 
   private void setProgress(int progress) {

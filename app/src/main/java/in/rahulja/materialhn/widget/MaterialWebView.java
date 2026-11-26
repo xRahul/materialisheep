@@ -174,6 +174,14 @@ public class MaterialWebView extends android.webkit.WebView {
     @Override
     public boolean shouldOverrideUrlLoading(
         android.webkit.WebView view, WebResourceRequest request) {
+      if (request.isForMainFrame()) {
+        String url = request.getUrl().toString();
+        String upgraded = ArticleUrlPolicy.upgradeToHttps(url);
+        if (upgraded != null && !upgraded.equals(url)) {
+          view.loadUrl(upgraded);
+          return true;
+        }
+      }
       if (handleNavigation(view, request.getUrl().toString())) {
         return true;
       }
@@ -209,6 +217,51 @@ public class MaterialWebView extends android.webkit.WebView {
       clearPendingHistory(view);
       if (mClient != null) {
         mClient.onPageFinished(view, url);
+      }
+    }
+
+    @Override
+    public void doUpdateVisitedHistory(
+        android.webkit.WebView view, String url, boolean isReload) {
+      super.doUpdateVisitedHistory(view, url, isReload);
+      if (mClient != null) {
+        mClient.doUpdateVisitedHistory(view, url, isReload);
+      }
+    }
+
+    @Override
+    public void onReceivedError(
+        android.webkit.WebView view,
+        WebResourceRequest request,
+        android.webkit.WebResourceError error) {
+      if (mClient != null) {
+        mClient.onReceivedError(view, request, error);
+      }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onReceivedError(
+        android.webkit.WebView view,
+        int errorCode,
+        String description,
+        String failingUrl) {
+      if (mClient != null) {
+        mClient.onReceivedError(view, errorCode, description, failingUrl);
+      } else {
+        super.onReceivedError(view, errorCode, description, failingUrl);
+      }
+    }
+
+    @Override
+    public void onReceivedSslError(
+        android.webkit.WebView view,
+        android.webkit.SslErrorHandler handler,
+        android.net.http.SslError error) {
+      if (mClient != null) {
+        mClient.onReceivedSslError(view, handler, error);
+      } else {
+        super.onReceivedSslError(view, handler, error);
       }
     }
 

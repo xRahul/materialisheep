@@ -10,8 +10,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.View;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebViewClient;
+import android.widget.TextView;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -243,6 +250,93 @@ public class WebFragmentTest {
         assertEquals(
                 android.view.View.GONE,
                 fragment.getView().findViewById(R.id.control_switcher).getVisibility());
+    }
+
+    @Test
+    public void testMainFrameErrorShowsPanel() {
+        WebFragment fragment = attachFragment();
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getWebViewClient();
+
+        client.onReceivedError(
+                fragment.mWebView, request("https://example.com", true), webResourceError());
+
+        View panel = fragment.getView().findViewById(R.id.web_error);
+        assertEquals(View.VISIBLE, panel.getVisibility());
+        assertEquals(
+                fragment.getString(R.string.web_error_generic),
+                ((TextView) fragment.getView().findViewById(R.id.web_error_message))
+                        .getText()
+                        .toString());
+    }
+
+    @Test
+    public void testSubresourceErrorDoesNotShowPanel() {
+        WebFragment fragment = attachFragment();
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getWebViewClient();
+
+        client.onReceivedError(
+                fragment.mWebView, request("https://example.com/ad.js", false), webResourceError());
+
+        assertEquals(View.GONE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
+    @Test
+    public void testRetryHidesPanelAndReloads() {
+        WebFragment fragment = attachFragment();
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getWebViewClient();
+        client.onReceivedError(
+                fragment.mWebView, request("https://example.com", true), webResourceError());
+
+        fragment.getView().findViewById(R.id.web_error_retry).performClick();
+
+        assertEquals(View.GONE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+        assertEquals(
+                "https://example.com",
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getLastLoadedUrl());
+    }
+
+    @Test
+    public void testSslErrorIsCancelledAndShown() {
+        WebFragment fragment = attachFragment();
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getWebViewClient();
+        SslErrorHandler handler = mock(SslErrorHandler.class);
+
+        client.onReceivedSslError(
+                fragment.mWebView, handler, mock(android.net.http.SslError.class));
+
+        verify(handler).cancel();
+        assertEquals(View.VISIBLE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
+    @Test
+    public void testIsPdfDetection() {
+        org.junit.Assert.assertTrue(WebFragment.isPdf("application/pdf", "https://x/a.pdf"));
+        org.junit.Assert.assertTrue(
+                WebFragment.isPdf("APPLICATION/PDF; charset=binary", "https://x/a"));
+        org.junit.Assert.assertTrue(
+                WebFragment.isPdf("application/octet-stream", "https://x/docs/a.PDF?dl=1"));
+        org.junit.Assert.assertFalse(
+                WebFragment.isPdf("application/octet-stream", "https://x/a.zip"));
+        org.junit.Assert.assertFalse(WebFragment.isPdf("text/html", "https://x/a.pdf"));
+        org.junit.Assert.assertFalse(WebFragment.isPdf(null, null));
+    }
+
+    private WebResourceError webResourceError() {
+        WebResourceError error = mock(WebResourceError.class);
+        when(error.getErrorCode()).thenReturn(-1);
+        when(error.getDescription()).thenReturn("mock");
+        return error;
+    }
+
+    private WebResourceRequest request(String url, boolean mainFrame) {
+        WebResourceRequest request = mock(WebResourceRequest.class);
+        when(request.getUrl()).thenReturn(Uri.parse(url));
+        when(request.isForMainFrame()).thenReturn(mainFrame);
+        return request;
     }
 
     private WebFragment attachFragment() {
