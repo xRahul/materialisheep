@@ -30,7 +30,6 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.os.BundleCompat;
-import androidx.core.widget.NestedScrollView;
 import in.rahulja.materialhn.annotation.Synthetic;
 import in.rahulja.materialhn.data.FileDownloader;
 import in.rahulja.materialhn.data.Item;
@@ -68,7 +67,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   public static final String PDF_LOADER_URL = "file:///android_asset/pdf/index.html";
   private static final String PDF_MIME_TYPE = "application/pdf";
   @Synthetic MaterialWebView mWebView;
-  private NestedScrollView mScrollView;
   @Synthetic boolean mExternalRequired = false;
 
   @Inject
@@ -76,11 +74,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   ItemManager mItemManager;
 
   @Inject PopupMenu mPopupMenu;
-  private KeyDelegate.NestedScrollViewHelper mScrollableHelper;
+  private KeyDelegate.WebViewHelper mScrollableHelper;
   private final CompositeDisposable mDisposables = new CompositeDisposable();
   private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
-  private ViewGroup mFullscreenView;
-  private ViewGroup mScrollViewContent;
   @Synthetic ImageButton mButtonRefresh;
   private ViewSwitcher mControls;
   private EditText mEditText;
@@ -137,9 +133,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
     mFragmentView = inflater.inflate(R.layout.fragment_web, container, false);
-    mFullscreenView = (ViewGroup) mFragmentView.findViewById(R.id.fullscreen);
-    mScrollViewContent = (ViewGroup) mFragmentView.findViewById(R.id.scroll_view_content);
-    mScrollView = (NestedScrollView) mFragmentView.findViewById(R.id.nested_scroll_view);
     mControls = (ViewSwitcher) mFragmentView.findViewById(R.id.control_switcher);
     mWebView = (MaterialWebView) mFragmentView.findViewById(R.id.web_view);
     mButtonRefresh = (ImageButton) mFragmentView.findViewById(R.id.button_refresh);
@@ -157,7 +150,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mScrollableHelper = new KeyDelegate.NestedScrollViewHelper(mScrollView);
+    mScrollableHelper = new KeyDelegate.WebViewHelper(mWebView);
     mSystemUiHelper = new AppUtils.SystemUiHelper(getActivity().getWindow());
     mSystemUiHelper.setEnabled(!getResources().getBoolean(R.bool.multi_pane));
     if (mFullscreen) {
@@ -287,17 +280,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mWebView.destroy();
       mWebView = null;
     }
-    mScrollView = null;
-    mFullscreenView = null;
-    mScrollViewContent = null;
+    mScrollableHelper = null;
+    mSystemUiHelper = null;
     mControls = null;
     mButtonRefresh = null;
     mButtonMore = null;
     mButtonNext = null;
     mEditText = null;
     mProgressBar = null;
-    mScrollableHelper = null;
-    mSystemUiHelper = null;
     mFragmentView = null;
     super.onDestroyView();
   }
@@ -326,39 +316,19 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Override
   public void scrollToTop() {
-    if (mFullscreen) {
-      if (mWebView != null) {
-        mWebView.pageUp(true);
-      }
-    } else if (mScrollableHelper != null) {
+    if (mScrollableHelper != null) {
       mScrollableHelper.scrollToTop();
     }
   }
 
   @Override
   public boolean scrollToNext() {
-    if (mFullscreen) {
-      if (mWebView != null) {
-        mWebView.pageDown(false);
-        return true;
-      }
-      return false;
-    } else {
-      return mScrollableHelper != null && mScrollableHelper.scrollToNext();
-    }
+    return mScrollableHelper != null && mScrollableHelper.scrollToNext();
   }
 
   @Override
   public boolean scrollToPrevious() {
-    if (mFullscreen) {
-      if (mWebView != null) {
-        mWebView.pageUp(false);
-        return true;
-      }
-      return false;
-    } else {
-      return mScrollableHelper != null && mScrollableHelper.scrollToPrevious();
-    }
+    return mScrollableHelper != null && mScrollableHelper.scrollToPrevious();
   }
 
   @Override
@@ -665,50 +635,17 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   @Synthetic
   void setFullscreen(boolean isFullscreen) {
-    if (getView() == null || mWebView == null || mControls == null || mScrollViewContent == null) {
+    if (getView() == null || mWebView == null || mControls == null) {
       return;
     }
     mFullscreen = isFullscreen;
     mControls.setVisibility(isFullscreen ? VISIBLE : View.GONE);
-    ViewGroup.LayoutParams params = mWebView.getLayoutParams();
-    if (isFullscreen) {
-      if (mScrollViewContent.getParent() != mFullscreenView) {
-        if (mScrollViewContent.getParent() != null) {
-          ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
-        }
-        if (mFullscreenView != null) {
-          mFullscreenView.addView(mScrollViewContent);
-        }
-      }
-      if (mScrollView != null) {
-        mWebView.scrollTo(mScrollView.getScrollX(), mScrollView.getScrollY());
-      }
-      params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-    } else {
-      reset();
-      // We'll zoom out until it returns false, which means it has min zoom level.
-      // It's quite dangerous piece of code - potentially could lead to infinite loop,
-      // so let's add some reasonable limit just in case
-      int i = 0;
-      while (mWebView.zoomOut() && i < 30) {
-        i++;
-      }
-      if (mScrollView != null && mScrollViewContent.getParent() != mScrollView) {
-        if (mScrollViewContent.getParent() != null) {
-          ((ViewGroup) mScrollViewContent.getParent()).removeView(mScrollViewContent);
-        }
-        mScrollView.addView(mScrollViewContent);
-      }
-      if (mScrollView != null) {
-        mScrollView.post(() -> {
-          if (mScrollView != null && mWebView != null) {
-            mScrollView.scrollTo(mWebView.getScrollX(), mWebView.getScrollY());
-          }
-        });
-      }
-      params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+    if (mSystemUiHelper != null) {
+      mSystemUiHelper.setFullscreen(isFullscreen);
     }
-    mWebView.setLayoutParams(params);
+    if (!isFullscreen) {
+      reset();
+    }
   }
 
   private void showPreferences() {

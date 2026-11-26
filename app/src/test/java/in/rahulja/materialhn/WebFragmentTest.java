@@ -230,6 +230,21 @@ public class WebFragmentTest {
         verify(mockWebView, never()).resumeTimers();
     }
 
+    @Test
+    public void testFullscreenTogglesControls() {
+        WebFragment fragment = attachFragment();
+
+        fragment.setFullscreen(true);
+        assertEquals(
+                android.view.View.VISIBLE,
+                fragment.getView().findViewById(R.id.control_switcher).getVisibility());
+
+        fragment.setFullscreen(false);
+        assertEquals(
+                android.view.View.GONE,
+                fragment.getView().findViewById(R.id.control_switcher).getVisibility());
+    }
+
     private WebFragment attachFragment() {
         Bundle args = new Bundle();
         WebItem item = mock(WebItem.class);

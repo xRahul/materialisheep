@@ -19,7 +19,6 @@ package in.rahulja.materialhn;
 import android.graphics.Color;
 import android.os.Bundle;
 import androidx.activity.OnBackPressedCallback;
-import androidx.core.widget.NestedScrollView;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
 import android.text.TextUtils;
@@ -71,9 +70,12 @@ public class OfflineWebActivity extends ThemedActivity {
         }
         setTitle(url);
         setContentView(R.layout.activity_offline_web);
-        final NestedScrollView scrollView = (NestedScrollView) findViewById(R.id.nested_scroll_view);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setOnClickListener(v -> scrollView.smoothScrollTo(0, 0));
+        toolbar.setOnClickListener(v -> {
+            if (mWebView != null) {
+                mWebView.pageUp(true);
+            }
+        });
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
