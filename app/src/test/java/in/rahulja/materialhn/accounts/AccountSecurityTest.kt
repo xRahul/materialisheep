@@ -72,6 +72,8 @@ class AccountSecurityTest {
         prefs.edit().putString("pwd_$username", android.util.Base64.encodeToString(ByteArray(4), android.util.Base64.NO_WRAP)).apply()
 
         assertNull(AccountSecurity.getPassword(context, username))
+        assertNull("truncated payload must be dropped",
+            prefs.getString("pwd_$username", null))
     }
 
     @Test

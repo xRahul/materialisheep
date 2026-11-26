@@ -129,7 +129,10 @@ object AccountSecurity {
 
         return try {
             val combined = Base64.decode(encoded, Base64.NO_WRAP)
-            if (combined.size <= GCM_IV_LENGTH) return null
+            if (combined.size <= GCM_IV_LENGTH) {
+                clearPassword(context, username)
+                return null
+            }
 
             val iv = ByteArray(GCM_IV_LENGTH)
             val cipherText = ByteArray(combined.size - GCM_IV_LENGTH)
