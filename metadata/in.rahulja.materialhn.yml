@@ -13,15 +13,15 @@ RepoType: git
 Repo: https://github.com/xRahul/materialisheep
 
 Builds:
-  - versionName: 4.5.0
-    versionCode: 101
-    commit: v4.5.0
+  - versionName: 4.6.0
+    versionCode: 102
+    commit: v4.6.0
     gradle:
       - yes
-      - -PversionCode=101
-      - -PversionName=4.5.0
+      - -PversionCode=102
+      - -PversionName=4.6.0
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 4.5.0
-CurrentVersionCode: 101
+CurrentVersion: 4.6.0
+CurrentVersionCode: 102

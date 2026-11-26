@@ -1,5 +1,7 @@
 # Material HN — Store & Security Implementation Plan
 
+> **Status:** executed on branch `feat/materialhn-store-security`; Task 18's tag push is left to the owner.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship `in.rahulja.materialhn` as a clean, GPL-3.0, auditable app that F-Droid and IzzyOnDroid can build and list.
