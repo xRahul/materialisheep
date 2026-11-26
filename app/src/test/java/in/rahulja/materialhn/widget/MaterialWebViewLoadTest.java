@@ -105,4 +105,91 @@ public class MaterialWebViewLoadTest {
 
     assertEquals("https://a.com", Shadows.shadowOf(webView).getLastLoadedUrl());
   }
+
+  @Test
+  public void testPageFinishedRevealsWhenCommitNeverFires() {
+    MaterialWebView webView = createWebView();
+    webView.reloadHtml("<html><body>reader</body></html>");
+
+    clientOf(webView).onPageFinished(webView, MaterialWebView.FILE);
+
+    assertEquals(
+        "data: pages must not stay hidden when commit is never reported",
+        VISIBLE,
+        webView.getVisibility());
+  }
+
+  @Test
+  public void testStalePageFinishDoesNotRevealNewLoad() {
+    MaterialWebView webView = createWebView();
+    webView.reloadUrl("https://b.com");
+
+    clientOf(webView).onPageFinished(webView, "https://a.com");
+
+    assertEquals(
+        "a superseded page must not flash while the new one loads",
+        INVISIBLE,
+        webView.getVisibility());
+  }
+
+  @Test
+  public void testSameUrlReloadFinishDoesNotReveal() {
+    MaterialWebView webView = createWebView();
+    webView.reloadUrl("https://a.com");
+
+    clientOf(webView).onPageFinished(webView, "https://a.com");
+
+    assertEquals(
+        "only commit may reveal a remote page",
+        INVISIBLE,
+        webView.getVisibility());
+  }
+
+  @Test
+  public void testAbortedErrorKeepsLoadState() {
+    MaterialWebView webView = createWebView();
+    webView.reloadUrl("https://a.com");
+
+    android.webkit.WebResourceError aborted = mock(android.webkit.WebResourceError.class);
+    when(aborted.getErrorCode()).thenReturn(-3);
+    when(aborted.getDescription()).thenReturn("net::ERR_ABORTED");
+    clientOf(webView).onReceivedError(webView, request("https://a.com", "GET"), aborted);
+
+    assertTrue("an aborted load must not undo the newer load's history reset",
+        webView.mClearHistoryOnCommit);
+  }
+
+  @Test
+  public void testMainFrameErrorRestoresBackNavigation() {
+    MaterialWebView webView = createWebView();
+    webView.reloadUrl("https://a.com/three");
+    assertTrue("a fresh load hides back navigation until it commits",
+        webView.mClearHistoryOnCommit);
+
+    clientOf(webView).onReceivedError(webView, request("https://a.com/three", "GET"), error());
+
+    assertFalse("a failed load must not keep back navigation disabled",
+        webView.mClearHistoryOnCommit);
+  }
+
+  @Test
+  public void testFailedLoadNeverRevealsItself() {
+    MaterialWebView webView = createWebView();
+    webView.reloadUrl("https://a.com/three");
+
+    clientOf(webView).onReceivedError(webView, request("https://a.com/three", "GET"), error());
+    clientOf(webView).onPageFinished(webView, "https://a.com/three");
+
+    assertEquals(
+        "a failed page must not replace the error panel",
+        INVISIBLE,
+        webView.getVisibility());
+  }
+
+  private android.webkit.WebResourceError error() {
+    android.webkit.WebResourceError error = mock(android.webkit.WebResourceError.class);
+    when(error.getErrorCode()).thenReturn(-2);
+    when(error.getDescription()).thenReturn("net::ERR_NAME_NOT_RESOLVED");
+    return error;
+  }
 }

@@ -391,9 +391,13 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   private void loadUrl() {
     setWebSettings(true);
-    String original = mItem.getUrl();
+    String original = mItem == null ? null : mItem.getUrl();
     String upgraded = ArticleUrlPolicy.upgradeToHttps(original);
-    mUpgradedFromHttp = upgraded != null && original != null && !upgraded.equals(original);
+    if (upgraded == null) {
+      showError(R.string.web_error_generic);
+      return;
+    }
+    mUpgradedFromHttp = original != null && !upgraded.equals(original);
     reloadUrl(upgraded);
   }
 
@@ -656,7 +660,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             mIsPdf = true;
             downloadFileAndRenderPdf(url);
           } else {
-            offerExternalApp();
+            offerExternalApp(url);
           }
         });
     attachScrollListener(webView);
@@ -715,10 +719,15 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void offerExternalApp() {
+    offerExternalApp(null);
+  }
+
+  private void offerExternalApp(@Nullable String targetUrl) {
     if (getActivity() == null || mItem == null) {
       return;
     }
-    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mItem.getUrl()));
+    String url = targetUrl != null ? targetUrl : mItem.getUrl();
+    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
     if (intent.resolveActivity(getActivity().getPackageManager()) == null) {
       return;
     }
@@ -946,7 +955,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
         new FileDownloader.FileDownloaderCallback() {
           @Override
           public void onFailure(Call call, IOException e) {
-            offerExternalApp();
+            offerExternalApp(url);
           }
 
           @Override

@@ -234,10 +234,12 @@ public class MaterialWebView extends android.webkit.WebView {
       // without revealing a page that a newer load has already superseded.
       if (view instanceof MaterialWebView) {
         MaterialWebView webView = (MaterialWebView) view;
-        if (webView.mPendingUrl != null
-            && (TextUtils.equals(url, webView.mPendingUrl)
-                || (TextUtils.equals(webView.mPendingUrl, FILE)
-                    && (url == null || url.startsWith("data:"))))) {
+        // Only local documents need this fallback; remote pages are revealed by
+        // onPageCommitVisible, so a late finish for the same URL cannot flash.
+        if (TextUtils.equals(webView.mPendingUrl, FILE)
+            && (url == null
+                || TextUtils.equals(url, FILE)
+                || url.startsWith("data:"))) {
           view.setVisibility(VISIBLE);
           webView.mPendingUrl = null;
         }
@@ -262,9 +264,14 @@ public class MaterialWebView extends android.webkit.WebView {
         android.webkit.WebView view,
         WebResourceRequest request,
         android.webkit.WebResourceError error) {
-      if (request.isForMainFrame() && view instanceof MaterialWebView) {
-        // A load that never commits must not keep back navigation disabled.
-        ((MaterialWebView) view).mClearHistoryOnCommit = false;
+      if (request.isForMainFrame()
+          && !in.rahulja.materialhn.AppUtils.isAbortedError(error)
+          && view instanceof MaterialWebView) {
+        // A load that never commits must not keep back navigation disabled, and
+        // its late onPageFinished must not reveal the failed page.
+        MaterialWebView webView = (MaterialWebView) view;
+        webView.mClearHistoryOnCommit = false;
+        webView.mPendingUrl = null;
       }
       if (mClient != null) {
         mClient.onReceivedError(view, request, error);

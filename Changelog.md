@@ -1,5 +1,8 @@
 # Changelog
  
+## [UNRELEASED]
+### Added
+
 ## [4.7.0] - 2026-11-26
 ### Added
 - **Article Tab Loading Rework:** The article WebView now owns its scrolling (sticky headers, `100vh` heroes, lazy images and infinite scroll behave as in Chrome) and the app bar follows its scroll; horizontal gestures only leave the pager when the page can pan.

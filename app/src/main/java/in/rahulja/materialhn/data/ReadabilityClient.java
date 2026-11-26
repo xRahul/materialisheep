@@ -184,6 +184,9 @@ public interface ReadabilityClient {
                                 view.evaluateJavascript(
                                         "document.body ? document.body.innerText.length : 0",
                                         value -> {
+                                            if (isFinished.get()) {
+                                                return;
+                                            }
                                             int length = parseInt(value);
                                             long elapsed =
                                                     android.os.SystemClock.elapsedRealtime() - startedAt;

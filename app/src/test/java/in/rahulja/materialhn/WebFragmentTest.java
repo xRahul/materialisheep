@@ -427,6 +427,55 @@ public class WebFragmentTest {
         org.junit.Assert.assertSame(oldParent, fragment.mWebView.getParent());
     }
 
+    @Test
+    public void testPdfDownloadUsesClickedUrl() {
+        WebFragment fragment = attachFragment();
+        android.webkit.DownloadListener listener =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getDownloadListener();
+        org.junit.Assert.assertNotNull("download listener must be installed", listener);
+
+        listener.onDownloadStart(
+                "https://cdn.example.org/paper.pdf",
+                "ua",
+                "attachment",
+                "application/octet-stream",
+                1024);
+
+        verify(mockFileDownloader)
+                .downloadFile(
+                        org.mockito.ArgumentMatchers.eq("https://cdn.example.org/paper.pdf"),
+                        any(),
+                        any());
+    }
+
+    @Test
+    public void testMissingArticleUrlShowsPanel() {
+        Bundle args = new Bundle();
+        WebItem item = mock(WebItem.class);
+        when(item.getUrl()).thenReturn(null);
+        when(item.getId()).thenReturn("1");
+        args.putParcelable(WebFragment.EXTRA_ITEM, item);
+
+        WebFragment fragment = new WebFragment();
+        fragment.setArguments(args);
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+
+        fragment.load();
+
+        assertEquals(
+                "an article without a URL must show the panel, not a blank tab",
+                View.VISIBLE,
+                fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
     private WebResourceError abortedError() {
         WebResourceError error = mock(WebResourceError.class);
         when(error.getErrorCode()).thenReturn(-3);
