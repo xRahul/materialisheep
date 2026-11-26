@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -193,6 +195,61 @@ public class WebFragmentTest {
         webView.setWebChromeClient(null);
         webView.loadUrl("about:blank");
         webView.reloadUrl("https://example.com");
+    }
+
+    @Test
+    public void testLifecyclePausesAndResumesOwnWebView() {
+        WebFragment fragment = attachFragment();
+
+        org.robolectric.shadows.ShadowWebView shadow =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView);
+
+        fragment.onPause();
+        org.junit.Assert.assertTrue(
+                "onPause must pause this WebView", shadow.wasOnPauseCalled());
+
+        fragment.onResume();
+        org.junit.Assert.assertTrue(
+                "onResume must resume this WebView", shadow.wasOnResumeCalled());
+    }
+
+    @Test
+    public void testLifecycleNeverTouchesGlobalTimerPause() {
+        WebFragment fragment = attachFragment();
+        in.rahulja.materialhn.widget.MaterialWebView mockWebView =
+                mock(in.rahulja.materialhn.widget.MaterialWebView.class);
+        fragment.mWebView = mockWebView;
+
+        fragment.onPause();
+        fragment.onResume();
+        fragment.onStop();
+
+        verify(mockWebView).onPause();
+        verify(mockWebView).onResume();
+        verify(mockWebView, never()).pauseTimers();
+        verify(mockWebView, never()).resumeTimers();
+    }
+
+    private WebFragment attachFragment() {
+        Bundle args = new Bundle();
+        WebItem item = mock(WebItem.class);
+        when(item.getUrl()).thenReturn("https://example.com");
+        when(item.getId()).thenReturn("1");
+        args.putParcelable(WebFragment.EXTRA_ITEM, item);
+
+        WebFragment fragment = new WebFragment();
+        fragment.setArguments(args);
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class)
+                .create()
+                .start()
+                .resume()
+                .get();
+
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+        return fragment;
     }
 
     @Test

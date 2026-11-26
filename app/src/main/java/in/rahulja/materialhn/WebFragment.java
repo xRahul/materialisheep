@@ -237,7 +237,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     super.onResume();
     if (mWebView != null) {
       mWebView.onResume();
-      mWebView.resumeTimers();
     }
     updateBackPressedCallback();
   }
@@ -248,12 +247,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (mBackPressedCallback != null) {
       mBackPressedCallback.setEnabled(false);
     }
-  }
-
-  @Override
-  public void onStop() {
-    super.onStop();
-    pauseWebView();
+    if (mWebView != null) {
+      mWebView.onPause();
+    }
   }
 
   @Override
@@ -469,13 +465,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       loadContent();
     } else {
       AppUtils.addDisposable(mDisposables, mItemManager.getItem(mItem.getId(), ItemManager.MODE_DEFAULT, new ItemResponseListener(this)));
-    }
-  }
-
-  private void pauseWebView() {
-    if (mWebView != null) {
-      mWebView.onPause();
-      mWebView.pauseTimers();
     }
   }
 
