@@ -170,7 +170,7 @@ jobs:
         with:
           name: release-apks
           path: |
-            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/in.rahulja.materialhn-*.apk
             app/build/outputs/apk/release/sha256sum.txt
 
       - name: Upload R8 mapping
@@ -187,6 +187,6 @@ jobs:
           body_path: RELEASE_CHANGELOG.md
           make_latest: true
           files: |
-            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/in.rahulja.materialhn-*.apk
             app/build/outputs/apk/release/sha256sum.txt
             app/build/outputs/mapping/release/mapping.txt
