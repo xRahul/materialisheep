@@ -56,7 +56,10 @@ public class WidgetProvider extends AppWidgetProvider {
                 () -> {
                   WidgetHelper widgetHelper = new WidgetHelper(context);
                   for (int appWidgetId : appWidgetIds) {
-                    widgetHelper.configure(appWidgetId);
+                    // This broadcast is spoofable; only refresh widgets we own.
+                    if (isKnownWidget(context, appWidgetId)) {
+                      widgetHelper.configure(appWidgetId);
+                    }
                   }
                   pendingResult.finish();
                 })

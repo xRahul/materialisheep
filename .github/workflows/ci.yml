@@ -47,6 +47,11 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --console=plain
 
+      # R8 shrink and obfuscation only run in this variant; a lost reflection
+      # keep must fail here, not in a release.
+      - name: Assemble release APK
+        run: ./gradlew assembleRelease --console=plain
+
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0

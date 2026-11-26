@@ -259,6 +259,7 @@
     <string name="or">or</string>
     <string name="leave_feedback">Leave feedback</string>
     <string name="no_browser">No browser app found</string>
+    <string name="login_secure_storage_failed">Could not store the credentials securely on this device</string>
     <string name="submit_content_hint">URL or text</string>
     <string name="title_activity_submit">Submit to HN</string>
     <string name="url_text_required">URL or text is required</string>

@@ -6,7 +6,6 @@ import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
-import `in`.rahulja.materialhn.BuildConfig
 import java.security.GeneralSecurityException
 import java.security.KeyStore
 import java.security.UnrecoverableKeyException
@@ -74,12 +73,12 @@ object AccountSecurity {
     }
 
     /**
-     * True for the JVM/Robolectric test runner and for debug builds running on a
-     * device whose Keystore rejects the key. Release builds never take the
-     * fallback path.
+     * True only for the JVM/Robolectric test runner. A device build, debug or
+     * release, must use the real Keystore: a throwaway key there would write
+     * ciphertext that can never be read again.
      */
     private fun isTestEnvironment(): Boolean =
-        BuildConfig.DEBUG || android.os.Build.FINGERPRINT == "robolectric"
+        android.os.Build.FINGERPRINT == "robolectric"
 
     /**
      * Encrypts and securely persists the password for the given username.
@@ -158,6 +157,7 @@ object AccountSecurity {
             null
         } catch (e: Exception) {
             Log.e(TAG, "Failed to decrypt password for user: $username", e)
+            clearPassword(context, username)
             null
         }
     }

@@ -415,12 +415,16 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mWebView.removeJavascriptInterface("PdfAndroidJavascriptBridge");
     }
     if (pdfFilePath != null && TextUtils.equals(PDF_LOADER_URL, url)) {
+      Context appContext = getContext() == null ? null : getContext().getApplicationContext();
+      if (appContext == null) {
+        return; // fragment detached while the download finished
+      }
       mWebView.getSettings().setJavaScriptEnabled(true);
       setProgress(80);
       mIsPdf = true;
       mPdfAndroidJavascriptBridge =
           new PdfAndroidJavascriptBridge(
-              getActivity().getApplicationContext(),
+              appContext,
               pdfFilePath,
               new PdfAndroidJavascriptBridge.Callbacks() {
                 @Override

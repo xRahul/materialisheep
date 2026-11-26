@@ -84,6 +84,8 @@ class AccountSecurityTest {
         prefs.edit().putString("pwd_$username", tampered).commit()
 
         assertNull(AccountSecurity.getPassword(context, username))
+        assertNull("undecryptable ciphertext must be dropped",
+            prefs.getString("pwd_$username", null))
     }
 
     @Test

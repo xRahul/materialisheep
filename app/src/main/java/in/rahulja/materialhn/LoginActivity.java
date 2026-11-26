@@ -149,7 +149,13 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     private void addAccount(String username, String password) {
         Account account = new Account(username, BuildConfig.APPLICATION_ID);
         mAccountManager.addAccountExplicitly(account, null, null);
-        AccountSecurity.savePassword(this, username, password);
+        if (!AccountSecurity.savePassword(this, username, password)) {
+            // Without the stored password every authenticated request would fail.
+            mAccountManager.removeAccountExplicitly(account);
+            Toast.makeText(this, R.string.login_secure_storage_failed, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         Bundle bundle = new Bundle();
         bundle.putString(AccountManager.KEY_ACCOUNT_NAME, username);
         bundle.putString(AccountManager.KEY_ACCOUNT_TYPE, BuildConfig.APPLICATION_ID);
