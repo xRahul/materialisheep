@@ -147,7 +147,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.properties
-          git commit -m "chore(release): release ${TAG} [skip ci]"
+          # No-op when the requested version already equals version.properties.
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): release ${TAG} [skip ci]"
+          fi
           git tag -a "${TAG}" -m "Release ${TAG}"
           if [ "${{ github.ref_type }}" = "branch" ]; then
             git push origin HEAD:"${{ github.ref_name }}"
