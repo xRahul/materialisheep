@@ -38,6 +38,7 @@ import in.rahulja.materialhn.data.ReadabilityClient;
 import in.rahulja.materialhn.data.ResponseListener;
 import in.rahulja.materialhn.data.WebItem;
 import in.rahulja.materialhn.widget.AdBlockWebViewClient;
+import in.rahulja.materialhn.widget.AppBarScrollSync;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import in.rahulja.materialhn.widget.CacheableWebView;
 import in.rahulja.materialhn.widget.MaterialWebView;
@@ -89,6 +90,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   private AppUtils.SystemUiHelper mSystemUiHelper;
   private View mFragmentView;
   private FullscreenViewModel mFullscreenViewModel;
+  private AppBarScrollSync mAppBarScrollSync;
   @Inject ReadabilityClient mReadabilityClient;
   @Inject FileDownloader mFileDownloader;
   private WebItem mItem;
@@ -151,6 +153,15 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     super.onViewCreated(view, savedInstanceState);
 
     mScrollableHelper = new KeyDelegate.WebViewHelper(mWebView);
+    mAppBarScrollSync = new AppBarScrollSync(
+        requireActivity().findViewById(R.id.appbar),
+        Math.round(8 * getResources().getDisplayMetrics().density));
+    mWebView.setOnScrollChangeListener(
+        (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+          if (!mFullscreen && mAppBarScrollSync != null) {
+            mAppBarScrollSync.onScroll(scrollY - oldScrollY, scrollY == 0);
+          }
+        });
     mSystemUiHelper = new AppUtils.SystemUiHelper(getActivity().getWindow());
     mSystemUiHelper.setEnabled(!getResources().getBoolean(R.bool.multi_pane));
     if (mFullscreen) {
@@ -281,6 +292,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       mWebView = null;
     }
     mScrollableHelper = null;
+    mAppBarScrollSync = null;
     mSystemUiHelper = null;
     mControls = null;
     mButtonRefresh = null;
@@ -344,6 +356,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   protected void load() {
     if (mWebView == null) {
       return;
+    }
+    if (mAppBarScrollSync != null) {
+      mAppBarScrollSync.expand();
     }
     mWebView.setVisibility(View.INVISIBLE);
     if (mIsHackerNewsUrl) {

@@ -20,6 +20,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
+import android.view.ViewParent;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebViewClient;
@@ -30,6 +33,8 @@ public class MaterialWebView extends android.webkit.WebView {
   static final String FILE = "file:///";
   private final HistoryWebViewClient mClient = new HistoryWebViewClient();
   @Synthetic boolean mClearHistoryOnCommit;
+  private final int mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+  private float mDownX, mDownY;
 
   public MaterialWebView(Context context) {
     this(context, null);
@@ -66,6 +71,40 @@ public class MaterialWebView extends android.webkit.WebView {
     stopLoading();
     mClearHistoryOnCommit = true;
     loadDataWithBaseURL(FILE, html, "text/html", "UTF-8", null);
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+    ViewParent parent = getParent();
+    switch (event.getActionMasked()) {
+      case MotionEvent.ACTION_DOWN:
+        mDownX = event.getX();
+        mDownY = event.getY();
+        if (parent != null) {
+          parent.requestDisallowInterceptTouchEvent(false);
+        }
+        break;
+      case MotionEvent.ACTION_MOVE:
+        if (parent != null
+            && GestureIntent.claimsHorizontal(
+                event.getX() - mDownX,
+                event.getY() - mDownY,
+                canScrollHorizontally(-1),
+                canScrollHorizontally(1),
+                mTouchSlop)) {
+          parent.requestDisallowInterceptTouchEvent(true);
+        }
+        break;
+      case MotionEvent.ACTION_UP:
+      case MotionEvent.ACTION_CANCEL:
+        if (parent != null) {
+          parent.requestDisallowInterceptTouchEvent(false);
+        }
+        break;
+      default:
+        break;
+    }
+    return super.onTouchEvent(event);
   }
 
   protected WebResourceResponse interceptRequest(WebResourceRequest request) {
