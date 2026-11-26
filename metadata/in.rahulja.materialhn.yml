@@ -1,0 +1,27 @@
+Categories:
+  - Internet
+License: GPL-3.0-or-later
+AuthorName: Rahul Jain
+AuthorEmail: xRahul@users.noreply.github.com
+SourceCode: https://github.com/xRahul/materialisheep
+IssueTracker: https://github.com/xRahul/materialisheep/issues
+Changelog: https://github.com/xRahul/materialisheep/releases
+
+AutoName: Material HN
+
+RepoType: git
+Repo: https://github.com/xRahul/materialisheep
+
+Builds:
+  - versionName: 4.5.0
+    versionCode: 101
+    commit: v4.5.0
+    gradle:
+      - yes
+      - -PversionCode=101
+      - -PversionName=4.5.0
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 4.5.0
+CurrentVersionCode: 101

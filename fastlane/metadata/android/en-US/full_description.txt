@@ -1,0 +1,31 @@
+Material HN is a fast, offline-capable client for Hacker News.
+
+FEEDS AND COMMENTS
+Top, New, Best, Ask, Show and Jobs, plus full comment trees with collapsing,
+in-thread navigation and favorites. Voting, replying, submitting and saving all
+work from inside the app.
+
+READER MODE
+Open any linked article in a clean reader view with Readability. Choose the font,
+size and line height, switch to a dark or pure-black theme, and read long
+discussions without leaving the app.
+
+OFFLINE
+Read stories, comments and saved articles without a connection. Saved items and
+pending votes or comments are queued and synced when the network returns.
+
+SEARCH
+Search stories and comments through the Algolia Hacker News index, and open
+results directly in the thread.
+
+PRIVACY
+No analytics, no advertising, no tracking SDKs. Links are stripped of common
+tracking parameters before they open, known ad and tracker domains are blocked,
+and all traffic uses HTTPS. Login credentials are encrypted with a key that never
+leaves your device and are excluded from device backups.
+
+FREE SOFTWARE
+GPL-3.0-or-later. Source, issues and releases:
+https://github.com/xRahul/materialisheep
+
+A fork of Materialisheep, which descends from Materialistic.
