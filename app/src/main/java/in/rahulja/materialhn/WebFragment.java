@@ -43,6 +43,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import in.rahulja.materialhn.widget.CacheableWebView;
 import in.rahulja.materialhn.widget.MaterialWebView;
 import in.rahulja.materialhn.widget.PopupMenu;
+import in.rahulja.materialhn.widget.WebViewSettingsPolicy;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
@@ -409,6 +410,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     if (url != null && !TextUtils.equals(PDF_LOADER_URL, url)) {
       url = UrlSanitizer.sanitizeUrl(url);
     }
+    mWebView.setInitialScale(0);
     mIsPdf = false;
     if (mPdfAndroidJavascriptBridge != null) {
       mPdfAndroidJavascriptBridge.cleanUp();
@@ -461,6 +463,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void bindContent() {
+    mReadability = true;
     if (mItem instanceof Item) {
       mContent = ((Item) mItem).getText();
       loadContent();
@@ -621,7 +624,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             offerExternalApp();
           }
         });
-    AppUtils.toggleWebViewZoom(mWebView.getSettings(), false);
   }
 
   private void offerExternalApp() {
@@ -657,14 +659,15 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     }
   }
 
-  @SuppressLint("SetJavaScriptEnabled")
   private void setWebSettings(boolean isRemote) {
-    mReadability = !isRemote;
     if (mWebView != null) {
-      mWebView.setBackgroundColor(isRemote ? Color.WHITE : Color.TRANSPARENT);
-      mWebView.getSettings().setLoadWithOverviewMode(isRemote);
-      mWebView.getSettings().setUseWideViewPort(isRemote);
-      mWebView.getSettings().setJavaScriptEnabled(isRemote);
+      if (isRemote) {
+        WebViewSettingsPolicy.applyRemote(mWebView.getSettings());
+        mWebView.setBackgroundColor(Color.WHITE);
+      } else {
+        WebViewSettingsPolicy.applyLocal(mWebView.getSettings());
+        mWebView.setBackgroundColor(Color.TRANSPARENT);
+      }
     }
     if (getActivity() != null) {
       getActivity().invalidateOptionsMenu();
@@ -678,7 +681,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     }
     mFullscreen = isFullscreen;
     mControls.setVisibility(isFullscreen ? VISIBLE : View.GONE);
-    AppUtils.toggleWebViewZoom(mWebView.getSettings(), isFullscreen);
     ViewGroup.LayoutParams params = mWebView.getLayoutParams();
     if (isFullscreen) {
       if (mScrollViewContent.getParent() != mFullscreenView) {
@@ -806,6 +808,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
         if (mReadability) {
           Toast.makeText(getActivity(), R.string.readability_failed, Toast.LENGTH_SHORT).show();
         }
+        mReadability = false;
         loadUrl();
       }
     }
