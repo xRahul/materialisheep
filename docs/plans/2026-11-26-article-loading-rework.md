@@ -736,7 +736,27 @@ size on a live page does not reload it.
 
 ## 10. Verification log
 
-_To be filled during Task 11._
+Host-side verification (2026-11-26):
+
+- `./gradlew test lint assembleDebug` → BUILD SUCCESSFUL; lint 0 errors
+  (warnings/hints only).
+- Unit suites added: `WebViewSettingsPolicyTest`, `MaterialWebViewLoadTest`,
+  `KeyDelegateWebViewHelperTest`, `AppBarScrollSyncTest`, `GestureIntentTest`,
+  `AdBlockWebViewClientTest`, `ArticleUrlPolicyTest`, `SettleTrackerTest`;
+  extended `CacheableWebViewTest`, `WebFragmentTest`, `AppUtilsTest`.
+
+Device smoke pass: **not run — no device attached to this workstation.**
+The table stays for the owner to fill from `adb install` of the debug APK.
 
 | Date | Device / WebView | Theme | Site class | Result | Notes |
 |------|------------------|-------|------------|--------|-------|
+| — | — | light / AMOLED | SPA news site (DOM storage) | not run | needs device |
+| — | — | light / AMOLED | sticky header + `100vh` (layout) | not run | needs device |
+| — | — | light / AMOLED | lazy images + infinite scroll | not run | needs device |
+| — | — | light / AMOLED | `http://` only + http→https (upgrade/panel) | not run | needs device |
+| — | — | light / AMOLED | redirecting link (shortener, apex→www) | not run | needs device |
+| — | — | light / AMOLED | PDF (`application/pdf`, `.pdf`/octet-stream) | not run | needs device |
+| — | — | light / AMOLED | airplane mode ± offline archive | not run | needs device |
+| — | — | light / AMOLED | item A article → item B (lifecycle) | not run | needs device |
+| — | — | light / AMOLED | zoomed wide table (gestures) + swipe to comments | not run | needs device |
+| — | — | light / AMOLED | Readability default on JS-rendered blog | not run | needs device |

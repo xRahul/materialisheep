@@ -16,6 +16,7 @@
 
 package in.rahulja.materialhn.widget;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
@@ -73,6 +74,7 @@ public class MaterialWebView extends android.webkit.WebView {
     loadDataWithBaseURL(FILE, html, "text/html", "UTF-8", null);
   }
 
+  @SuppressLint("ClickableViewAccessibility") // the WebView handles clicks itself
   @Override
   public boolean onTouchEvent(MotionEvent event) {
     ViewParent parent = getParent();

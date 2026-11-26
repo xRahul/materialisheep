@@ -2,6 +2,13 @@
  
 ## [UNRELEASED]
 ### Added
+- **Article Tab Loading Rework:** The article WebView now owns its scrolling (sticky headers, `100vh` heroes, lazy images and infinite scroll behave as in Chrome) and the app bar follows its scroll; horizontal gestures only leave the pager when the page can pan.
+- **Recoverable Web Errors:** Main-frame network, SSL and renderer-crash failures show an in-tab panel with Retry and Open in browser instead of a raw Chromium error page or an app crash.
+- **Dark Web Content:** `androidx.webkit` algorithmic darkening follows the app theme, and the remote page background uses the card colour, removing white flashes in dark and AMOLED themes.
+- **Complete Reader Text:** Readability waits for the page to settle (400 ms polling, 4 s cap) and runs with DOM storage and the ad blocker enabled; aborted parses fall back to the live page in 20 s.
+- **https Upgrade:** Plain-`http` articles are retried over https, with a recoverable panel when the site has no secure endpoint.
+- **DOM Storage and Fresh Cache:** Remote pages get DOM storage, and online loads use `LOAD_DEFAULT` (offline archives keep `LOAD_CACHE_ONLY`).
+- **Per-WebView Lifecycle:** Opening a second article no longer freezes the first via global `pauseTimers()`.
 - **Comment Thread Ancestor & Parent Navigation:** Tap on the left depth color bar to instantly smooth-scroll to the parent comment; long-press to jump directly to the thread root comment in single-page comment discussions.
 - **Universal Data Portability (`FavoriteExporter.kt`):** Export saved stories to structured JSON, Markdown for PKM apps (Obsidian/Logseq), and Netscape Bookmark HTML.
 - **Universal URL Privacy Shield (`UrlSanitizer.kt`):** Automatically strips ad-attribution and tracking query parameters (`utm_*`, `fbclid`, `gclid`, `mc_eid`, `hsa_*`, etc.) before launching Custom Tabs or loading internal WebViews.

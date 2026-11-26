@@ -36,12 +36,23 @@ error shielding), logging interceptor at `NONE` for release.
 
 ### Web content and reader
 
-`WebFragment` + `MaterialWebView`. JavaScript is enabled only for remote content
-(`isRemote`), disabled for local content; the PDF.js viewer is a separate local
-document with a JS bridge. `AdBlockWebViewClient` drops requests matching the
-bundled blocklist through the synchronized `AdBlocker`. `ReadabilityManager`
-injects Readability.js for reader mode. `UrlSanitizer` strips tracking parameters
-before a link leaves the app.
+`WebFragment` + `MaterialWebView`. Settings live in one policy
+(`WebViewSettingsPolicy`): remote content gets JavaScript, DOM storage and pinch
+zoom; local content gets neither JavaScript nor DOM storage; file and content
+access stay off in both. In dark themes remote pages are algorithmically
+darkened through `androidx.webkit`. Loads are direct (`loadUrl`, no
+`about:blank` round-trip) and visibility is driven by `onPageCommitVisible` /
+`onPageStarted`; history is cleared once per fresh load. Main-frame network, SSL
+and renderer failures show the in-tab error panel (`include_web_error.xml`,
+Retry / Open in browser); `onRenderProcessGone` replaces the dead WebView.
+`MaterialWebView` owns its scrolling, claims horizontal gestures only when the
+page can pan (`GestureIntent`), and `AppBarScrollSync` drives the activity app
+bar. Cleartext stays banned; a main-frame `http://` URL is upgraded to `https://`
+(`ArticleUrlPolicy`). `AdBlockWebViewClient` never blocks the main frame.
+`ReadabilityClient` waits for the document to settle (`SettleTracker`, 400 ms
+poll, 4 s cap, 20 s timeout) before injecting Readability.js, and its hidden
+WebView uses DOM storage and the ad blocker. `UrlSanitizer` strips tracking
+parameters before a link leaves the app.
 
 ### Credentials
 
@@ -69,7 +80,7 @@ as `LiveData`.
 |---|---|
 | Transport | HTTPS only; cleartext disabled in `network_security_config.xml`; no redirects |
 | Credentials | Keystore AES-GCM; ciphertext excluded from backup; `AccountManager` holds username only |
-| WebView | JS gated by remote/local; file and content access disabled; cache reads restricted to the app cache directory |
+| WebView | JS and DOM storage gated by remote/local; file and content access disabled; SSL errors always cancelled; algorithmic darkening only; cache reads restricted to the app cache directory |
 | Links | Tracking parameters stripped; external opens go through Custom Tabs with a validated URL |
 | Ads/trackers | Bundled domain blocklist, request interception |
 | Backup | `data_extraction_rules.xml` excludes `auth_secure_store` and `app_webview/` |
