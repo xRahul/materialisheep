@@ -160,6 +160,7 @@ public interface ReadabilityClient {
                 final AtomicBoolean polling = new AtomicBoolean(false);
                 final Runnable[] poller = new Runnable[1];
                 emitter.setCancellable(() -> {
+                    isFinished.set(true);
                     Runnable pending = poller[0];
                     if (pending != null) {
                         handler.removeCallbacks(pending);

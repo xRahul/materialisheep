@@ -28,6 +28,9 @@ object WebViewSettingsPolicy {
         settings.useWideViewPort = false
         settings.loadWithOverviewMode = false
         applySharedFlags(settings)
+        // Reader colours must stay exactly as designed, even after a remote page
+        // was darkened in the same theme.
+        applyAlgorithmicDarkening(settings, allow = false)
     }
 
     private fun applySharedFlags(settings: WebSettings) {

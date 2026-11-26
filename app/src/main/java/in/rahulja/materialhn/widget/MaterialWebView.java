@@ -82,8 +82,11 @@ public class MaterialWebView extends android.webkit.WebView {
       case MotionEvent.ACTION_DOWN:
         mDownX = event.getX();
         mDownY = event.getY();
+        // ViewPager2 intercepts on the same event once slop is passed, so a
+        // pannable page must claim the gesture before that happens.
         if (parent != null) {
-          parent.requestDisallowInterceptTouchEvent(false);
+          parent.requestDisallowInterceptTouchEvent(
+              canScrollHorizontally(-1) || canScrollHorizontally(1));
         }
         break;
       case MotionEvent.ACTION_MOVE:
@@ -185,7 +188,7 @@ public class MaterialWebView extends android.webkit.WebView {
     @Override
     public boolean shouldOverrideUrlLoading(
         android.webkit.WebView view, WebResourceRequest request) {
-      if (request.isForMainFrame()) {
+      if (request.isForMainFrame() && "GET".equalsIgnoreCase(request.getMethod())) {
         String url = request.getUrl().toString();
         String upgraded = ArticleUrlPolicy.upgradeToHttps(url);
         if (upgraded != null && !upgraded.equals(url)) {
@@ -203,9 +206,6 @@ public class MaterialWebView extends android.webkit.WebView {
     public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon) {
       super.onPageStarted(view, url, favicon);
       view.pageUp(true);
-      if (!TextUtils.isEmpty(url) && !TextUtils.equals(url, BLANK)) {
-        view.setVisibility(VISIBLE);
-      }
       if (mClient != null) {
         mClient.onPageStarted(view, url, favicon);
       }

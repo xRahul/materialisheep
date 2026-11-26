@@ -4,8 +4,14 @@ import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import android.app.Activity;
+import android.net.Uri;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebViewClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +42,7 @@ public class MaterialWebViewLoadTest {
     MaterialWebView webView = createWebView();
     webView.reloadUrl("https://a.com");
 
-    WebViewClient client = clientOf(webView);
-    client.onPageStarted(webView, "https://www.a.com/", null);
-    client.onPageCommitVisible(webView, "https://www.a.com/");
+    clientOf(webView).onPageCommitVisible(webView, "https://www.a.com/");
 
     assertEquals(VISIBLE, webView.getVisibility());
     assertFalse("back history is cleared for a fresh load", webView.canGoBack());
@@ -52,6 +56,46 @@ public class MaterialWebViewLoadTest {
     clientOf(webView).onPageCommitVisible(webView, MaterialWebView.FILE);
 
     assertEquals(VISIBLE, webView.getVisibility());
+  }
+
+  @Test
+  public void testPageStartedDoesNotRevealStaleContent() {
+    MaterialWebView webView = createWebView();
+    webView.reloadUrl("https://a.com");
+
+    clientOf(webView).onPageStarted(webView, "https://a.com", null);
+
+    assertEquals("old page must stay hidden until commit", INVISIBLE, webView.getVisibility());
+  }
+
+  @Test
+  public void testGetNavigationIsUpgradedToHttps() {
+    MaterialWebView webView = createWebView();
+
+    boolean handled =
+        clientOf(webView).shouldOverrideUrlLoading(webView, request("http://a.com/x", "GET"));
+
+    assertTrue(handled);
+    assertEquals("https://a.com/x", Shadows.shadowOf(webView).getLastLoadedUrl());
+  }
+
+  @Test
+  public void testPostNavigationIsNotRewritten() {
+    MaterialWebView webView = createWebView();
+
+    boolean handled =
+        clientOf(webView).shouldOverrideUrlLoading(webView, request("http://a.com/x", "POST"));
+
+    assertFalse("a POST body must not be dropped by the https rewrite", handled);
+    assertNull(Shadows.shadowOf(webView).getLastLoadedUrl());
+  }
+
+  private WebResourceRequest request(String url, String method) {
+    WebResourceRequest request = mock(WebResourceRequest.class);
+    when(request.getUrl()).thenReturn(Uri.parse(url));
+    when(request.getMethod()).thenReturn(method);
+    when(request.isForMainFrame()).thenReturn(true);
+    return request;
   }
 
   @Test

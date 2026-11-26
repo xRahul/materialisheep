@@ -107,6 +107,10 @@ public class CacheableWebView extends MaterialWebView {
       mArchiveClient.cacheFileName = null;
       return url;
     }
+    if (url.startsWith("file://") && url.endsWith(CACHE_EXTENSION)) {
+      // Already resolved to an archive by the first pass; keep its cache mode.
+      return url;
+    }
     mArchiveClient.cacheFileName = generateCacheFilename(url);
     boolean online = AppUtils.hasConnection(getContext());
     File cacheFile = new File(mArchiveClient.cacheFileName);

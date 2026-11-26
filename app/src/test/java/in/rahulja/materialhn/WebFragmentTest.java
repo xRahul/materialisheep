@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -376,6 +377,61 @@ public class WebFragmentTest {
                 .parse(org.mockito.ArgumentMatchers.eq("1"),
                         org.mockito.ArgumentMatchers.eq("https://example.com"),
                         any());
+    }
+
+    @Test
+    public void testAbortedMainFrameErrorDoesNotShowPanel() {
+        WebFragment fragment = attachFragment();
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getWebViewClient();
+
+        client.onReceivedError(
+                fragment.mWebView,
+                request("https://example.com", true),
+                abortedError());
+
+        assertEquals(
+                View.GONE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
+    @Test
+    public void testSuccessfulCommitHidesPreviousError() {
+        WebFragment fragment = attachFragment();
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(fragment.mWebView).getWebViewClient();
+        client.onReceivedError(
+                fragment.mWebView, request("https://example.com", true), webResourceError());
+        assertEquals(
+                View.VISIBLE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+
+        client.onPageCommitVisible(fragment.mWebView, "https://example.com");
+
+        assertEquals(
+                View.GONE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
+    @Test
+    public void testRenderProcessGoneFallsBackToDeadViewsParent() {
+        WebFragment fragment = attachFragment();
+        in.rahulja.materialhn.widget.MaterialWebView old = fragment.mWebView;
+        ViewGroup oldParent = (ViewGroup) old.getParent();
+        fragment.getView().findViewById(R.id.web_view_container).setId(View.NO_ID);
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(old).getWebViewClient();
+
+        boolean handled =
+                client.onRenderProcessGone(old, mock(android.webkit.RenderProcessGoneDetail.class));
+
+        org.junit.Assert.assertTrue(handled);
+        org.junit.Assert.assertNotNull(fragment.mWebView.getParent());
+        org.junit.Assert.assertSame(oldParent, fragment.mWebView.getParent());
+    }
+
+    private WebResourceError abortedError() {
+        WebResourceError error = mock(WebResourceError.class);
+        when(error.getErrorCode()).thenReturn(-3);
+        when(error.getDescription()).thenReturn("net::ERR_ABORTED");
+        return error;
     }
 
     private WebResourceError webResourceError() {

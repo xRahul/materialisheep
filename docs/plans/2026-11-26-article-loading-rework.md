@@ -740,7 +740,13 @@ Host-side verification (2026-11-26):
 
 - `./gradlew test lint assembleDebug` → BUILD SUCCESSFUL; lint 0 errors
   (warnings/hints only).
-- Unit suites added: `WebViewSettingsPolicyTest`, `MaterialWebViewLoadTest`,
+- Independent review fix pass: aborted-load errors ignored and the panel hidden on
+  commit, reader mode disables algorithmic darkening, page-start no longer reveals
+  stale content, gesture claimed on ACTION_DOWN, offline archive keeps
+  `LOAD_CACHE_ONLY` across the reload resolve, POST navigations not rewritten,
+  crash fallback to the dead view's parent, `:80` dropped on upgrade,
+  Readability poll cancelled cleanly.
+- Unit suites added: `WebViewSettingsPolicyTest`, `MaterialWebViewLoadTest`, `MaterialWebViewTouchTest`,
   `KeyDelegateWebViewHelperTest`, `AppBarScrollSyncTest`, `GestureIntentTest`,
   `AdBlockWebViewClientTest`, `ArticleUrlPolicyTest`, `SettleTrackerTest`;
   extended `CacheableWebViewTest`, `WebFragmentTest`, `AppUtilsTest`.

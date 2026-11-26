@@ -1,6 +1,9 @@
 package `in`.rahulja.materialhn.widget
 
 import android.os.Build
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
+import org.mockito.Mockito.mockStatic
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.test.core.app.ApplicationProvider
@@ -112,6 +115,23 @@ class WebViewSettingsPolicyTest {
         )
 
         assertEquals(false, allowed)
+    }
+
+    @Test
+    fun applyLocalTurnsAlgorithmicDarkeningOff() {
+        mockStatic(WebViewFeature::class.java).use { feature ->
+            feature.`when`<Boolean> {
+                WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)
+            }.thenReturn(true)
+
+            mockStatic(WebSettingsCompat::class.java).use { compat ->
+                WebViewSettingsPolicy.applyLocal(settings)
+
+                compat.verify {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
+                }
+            }
+        }
     }
 
     @Test

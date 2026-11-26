@@ -597,17 +597,24 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
           }
 
           @Override
+          public void onPageCommitVisible(android.webkit.WebView view, String url) {
+            super.onPageCommitVisible(view, url);
+            hideError();
+          }
+
+          @Override
           public void onReceivedError(
               android.webkit.WebView view,
               android.webkit.WebResourceRequest request,
               android.webkit.WebResourceError error) {
             super.onReceivedError(view, request, error);
-            if (request.isForMainFrame()) {
-              showError(
-                  mUpgradedFromHttp
-                      ? R.string.web_error_https_only
-                      : R.string.web_error_generic);
+            if (!request.isForMainFrame() || isAborted(error)) {
+              return;
             }
+            showError(
+                mUpgradedFromHttp
+                    ? R.string.web_error_https_only
+                    : R.string.web_error_generic);
           }
 
           @Override
@@ -668,10 +675,20 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       return;
     }
     ViewGroup container = mFragmentView.findViewById(R.id.web_view_container);
-    ViewGroup parent = container != null ? container : (ViewGroup) deadView.getParent();
-    if (parent != null) {
-      parent.removeView(deadView);
+    ViewGroup parent =
+        deadView.getParent() instanceof ViewGroup
+            ? (ViewGroup) deadView.getParent()
+            : container;
+    if (parent == null) {
+      deadView.setWebViewClient(null);
+      deadView.setWebChromeClient(null);
+      deadView.setDownloadListener(null);
+      deadView.destroy();
+      mWebView = null;
+      showError(R.string.web_error_crashed);
+      return;
     }
+    parent.removeView(deadView);
     deadView.setWebViewClient(null);
     deadView.setWebChromeClient(null);
     deadView.setDownloadListener(null);
@@ -682,9 +699,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     replacement.setLayoutParams(
         new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-    if (container != null) {
-      container.addView(replacement, 0);
-    }
+    parent.addView(replacement, 0);
     bindWebView(replacement);
     applySettingsTo(replacement, mIsRemoteContent);
     showError(R.string.web_error_crashed);
@@ -736,6 +751,19 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       return;
     }
     AppUtils.openWebUrlExternal(getActivity(), mItem, mItem.getUrl(), null);
+  }
+
+  /** net::ERR_ABORTED (-3): the load was cancelled, usually by our own stopLoading(). */
+  @Synthetic
+  static boolean isAborted(android.webkit.WebResourceError error) {
+    if (error == null) {
+      return false;
+    }
+    if (error.getErrorCode() == -3) {
+      return true;
+    }
+    CharSequence description = error.getDescription();
+    return description != null && description.toString().contains("ERR_ABORTED");
   }
 
   @Synthetic
