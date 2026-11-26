@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +63,33 @@ class AccountSecurityTest {
         prefs.edit().putString("pwd_$username", "corrupted_non_base64_data_!@#$").apply()
 
         assertNull(AccountSecurity.getPassword(context, username))
+    }
+
+    @Test
+    fun testTooShortCiphertext_returnsNull() {
+        val username = "testuser"
+        val prefs = context.applicationContext.getSharedPreferences("auth_secure_store", Context.MODE_PRIVATE)
+        prefs.edit().putString("pwd_$username", android.util.Base64.encodeToString(ByteArray(4), android.util.Base64.NO_WRAP)).apply()
+
+        assertNull(AccountSecurity.getPassword(context, username))
+    }
+
+    @Test
+    fun testTamperedCiphertext_returnsNullAndKeepsStoreClean() {
+        val username = "testuser"
+        AccountSecurity.savePassword(context, username, "originalPassword")
+        val prefs = context.applicationContext.getSharedPreferences("auth_secure_store", Context.MODE_PRIVATE)
+        val stored = prefs.getString("pwd_$username", null)!!
+        val tampered = stored.dropLast(4) + "AAAA"
+        prefs.edit().putString("pwd_$username", tampered).commit()
+
+        assertNull(AccountSecurity.getPassword(context, username))
+    }
+
+    @Test
+    fun testSavePasswordReportsSuccess() {
+        assertTrue(AccountSecurity.savePassword(context, "testuser", "somePassword"))
+        assertTrue(AccountSecurity.savePassword(context, "testuser", ""))
     }
 
     @Test

@@ -486,10 +486,12 @@ public class AppUtils {
     // Fallback & automatic migration from legacy AccountManager plaintext
     String legacyPassword = accountManager.getPassword(matchedAccount);
     if (!TextUtils.isEmpty(legacyPassword)) {
-      AccountSecurity.savePassword(context, username, legacyPassword);
-      try {
-        accountManager.setPassword(matchedAccount, null);
-      } catch (Exception ignored) {
+      // Only drop the plaintext copy once it is safely re-encrypted
+      if (AccountSecurity.savePassword(context, username, legacyPassword)) {
+        try {
+          accountManager.setPassword(matchedAccount, null);
+        } catch (Exception ignored) {
+        }
       }
       return Pair.create(username, legacyPassword);
     }

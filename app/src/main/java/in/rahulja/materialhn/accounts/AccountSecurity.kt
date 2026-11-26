@@ -2,10 +2,14 @@ package `in`.rahulja.materialhn.accounts
 
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import `in`.rahulja.materialhn.BuildConfig
+import java.security.GeneralSecurityException
 import java.security.KeyStore
+import java.security.UnrecoverableKeyException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -13,7 +17,12 @@ import javax.crypto.spec.GCMParameterSpec
 
 /**
  * Handles hardware-backed Keystore AES-GCM encryption for user credentials.
- * Ensures zero-trust security where passwords/tokens are never stored in plaintext AccountManager.
+ *
+ * In release builds the key must come from the Android Keystore. If the Keystore
+ * is unavailable or the key was invalidated, stored credentials are dropped and
+ * the caller gets `null`, which forces a fresh login. Never fall back to an
+ * ephemeral key in release: it would silently produce ciphertext that dies with
+ * the process.
  */
 object AccountSecurity {
     private const val TAG = "AccountSecurity"
@@ -24,7 +33,11 @@ object AccountSecurity {
     private const val GCM_TAG_LENGTH = 128
     private const val AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding"
 
+    /** Test-only key, used when the Keystore is absent under Robolectric/JVM. */
     private var fallbackKey: SecretKey? = null
+
+    private class KeystoreUnavailableException(cause: Throwable) :
+        GeneralSecurityException("Android Keystore unavailable", cause)
 
     @Synchronized
     private fun getOrCreateSecretKey(): SecretKey {
@@ -49,30 +62,37 @@ object AccountSecurity {
 
             keyGenerator.init(spec)
             return keyGenerator.generateKey()
-        } catch (e: Throwable) {
-            // Fallback for JVM test environments (Robolectric) where AndroidKeyStore is unavailable
-            if (fallbackKey != null) {
-                return fallbackKey!!
+        } catch (e: Exception) {
+            if (!isTestEnvironment()) {
+                throw KeystoreUnavailableException(e)
             }
-            val keyGen = KeyGenerator.getInstance("AES")
-            keyGen.init(256)
-            val key = keyGen.generateKey()
-            fallbackKey = key
-            return key
+            return fallbackKey ?: KeyGenerator.getInstance("AES").run {
+                init(256)
+                generateKey().also { fallbackKey = it }
+            }
         }
     }
 
     /**
+     * True for the JVM/Robolectric test runner and for debug builds running on a
+     * device whose Keystore rejects the key. Release builds never take the
+     * fallback path.
+     */
+    private fun isTestEnvironment(): Boolean =
+        BuildConfig.DEBUG || android.os.Build.FINGERPRINT == "robolectric"
+
+    /**
      * Encrypts and securely persists the password for the given username.
+     * Returns false when the credential could not be stored securely.
      */
     @JvmStatic
-    fun savePassword(context: Context, username: String, password: String?) {
+    fun savePassword(context: Context, username: String, password: String?): Boolean {
         if (password.isNullOrEmpty()) {
             clearPassword(context, username)
-            return
+            return true
         }
 
-        try {
+        return try {
             val key = getOrCreateSecretKey()
             val cipher = Cipher.getInstance(AES_GCM_TRANSFORMATION)
             cipher.init(Cipher.ENCRYPT_MODE, key)
@@ -87,13 +107,21 @@ object AccountSecurity {
             val encoded = Base64.encodeToString(combined, Base64.NO_WRAP)
             val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putString("pwd_$username", encoded).apply()
+            true
+        } catch (e: KeystoreUnavailableException) {
+            Log.e(TAG, "Keystore unavailable; refusing to store the password", e)
+            clearPassword(context, username)
+            false
         } catch (e: Exception) {
             Log.e(TAG, "Failed to encrypt and save password securely", e)
+            clearPassword(context, username)
+            false
         }
     }
 
     /**
-     * Decrypts and returns the password for the given username, or null if not found/corrupted.
+     * Decrypts and returns the password for the given username, or null if it is
+     * missing, corrupted, or encrypted with a key that no longer exists.
      */
     @JvmStatic
     fun getPassword(context: Context, username: String): String? {
@@ -116,6 +144,18 @@ object AccountSecurity {
 
             val plainTextBytes = cipher.doFinal(cipherText)
             String(plainTextBytes, Charsets.UTF_8)
+        } catch (e: KeyPermanentlyInvalidatedException) {
+            Log.w(TAG, "Keystore key invalidated; dropping stored password")
+            clearPassword(context, username)
+            null
+        } catch (e: UnrecoverableKeyException) {
+            Log.w(TAG, "Keystore key unrecoverable; dropping stored password")
+            clearPassword(context, username)
+            null
+        } catch (e: KeystoreUnavailableException) {
+            Log.e(TAG, "Keystore unavailable; dropping stored password")
+            clearPassword(context, username)
+            null
         } catch (e: Exception) {
             Log.e(TAG, "Failed to decrypt password for user: $username", e)
             null
