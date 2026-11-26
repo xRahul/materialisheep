@@ -102,6 +102,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   private View mErrorPanel;
   private TextView mErrorMessage;
   private boolean mUpgradedFromHttp;
+  private boolean mIsRemoteContent = true;
 
   @Override
   public void onAttach(Context context) {
@@ -164,16 +165,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mScrollableHelper = new KeyDelegate.WebViewHelper(mWebView);
     mAppBarScrollSync = new AppBarScrollSync(
         requireActivity().findViewById(R.id.appbar),
         Math.round(8 * getResources().getDisplayMetrics().density));
-    mWebView.setOnScrollChangeListener(
-        (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-          if (!mFullscreen && mAppBarScrollSync != null) {
-            mAppBarScrollSync.onScroll(scrollY - oldScrollY, scrollY == 0);
-          }
-        });
+    attachScrollListener(mWebView);
     mSystemUiHelper = new AppUtils.SystemUiHelper(getActivity().getWindow());
     mSystemUiHelper.setEnabled(!getResources().getBoolean(R.bool.multi_pane));
     if (mFullscreen) {
@@ -566,8 +561,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
 
   private void setUpWebView(View view) {
     mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
-    mWebView.setBackgroundColor(Color.TRANSPARENT);
-    mWebView.setWebViewClient(
+    bindWebView(mWebView);
+  }
+
+  /** Wires a WebView instance; also runs for the replacement after a renderer crash. */
+  private void bindWebView(MaterialWebView webView) {
+    mWebView = webView;
+    webView.setBackgroundColor(Color.TRANSPARENT);
+    webView.setWebViewClient(
         new AdBlockWebViewClient(Preferences.adBlockEnabled(getActivity())) {
           @Override
           public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon) {
@@ -615,8 +616,15 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             handler.cancel();
             showError(R.string.web_error_ssl);
           }
+
+          @Override
+          public boolean onRenderProcessGone(
+              android.webkit.WebView view, android.webkit.RenderProcessGoneDetail detail) {
+            replaceCrashedWebView(view);
+            return true;
+          }
         });
-    mWebView.setWebChromeClient(
+    webView.setWebChromeClient(
         new CacheableWebView.ArchiveClient() {
           @Override
           public void onProgressChanged(android.webkit.WebView view, int newProgress) {
@@ -626,7 +634,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             }
           }
         });
-    mWebView.setDownloadListener(
+    webView.setDownloadListener(
         (url, userAgent, contentDisposition, mimetype, contentLength) -> {
           if (getActivity() == null) {
             return;
@@ -639,6 +647,51 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
             offerExternalApp();
           }
         });
+    attachScrollListener(webView);
+    mScrollableHelper = new KeyDelegate.WebViewHelper(webView);
+  }
+
+  private void attachScrollListener(MaterialWebView webView) {
+    webView.setOnScrollChangeListener(
+        (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+          if (!mFullscreen && mAppBarScrollSync != null) {
+            mAppBarScrollSync.onScroll(scrollY - oldScrollY, scrollY == 0);
+          }
+        });
+  }
+
+  private void replaceCrashedWebView(android.webkit.WebView deadView) {
+    if (getActivity() == null || mFragmentView == null) {
+      deadView.destroy();
+      return;
+    }
+    ViewGroup container = mFragmentView.findViewById(R.id.web_view_container);
+    ViewGroup parent = container != null ? container : (ViewGroup) deadView.getParent();
+    if (parent != null) {
+      parent.removeView(deadView);
+    }
+    deadView.setWebViewClient(null);
+    deadView.setWebChromeClient(null);
+    deadView.setDownloadListener(null);
+    deadView.destroy();
+
+    CacheableWebView replacement = new CacheableWebView(requireContext());
+    replacement.setId(R.id.web_view);
+    replacement.setLayoutParams(
+        new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    if (container != null) {
+      container.addView(replacement, 0);
+    }
+    bindWebView(replacement);
+    if (mIsRemoteContent) {
+      WebViewSettingsPolicy.applyRemote(replacement.getSettings());
+      replacement.setBackgroundColor(Color.WHITE);
+    } else {
+      WebViewSettingsPolicy.applyLocal(replacement.getSettings());
+      replacement.setBackgroundColor(Color.TRANSPARENT);
+    }
+    showError(R.string.web_error_crashed);
   }
 
   private void offerExternalApp() {
@@ -717,6 +770,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void setWebSettings(boolean isRemote) {
+    mIsRemoteContent = isRemote;
     if (mWebView != null) {
       if (isRemote) {
         WebViewSettingsPolicy.applyRemote(mWebView.getSettings());

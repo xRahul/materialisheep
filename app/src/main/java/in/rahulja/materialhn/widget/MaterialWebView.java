@@ -172,6 +172,15 @@ public class MaterialWebView extends android.webkit.WebView {
     }
 
     @Override
+    public boolean onRenderProcessGone(
+        android.webkit.WebView view, android.webkit.RenderProcessGoneDetail detail) {
+      if (mClient != null) {
+        return mClient.onRenderProcessGone(view, detail);
+      }
+      return super.onRenderProcessGone(view, detail);
+    }
+
+    @Override
     public boolean shouldOverrideUrlLoading(
         android.webkit.WebView view, WebResourceRequest request) {
       if (request.isForMainFrame()) {

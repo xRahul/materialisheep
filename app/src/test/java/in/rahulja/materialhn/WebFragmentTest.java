@@ -325,6 +325,24 @@ public class WebFragmentTest {
         org.junit.Assert.assertFalse(WebFragment.isPdf(null, null));
     }
 
+    @Test
+    public void testRenderProcessGoneReplacesWebView() {
+        WebFragment fragment = attachFragment();
+        in.rahulja.materialhn.widget.MaterialWebView old = fragment.mWebView;
+        WebViewClient client =
+                org.robolectric.Shadows.shadowOf(old).getWebViewClient();
+
+        boolean handled =
+                client.onRenderProcessGone(old, mock(android.webkit.RenderProcessGoneDetail.class));
+
+        org.junit.Assert.assertTrue("renderer crash must be handled in-app", handled);
+        org.junit.Assert.assertNull("dead WebView must be detached", old.getParent());
+        org.junit.Assert.assertNotSame(
+                "a fresh WebView replaces the dead one", old, fragment.mWebView);
+        org.junit.Assert.assertNotNull(fragment.mWebView.getParent());
+        assertEquals(View.VISIBLE, fragment.getView().findViewById(R.id.web_error).getVisibility());
+    }
+
     private WebResourceError webResourceError() {
         WebResourceError error = mock(WebResourceError.class);
         when(error.getErrorCode()).thenReturn(-1);
