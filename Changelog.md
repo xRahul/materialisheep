@@ -1,6 +1,6 @@
 # Changelog
  
-## [UNRELEASED]
+## [4.7.0] - 2026-11-26
 ### Added
 - **Article Tab Loading Rework:** The article WebView now owns its scrolling (sticky headers, `100vh` heroes, lazy images and infinite scroll behave as in Chrome) and the app bar follows its scroll; horizontal gestures only leave the pager when the page can pan.
 - **Recoverable Web Errors:** Main-frame network, SSL and renderer-crash failures show an in-tab panel with Retry and Open in browser instead of a raw Chromium error page or an app crash.

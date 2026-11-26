@@ -72,6 +72,23 @@ public class AppUtilsTest {
   }
 
   @Test
+  public void testAbortedErrorDetection() {
+    android.webkit.WebResourceError aborted = org.mockito.Mockito.mock(
+        android.webkit.WebResourceError.class);
+    org.mockito.Mockito.when(aborted.getErrorCode()).thenReturn(-3);
+    org.mockito.Mockito.when(aborted.getDescription()).thenReturn("net::ERR_ABORTED");
+
+    android.webkit.WebResourceError failed = org.mockito.Mockito.mock(
+        android.webkit.WebResourceError.class);
+    org.mockito.Mockito.when(failed.getErrorCode()).thenReturn(-2);
+    org.mockito.Mockito.when(failed.getDescription()).thenReturn("net::ERR_NAME_NOT_RESOLVED");
+
+    assertTrue(AppUtils.isAbortedError(aborted));
+    assertFalse(AppUtils.isAbortedError(failed));
+    assertFalse(AppUtils.isAbortedError(null));
+  }
+
+  @Test
   public void testWrapHtmlUpgradesInsecureRequests() {
     String html = AppUtils.wrapHtml(
         ApplicationProvider.getApplicationContext(), "<p>reader</p>");

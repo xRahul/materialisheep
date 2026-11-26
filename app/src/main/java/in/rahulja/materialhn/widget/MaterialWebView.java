@@ -34,6 +34,7 @@ public class MaterialWebView extends android.webkit.WebView {
   static final String FILE = "file:///";
   private final HistoryWebViewClient mClient = new HistoryWebViewClient();
   @Synthetic boolean mClearHistoryOnCommit;
+  @Synthetic String mPendingUrl;
   private final int mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
   private float mDownX, mDownY;
 
@@ -65,12 +66,14 @@ public class MaterialWebView extends android.webkit.WebView {
       stopLoading(); // this fires onPageFinished for the current URL
     }
     mClearHistoryOnCommit = true;
+    mPendingUrl = url;
     loadUrl(url);
   }
 
   public void reloadHtml(String html) {
     stopLoading();
     mClearHistoryOnCommit = true;
+    mPendingUrl = FILE;
     loadDataWithBaseURL(FILE, html, "text/html", "UTF-8", null);
   }
 
@@ -215,6 +218,9 @@ public class MaterialWebView extends android.webkit.WebView {
     public void onPageCommitVisible(android.webkit.WebView view, String url) {
       super.onPageCommitVisible(view, url);
       view.setVisibility(VISIBLE);
+      if (view instanceof MaterialWebView) {
+        ((MaterialWebView) view).mPendingUrl = null;
+      }
       clearPendingHistory(view);
       if (mClient != null) {
         mClient.onPageCommitVisible(view, url);
@@ -224,7 +230,18 @@ public class MaterialWebView extends android.webkit.WebView {
     @Override
     public void onPageFinished(android.webkit.WebView view, String url) {
       super.onPageFinished(view, url);
-      // Covers pages where onPageCommitVisible never fires.
+      // Fallback for pages where onPageCommitVisible never fires (data: documents),
+      // without revealing a page that a newer load has already superseded.
+      if (view instanceof MaterialWebView) {
+        MaterialWebView webView = (MaterialWebView) view;
+        if (webView.mPendingUrl != null
+            && (TextUtils.equals(url, webView.mPendingUrl)
+                || (TextUtils.equals(webView.mPendingUrl, FILE)
+                    && (url == null || url.startsWith("data:"))))) {
+          view.setVisibility(VISIBLE);
+          webView.mPendingUrl = null;
+        }
+      }
       clearPendingHistory(view);
       if (mClient != null) {
         mClient.onPageFinished(view, url);
@@ -245,6 +262,10 @@ public class MaterialWebView extends android.webkit.WebView {
         android.webkit.WebView view,
         WebResourceRequest request,
         android.webkit.WebResourceError error) {
+      if (request.isForMainFrame() && view instanceof MaterialWebView) {
+        // A load that never commits must not keep back navigation disabled.
+        ((MaterialWebView) view).mClearHistoryOnCommit = false;
+      }
       if (mClient != null) {
         mClient.onReceivedError(view, request, error);
       }

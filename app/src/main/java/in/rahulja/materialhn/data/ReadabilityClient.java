@@ -40,6 +40,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import in.rahulja.materialhn.DataModule;
+import in.rahulja.materialhn.AppUtils;
 import in.rahulja.materialhn.Preferences;
 import in.rahulja.materialhn.widget.AdBlockWebViewClient;
 import in.rahulja.materialhn.widget.ArticleUrlPolicy;
@@ -49,7 +50,6 @@ import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -165,7 +165,7 @@ public interface ReadabilityClient {
                     if (pending != null) {
                         handler.removeCallbacks(pending);
                     }
-                    AndroidSchedulers.mainThread().createWorker().schedule(webView::destroy);
+                    handler.post(webView::destroy);
                 });
                 webView.setWebViewClient(
                         new AdBlockWebViewClient(Preferences.adBlockEnabled(mContext)) {
@@ -200,20 +200,12 @@ public interface ReadabilityClient {
                         handler.post(poll);
                     }
 
-                    @SuppressWarnings("deprecation")
-                    @Override
-                    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                        super.onReceivedError(view, errorCode, description, failingUrl);
-                        if (targetUrl != null && targetUrl.equals(failingUrl)
-                                && isFinished.compareAndSet(false, true)) {
-                            emitter.onComplete();
-                        }
-                    }
-
                     @Override
                     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                         super.onReceivedError(view, request, error);
-                        if (request.isForMainFrame() && isFinished.compareAndSet(false, true)) {
+                        if (request.isForMainFrame()
+                                && !AppUtils.isAbortedError(error)
+                                && isFinished.compareAndSet(false, true)) {
                             emitter.onComplete();
                         }
                     }

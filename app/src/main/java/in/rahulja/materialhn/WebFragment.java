@@ -150,6 +150,10 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     mFragmentView.findViewById(R.id.web_error_retry).setOnClickListener(v -> {
       hideError();
       load();
+      if (mWebView == null) {
+        // The replacement WebView could not be attached; keep the panel up.
+        showError(R.string.web_error_generic);
+      }
     });
     mFragmentView.findViewById(R.id.web_error_open).setOnClickListener(v -> openInBrowser());
     mButtonRefresh = (ImageButton) mFragmentView.findViewById(R.id.button_refresh);
@@ -170,7 +174,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     mAppBarScrollSync = new AppBarScrollSync(
         requireActivity().findViewById(R.id.appbar),
         Math.round(8 * getResources().getDisplayMetrics().density));
-    attachScrollListener(mWebView);
     mSystemUiHelper = new AppUtils.SystemUiHelper(getActivity().getWindow());
     mSystemUiHelper.setEnabled(!getResources().getBoolean(R.bool.multi_pane));
     if (mFullscreen) {
@@ -608,7 +611,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
               android.webkit.WebResourceRequest request,
               android.webkit.WebResourceError error) {
             super.onReceivedError(view, request, error);
-            if (!request.isForMainFrame() || isAborted(error)) {
+            if (!request.isForMainFrame() || AppUtils.isAbortedError(error)) {
               return;
             }
             showError(
@@ -651,7 +654,7 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
           if (isPdf(mimetype, url)) {
             setProgress(10);
             mIsPdf = true;
-            downloadFileAndRenderPdf();
+            downloadFileAndRenderPdf(url);
           } else {
             offerExternalApp();
           }
@@ -670,8 +673,14 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
   }
 
   private void replaceCrashedWebView(android.webkit.WebView deadView) {
+    if (mPdfAndroidJavascriptBridge != null) {
+      mPdfAndroidJavascriptBridge.cleanUp();
+      mPdfAndroidJavascriptBridge = null;
+    }
+    mIsPdf = false;
     if (getActivity() == null || mFragmentView == null) {
       deadView.destroy();
+      mWebView = null;
       return;
     }
     ViewGroup container = mFragmentView.findViewById(R.id.web_view_container);
@@ -751,19 +760,6 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
       return;
     }
     AppUtils.openWebUrlExternal(getActivity(), mItem, mItem.getUrl(), null);
-  }
-
-  /** net::ERR_ABORTED (-3): the load was cancelled, usually by our own stopLoading(). */
-  @Synthetic
-  static boolean isAborted(android.webkit.WebResourceError error) {
-    if (error == null) {
-      return false;
-    }
-    if (error.getErrorCode() == -3) {
-      return true;
-    }
-    CharSequence description = error.getDescription();
-    return description != null && description.toString().contains("ERR_ABORTED");
   }
 
   @Synthetic
@@ -943,9 +939,9 @@ public class WebFragment extends LazyLoadFragment implements Scrollable, KeyDele
     bindContent();
   }
 
-  private void downloadFileAndRenderPdf() {
+  private void downloadFileAndRenderPdf(String url) {
     mFileDownloader.downloadFile(
-        mItem.getUrl(),
+        url,
         PDF_MIME_TYPE,
         new FileDownloader.FileDownloaderCallback() {
           @Override

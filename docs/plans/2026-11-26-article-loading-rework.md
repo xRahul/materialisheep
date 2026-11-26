@@ -746,6 +746,10 @@ Host-side verification (2026-11-26):
   `LOAD_CACHE_ONLY` across the reload resolve, POST navigations not rewritten,
   crash fallback to the dead view's parent, `:80` dropped on upgrade,
   Readability poll cancelled cleanly.
+- Hostile self-review pass: no-flash fallback reveal (finish only for the pending
+  URL), aborted loads ignored in Readability too, back navigation restored after a
+  failed load, PDF download follows the clicked URL, crash path clears the PDF
+  bridge, release build (`assembleRelease`, R8 + lintVital) green.
 - Unit suites added: `WebViewSettingsPolicyTest`, `MaterialWebViewLoadTest`, `MaterialWebViewTouchTest`,
   `KeyDelegateWebViewHelperTest`, `AppBarScrollSyncTest`, `GestureIntentTest`,
   `AdBlockWebViewClientTest`, `ArticleUrlPolicyTest`, `SettleTrackerTest`;
