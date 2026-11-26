@@ -728,3 +728,28 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+--------------------------------------------------------------------------------
+HaGeZi's Pro mini DNS/Browser Blocklist
+File: app/src/main/assets/hagezi-pro-mini.txt
+Source: https://github.com/hagezi/dns-blocklists
+License: GNU General Public License v3.0
+--------------------------------------------------------------------------------
+
+The bundled blocklist is licensed under the GNU General Public License, version
+3. It is included unmodified. The full license text is in LICENSE.txt.
+
+--------------------------------------------------------------------------------
+PDF.js
+Files: app/src/main/assets/pdf/vendor/pdfjs/
+Source: https://github.com/mozilla/pdf.js
+License: Apache License 2.0
+
+Readability.js
+File: app/src/main/assets/Readability.js
+Source: https://github.com/mozilla/readability
+License: Apache License 2.0
+
+Fonts: Droid Sans, Droid Serif, Roboto Slab - Apache License 2.0
+Font: Libre Baskerville - SIL Open Font License 1.1 (see below)
+--------------------------------------------------------------------------------

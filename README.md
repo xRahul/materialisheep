@@ -1,6 +1,10 @@
-# Materialisheep for Hacker News
+# Material HN
 
-Materialisheep, forked from hidroh's Materialistic, is a Hacker News client for Android that is built with a clean, modern architecture and a focus on Material Design principles. It uses the official [HackerNews/API] and [Algolia Hacker News Search API] to provide a fast, reliable, and feature-rich experience.
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE.txt)
+
+Material HN is a Hacker News client for Android, forked from [Materialisheep](https://github.com/sheepdestroyer/materialisheep) by sheepdestroyer, which in turn forked hidroh's Materialistic. It uses the official [HackerNews/API] and [Algolia Hacker News Search API] to provide a fast, reliable, and feature-rich experience.
+
+Package id: `in.rahulja.materialhn`. No analytics, no ads, no trackers.
 
 For a detailed breakdown of features and product requirements, see the [Product Requirements Document](docs/PRD.md).
 
@@ -108,24 +112,24 @@ Contributions are always welcome. Please make sure you read [Contributing notes]
 
     Copyright 2015 Ha Duy Trung
     Copyright 2020 sheepdestroyer
-    Copyright 2026 xrahul
+    Copyright 2026 Rahul Jain
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+    This program is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
 
-        http://www.apache.org/licenses/LICENSE-2.0
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+    Public License for more details.
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+See [LICENSE.txt](LICENSE.txt) for the full text and [NOTICE](NOTICE) for the
+upstream attribution. Portions derived from Materialistic and Materialisheep
+remain available under Apache-2.0.
 
 [Hacker News]: https://news.ycombinator.com/
 [HackerNews/API]: https://github.com/HackerNews/API
-[Play Store]: https://play.google.com/store/apps/details?id=io.github.sheepdestroyer.materialisheep&referrer=utm_source%3Dgithub
-[Play Store Badge]: https://play.google.com/intl/en_us/badges/images/badge_new.png
 [Algolia Hacker News Search API]: https://github.com/algolia/hn-search
 
 [Android Jetpack]: https://developer.android.com/jetpack/
