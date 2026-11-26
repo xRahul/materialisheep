@@ -14,5 +14,10 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
-<full-backup-content />
+<full-backup-content>
+    <!-- Credentials are encrypted with a device-bound Keystore key that is never
+         backed up, so backing up the ciphertext only produces unreadable data. -->
+    <exclude domain="sharedpref" path="auth_secure_store.xml" />
+    <!-- WebView data can carry session cookies for sites opened in the reader. -->
+    <exclude domain="root" path="app_webview/" />
+</full-backup-content>
